@@ -1,0 +1,43 @@
+CREATE TABLE country (
+                         id BIGINT GENERATED ALWAYS AS IDENTITY,
+                         name VARCHAR(100) NOT NULL,
+                         iso_code CHAR(2) NOT NULL,
+                         CONSTRAINT pk_country PRIMARY KEY (id),
+                         CONSTRAINT uk_country_name UNIQUE (name),
+                         CONSTRAINT uk_country_iso_code UNIQUE (iso_code)
+);
+
+INSERT INTO public.country (name, iso_code) VALUES
+                                                                            ('United States', 'US'),
+                                                                               ('Canada', 'CA'),
+                                                                               ('México', 'MX'),
+                                                                               ('Panamá', 'PA'),
+                                                                               ('Costa Rica', 'CR'),
+                                                                               ('El Salvador', 'SV'),
+                                                                               ('Guatemala', 'GT'),
+                                                                               ('Honduras', 'HN'),
+                                                                               ('Nicaragua', 'NI'),
+                                                                               ('Belize', 'BZ'),
+                                                                               ('Puerto Rico', 'PR'),
+                                                                               ('República Dominicana', 'DO'),
+                                                                               ('Cuba', 'CU'),
+                                                                               ('Jamaica', 'JM'),
+                                                                               ('Bahamas', 'BS'),
+                                                                               ('Haïti', 'HT'),
+                                                                               ('Barbados', 'BB'),
+                                                                               ('Trinidad and Tobago', 'TT'),
+                                                                               ('Sint Maarten', 'SX'),
+                                                                               ('Colombia', 'CO'),
+                                                                               ('Brasil', 'BR'),
+                                                                               ('Perú', 'PE'),
+                                                                               ('Chile', 'CL'),
+                                                                               ('Argentina', 'AR'),
+                                                                               ('Ecuador', 'EC'),
+                                                                               ('Venezuela', 'VE'),
+                                                                               ('Bolivia', 'BO'),
+                                                                               ('Paraguay', 'PY'),
+                                                                               ('Uruguay', 'UY'),
+                                                                               ('Guyana', 'GY'),
+                                                                               ('Suriname', 'SR'),
+                                                                               ('Guyane française', 'GF')
+    ON CONFLICT (iso_code) DO NOTHING;
