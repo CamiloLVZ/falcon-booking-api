@@ -27,9 +27,3 @@ out/
 
 spring.log
 
-
-# Environment-specific config
-
-application-local.properties
-application-dev.properties
-application-prod.properties
