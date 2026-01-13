@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "country")
 @NoArgsConstructor
@@ -21,4 +23,17 @@ public class CountryEntity {
 
     @Column(nullable = false, name = "iso_code", unique = true, columnDefinition = "bpchar", length = 2)
     String isoCode;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CountryEntity that = (CountryEntity) o;
+        return Objects.equals(isoCode, that.isoCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(isoCode);
+    }
 }
