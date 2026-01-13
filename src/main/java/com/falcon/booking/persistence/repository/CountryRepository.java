@@ -10,5 +10,4 @@ import java.util.Optional;
 @Repository
 public interface CountryRepository extends JpaRepository<CountryEntity, Integer> {
     Optional<CountryEntity> findByIsoCode(String isoCode);
-    List<CountryEntity> findAll();
 }

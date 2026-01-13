@@ -21,5 +21,4 @@ public class CountryEntity {
 
     @Column(nullable = false, name = "iso_code", unique = true, columnDefinition = "bpchar", length = 2)
     String isoCode;
-
 }

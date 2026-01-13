@@ -14,5 +14,4 @@ public class RestExceptionHandler {
         Error error = new Error("country-does-not-exist", exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
-
 }

@@ -22,8 +22,9 @@ public class CountryService {
     }
 
     public CountryDto getCountryByIsoCode(String isoCode) {
-        CountryEntity countryEntity = countryRepository.findByIsoCode(isoCode).orElse(null);
-        if (countryEntity == null) throw new CountryDoesNotExistException(isoCode);
+        CountryEntity countryEntity = countryRepository.findByIsoCode(isoCode).
+                orElseThrow( ()->new CountryDoesNotExistException(isoCode) );
+
         return countryMapper.toDto(countryEntity);
     }
 
@@ -31,5 +32,4 @@ public class CountryService {
         List<CountryEntity> listCountryEntity = countryRepository.findAll();
         return countryMapper.toDto(listCountryEntity);
     }
-
 }
