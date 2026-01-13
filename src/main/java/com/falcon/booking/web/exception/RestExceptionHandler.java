@@ -1,5 +1,6 @@
 package com.falcon.booking.web.exception;
 
+import com.falcon.booking.domain.exception.AirportDoesNotExistException;
 import com.falcon.booking.domain.exception.CountryDoesNotExistException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,4 +15,11 @@ public class RestExceptionHandler {
         Error error = new Error("country-does-not-exist", exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    @ExceptionHandler(AirportDoesNotExistException.class)
+    public ResponseEntity<Error> handleException(AirportDoesNotExistException exception){
+        Error error = new Error("airport-does-not-exist", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
 }
