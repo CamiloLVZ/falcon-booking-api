@@ -1,20 +1,20 @@
 package com.falcon.booking.domain.service;
 
-import com.falcon.booking.domain.exception.AirplaneTypeAlreadyExistsException;
-import com.falcon.booking.domain.exception.AirplaneTypeDoesNotExistException;
-import com.falcon.booking.domain.exception.AirplaneTypeStatusInvalidException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExistsException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.InvalidSearchCriteriaException;
 import com.falcon.booking.domain.mapper.AirplaneTypeMapper;
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
 import com.falcon.booking.web.dto.AirplaneTypeDto.AirplaneTypeResponseDto;
+import com.falcon.booking.web.dto.AirplaneTypeDto.CorrectAirplaneTypeDto;
 import com.falcon.booking.web.dto.AirplaneTypeDto.CreateAirplaneTypeDto;
 import com.falcon.booking.web.dto.AirplaneTypeDto.UpdateAirplaneTypeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -101,4 +101,72 @@ public class AirplaneTypeService {
 
         return airplaneTypeMapper.toResponseDto(updatedEntity);
     }
+
+    public AirplaneTypeResponseDto correctAirplaneType(Long id, CorrectAirplaneTypeDto correctAirplaneTypeDto) {
+
+        AirplaneTypeEntity entityToCorrect = airplaneTypeRepository.findById(id).
+                orElseThrow(()-> new AirplaneTypeDoesNotExistException(id));
+
+        String producerToValidate= correctAirplaneTypeDto.producer() != null ? correctAirplaneTypeDto.producer(): entityToCorrect.getProducer();
+        String modelToValidate= correctAirplaneTypeDto.model() != null ? correctAirplaneTypeDto.model(): entityToCorrect.getModel();
+
+        boolean isChanging = !entityToCorrect.getModel().equals(modelToValidate)
+                || !entityToCorrect.getProducer().equals(producerToValidate);
+
+        if(!isChanging) return airplaneTypeMapper.toResponseDto(entityToCorrect);
+
+        if(airplaneTypeRepository.existsByProducerAndModel(producerToValidate, modelToValidate)){
+            throw new AirplaneTypeAlreadyExistsException(producerToValidate, modelToValidate);
+        }
+
+        entityToCorrect.setProducer(producerToValidate);
+        entityToCorrect.setModel(modelToValidate);
+        return airplaneTypeMapper.toResponseDto(airplaneTypeRepository.save(entityToCorrect));
+
+    }
+
+    public AirplaneTypeResponseDto deactivateAirplaneType(Long id) {
+
+        AirplaneTypeEntity entityToDeactivate = airplaneTypeRepository.findById(id).
+                orElseThrow(()-> new AirplaneTypeDoesNotExistException(id));
+
+        if(!entityToDeactivate.getStatus().equals(AirplaneTypeStatus.ACTIVE))
+            throw new AirplaneTypeInvalidStatusChangeException(entityToDeactivate.getStatus(), AirplaneTypeStatus.INACTIVE);
+
+        entityToDeactivate.setStatus(AirplaneTypeStatus.INACTIVE);
+        return airplaneTypeMapper.toResponseDto(airplaneTypeRepository.save(entityToDeactivate));
+    }
+
+    public AirplaneTypeResponseDto activateAirplaneType(Long id) {
+
+        AirplaneTypeEntity entityToActivate = airplaneTypeRepository.findById(id).
+                orElseThrow(()-> new AirplaneTypeDoesNotExistException(id));
+
+        if(entityToActivate.getStatus() == AirplaneTypeStatus.RETIRED)
+            throw new AirplaneTypeInvalidStatusChangeException(
+                    AirplaneTypeStatus.RETIRED, AirplaneTypeStatus.ACTIVE
+            );
+
+        if(entityToActivate.getStatus() == AirplaneTypeStatus.ACTIVE)
+            return airplaneTypeMapper.toResponseDto(entityToActivate);
+
+        entityToActivate.setStatus(AirplaneTypeStatus.ACTIVE);
+        return airplaneTypeMapper.toResponseDto(airplaneTypeRepository.save(entityToActivate));
+    }
+
+    public AirplaneTypeResponseDto retireAirplaneType(Long id) {
+
+        AirplaneTypeEntity entityToRetire = airplaneTypeRepository.findById(id).
+                orElseThrow(()-> new AirplaneTypeDoesNotExistException(id));
+
+        if(entityToRetire.getStatus().equals(AirplaneTypeStatus.RETIRED))
+            return airplaneTypeMapper.toResponseDto(entityToRetire);
+
+        if(!entityToRetire.getStatus().equals(AirplaneTypeStatus.INACTIVE))
+            throw new AirplaneTypeInvalidStatusChangeException(entityToRetire.getStatus(), AirplaneTypeStatus.RETIRED);
+
+        entityToRetire.setStatus(AirplaneTypeStatus.RETIRED);
+        return airplaneTypeMapper.toResponseDto(airplaneTypeRepository.save(entityToRetire));
+    }
+
 }

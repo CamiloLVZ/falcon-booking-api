@@ -1,4 +1,4 @@
-package com.falcon.booking.domain.exception;
+package com.falcon.booking.domain.exception.AirplaneType;
 
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 

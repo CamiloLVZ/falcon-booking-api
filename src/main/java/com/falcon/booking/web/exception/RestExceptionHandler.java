@@ -1,6 +1,10 @@
 package com.falcon.booking.web.exception;
 
 import com.falcon.booking.domain.exception.*;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExistsException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,8 +27,6 @@ public class RestExceptionHandler {
 
         return ResponseEntity.badRequest().body(errors);
     }
-
-
 
     @ExceptionHandler(InvalidSearchCriteriaException.class)
     public ResponseEntity<Error> handleException(InvalidSearchCriteriaException exception){
@@ -60,6 +62,12 @@ public class RestExceptionHandler {
     public ResponseEntity<Error> handleException(AirplaneTypeStatusInvalidException exception){
             Error error = new Error("airplane-type-status-invalid", exception.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(AirplaneTypeInvalidStatusChangeException.class)
+    public ResponseEntity<Error> handleException(AirplaneTypeInvalidStatusChangeException exception){
+        Error error = new Error("invalid-status-change", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
 

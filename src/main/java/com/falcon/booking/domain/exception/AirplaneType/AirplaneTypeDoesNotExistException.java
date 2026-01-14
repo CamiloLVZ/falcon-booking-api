@@ -1,4 +1,4 @@
-package com.falcon.booking.domain.exception;
+package com.falcon.booking.domain.exception.AirplaneType;
 
 public class AirplaneTypeDoesNotExistException extends RuntimeException {
     public AirplaneTypeDoesNotExistException(Long id) {

@@ -1,4 +1,4 @@
-package com.falcon.booking.domain.exception;
+package com.falcon.booking.domain.exception.AirplaneType;
 
 public class AirplaneTypeAlreadyExistsException extends RuntimeException {
     public AirplaneTypeAlreadyExistsException(String producer, String model) {
