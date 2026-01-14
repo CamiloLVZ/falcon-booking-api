@@ -5,6 +5,7 @@ import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.web.dto.AirplaneTypeDto.AirplaneTypeResponseDto;
 import com.falcon.booking.web.dto.AirplaneTypeDto.CreateAirplaneTypeDto;
 import com.falcon.booking.web.dto.AirplaneTypeDto.UpdateAirplaneTypeDto;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,15 +40,16 @@ public class AirplaneTypeController {
     }
 
     @PostMapping
-    public ResponseEntity<AirplaneTypeResponseDto> createAirplaneType(@RequestBody CreateAirplaneTypeDto createAirplaneTypeDto) {
+    public ResponseEntity<AirplaneTypeResponseDto> createAirplaneType(@RequestBody @Valid CreateAirplaneTypeDto createAirplaneTypeDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 airplaneTypeService.addAirplaneType(createAirplaneTypeDto)
         );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AirplaneTypeResponseDto> updateAirplaneType(@PathVariable Long id, @RequestBody UpdateAirplaneTypeDto updateAirplaneTypeDto) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+    public ResponseEntity<AirplaneTypeResponseDto> updateAirplaneType(@PathVariable Long id,
+                                                                      @Valid @RequestBody UpdateAirplaneTypeDto updateAirplaneTypeDto) {
+        return ResponseEntity.ok(
                 airplaneTypeService.updateAirplaneType(id, updateAirplaneTypeDto)
         );
     }

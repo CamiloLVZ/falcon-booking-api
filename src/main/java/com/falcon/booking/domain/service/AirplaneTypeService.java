@@ -95,7 +95,7 @@ public class AirplaneTypeService {
 
         if(updateAirplaneTypeDto.economySeats()!=null) entityToUpdate.setEconomySeats(updateAirplaneTypeDto.economySeats());
         if(updateAirplaneTypeDto.firstClassSeats()!=null) entityToUpdate.setFirstClassSeats(updateAirplaneTypeDto.firstClassSeats());
-        if(updateAirplaneTypeDto.status()!=null) entityToUpdate.setStatus(AirplaneTypeStatus.valueOf(updateAirplaneTypeDto.status()));
+        if(updateAirplaneTypeDto.status()!=null) entityToUpdate.setStatus(updateAirplaneTypeDto.status());
 
         AirplaneTypeEntity updatedEntity = airplaneTypeRepository.save(entityToUpdate);
 
