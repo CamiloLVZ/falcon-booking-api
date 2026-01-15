@@ -113,6 +113,9 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToDeactivate = airplaneTypeRepository.findById(id).
                 orElseThrow(()-> new AirplaneTypeDoesNotExistException(id));
 
+        if(entityToDeactivate.getStatus() == AirplaneTypeStatus.INACTIVE)
+            return airplaneTypeMapper.toResponseDto(entityToDeactivate);
+
         if(!entityToDeactivate.getStatus().equals(AirplaneTypeStatus.ACTIVE))
             throw new AirplaneTypeInvalidStatusChangeException(entityToDeactivate.getStatus(), AirplaneTypeStatus.INACTIVE);
 
