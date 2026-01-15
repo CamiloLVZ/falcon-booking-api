@@ -5,6 +5,7 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExist
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
+import com.falcon.booking.domain.exception.Route.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -67,6 +68,42 @@ public class RestExceptionHandler {
     @ExceptionHandler(AirplaneTypeInvalidStatusChangeException.class)
     public ResponseEntity<Error> handleException(AirplaneTypeInvalidStatusChangeException exception){
         Error error = new Error("invalid-status-change", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(RouteAirplaneTypeIsNotActiveException.class)
+    public ResponseEntity<Error> handleException(RouteAirplaneTypeIsNotActiveException exception){
+        Error error = new Error("route-airplane-type-is-not-active", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(RouteAlreadyExistsException.class)
+    public ResponseEntity<Error> handleException(RouteAlreadyExistsException exception){
+        Error error = new Error("route-already-exists", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(RouteDoesNotExistException.class)
+    public ResponseEntity<Error> handleException(RouteDoesNotExistException exception){
+        Error error = new Error("route-does-not-exists", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(RouteInvalidStatusChangeException.class)
+    public ResponseEntity<Error> handleException(RouteInvalidStatusChangeException exception){
+        Error error = new Error("route-invalid-status-change", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(RouteSameOriginAndDestinationException.class)
+    public ResponseEntity<Error> handleException(RouteSameOriginAndDestinationException exception){
+        Error error = new Error("route-same-origin-and-destination", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(RouteStatusInvalidException.class)
+    public ResponseEntity<Error> handleException(RouteStatusInvalidException exception){
+        Error error = new Error("route-status-invalid", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
