@@ -20,8 +20,8 @@ public record CreateAirplaneTypeDto (
         Integer firstClassSeats){
 
     public CreateAirplaneTypeDto {
-        producer = (producer != null) ? producer.trim() : null;
-        model = (model != null) ? model.trim() : null;
+        producer = (producer != null) ? producer.trim().toUpperCase() : null;
+        model = (model != null) ? model.trim().toUpperCase() : null;
     }
 
 }

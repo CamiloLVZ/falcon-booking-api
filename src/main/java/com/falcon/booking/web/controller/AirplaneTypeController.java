@@ -34,8 +34,6 @@ public class AirplaneTypeController {
     public ResponseEntity<List<AirplaneTypeResponseDto>> getAirplaneTypeByStatus(@RequestParam(required = false) String producer,
                                                                                  @RequestParam(required = false) String model,
                                                                                  @RequestParam(required = false) AirplaneTypeStatus status) {
-        producer = normalize(producer);
-        model = normalize(model);
 
         return ResponseEntity.ok(airplaneTypeService.getAirplaneTypes(producer, model, status));
     }
@@ -78,7 +76,4 @@ public class AirplaneTypeController {
         return ResponseEntity.ok(airplaneTypeService.retireAirplaneType(id));
     }
 
-    private String normalize(String value) {
-        return value == null ? null : value.trim();
-    }
 }

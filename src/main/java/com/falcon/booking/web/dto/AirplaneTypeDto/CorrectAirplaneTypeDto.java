@@ -11,8 +11,8 @@ public record CorrectAirplaneTypeDto(
         {
 
     public CorrectAirplaneTypeDto {
-        producer = (producer != null) ? producer.trim() : null;
-        model = (model != null) ? model.trim() : null;
+        producer = (producer != null) ? producer.trim().toUpperCase() : null;
+        model = (model != null) ? model.trim().toUpperCase() : null;
     }
 
 }

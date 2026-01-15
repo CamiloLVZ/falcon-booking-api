@@ -7,16 +7,4 @@ public enum AirplaneTypeStatus {
     ACTIVE,
     INACTIVE,
     RETIRED;
-
-    @JsonCreator
-    public static AirplaneTypeStatus fromValue(String value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            return AirplaneTypeStatus.valueOf(value.toUpperCase().trim());
-        } catch (Exception e) {
-            throw new AirplaneTypeStatusInvalidException(value);
-        }
-    }
 }
