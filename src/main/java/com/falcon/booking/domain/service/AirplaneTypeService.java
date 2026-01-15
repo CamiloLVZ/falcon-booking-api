@@ -1,5 +1,6 @@
 package com.falcon.booking.domain.service;
 
+import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExistsException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
@@ -8,11 +9,13 @@ import com.falcon.booking.domain.mapper.AirplaneTypeMapper;
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
+import com.falcon.booking.persistence.specification.AirplaneTypeSpecifications;
 import com.falcon.booking.web.dto.AirplaneTypeDto.AirplaneTypeResponseDto;
 import com.falcon.booking.web.dto.AirplaneTypeDto.CorrectAirplaneTypeDto;
 import com.falcon.booking.web.dto.AirplaneTypeDto.CreateAirplaneTypeDto;
 import com.falcon.booking.web.dto.AirplaneTypeDto.UpdateAirplaneTypeDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,37 +40,17 @@ public class AirplaneTypeService {
 
     public List<AirplaneTypeResponseDto> getAirplaneTypes(String producer, String model, AirplaneTypeStatus status) {
 
-        if (model != null && producer == null) {
-            throw new InvalidSearchCriteriaException(
-                    "Searching by model alone is not supported"
-            );
-        }
+        producer = StringNormalizer.normalize(producer);
+        model = StringNormalizer.normalize(model);
 
-        if (producer != null && model != null) {
-            AirplaneTypeEntity entity =
-                    airplaneTypeRepository.findByProducerIgnoreCaseAndModelContainingIgnoreCase(producer, model)
-                            .orElseThrow(() -> new AirplaneTypeDoesNotExistException(producer, model));
-            return List.of(airplaneTypeMapper.toResponseDto(entity));
-        }
+        Specification<AirplaneTypeEntity> specification = Specification.allOf();
+        specification = specification.and(AirplaneTypeSpecifications.hasModel(model));
+        specification = specification.and(AirplaneTypeSpecifications.hasProducer(producer));
+        specification = specification.and(AirplaneTypeSpecifications.hasStatus(status));
 
-        if (producer != null) {
-            List<AirplaneTypeResponseDto> list;
-            if(status==null){
-            list =
-                    airplaneTypeMapper.toResponseDto(airplaneTypeRepository.findAllByProducerIgnoreCase(producer));
+        List<AirplaneTypeEntity> entites = airplaneTypeRepository.findAll(specification);
 
-            return list;}
-            else{
-                list=airplaneTypeMapper.toResponseDto(
-                        airplaneTypeRepository.findAllByProducerIgnoreCaseAndStatus(producer,status));
-                return list;}
-        }
-        if (status != null) {
-            return airplaneTypeMapper.toResponseDto(
-                    airplaneTypeRepository.findAllByStatus(status));
-        }
-        return airplaneTypeMapper.toResponseDto(
-                airplaneTypeRepository.findAll());
+        return airplaneTypeMapper.toResponseDto(entites);
     }
 
     public List<AirplaneTypeResponseDto> getAllAirplaneTypes() {
