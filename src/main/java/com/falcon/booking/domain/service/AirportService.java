@@ -1,5 +1,6 @@
 package com.falcon.booking.domain.service;
 
+import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.AirportDoesNotExistException;
 import com.falcon.booking.domain.mapper.AirportMapper;
 import com.falcon.booking.persistence.entity.AirportEntity;
@@ -36,7 +37,8 @@ public class AirportService {
     }
 
     public List<AirportDto> getAirportsByCountryIsoCode(String isoCode) {
-        List<AirportEntity> airportEntities = airportRepository.findAllByCountryIsoCode(isoCode);
+        String isoCodeNormalized= StringNormalizer.normalize(isoCode);
+        List<AirportEntity> airportEntities = airportRepository.findAllByCountryIsoCode(isoCodeNormalized);
 
         return airportMapper.toDto(airportEntities);
     }

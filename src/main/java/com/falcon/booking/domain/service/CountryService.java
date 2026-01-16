@@ -1,5 +1,6 @@
 package com.falcon.booking.domain.service;
 
+import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.CountryDoesNotExistException;
 import com.falcon.booking.domain.mapper.CountryMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
@@ -22,7 +23,8 @@ public class CountryService {
     }
 
     public CountryDto getCountryByIsoCode(String isoCode) {
-        CountryEntity countryEntity = countryRepository.findByIsoCode(isoCode).
+        String isoCodeNormalized= StringNormalizer.normalize(isoCode);
+        CountryEntity countryEntity = countryRepository.findByIsoCode(isoCodeNormalized).
                 orElseThrow( ()->new CountryDoesNotExistException(isoCode) );
 
         return countryMapper.toDto(countryEntity);
