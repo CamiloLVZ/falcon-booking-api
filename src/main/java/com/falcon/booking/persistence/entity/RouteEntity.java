@@ -1,11 +1,16 @@
 package com.falcon.booking.persistence.entity;
 
 import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.domain.valueobject.WeekDay;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalTime;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Collection;
 import java.util.Objects;
 
 @Entity
@@ -41,18 +46,37 @@ public class RouteEntity {
     @Column(nullable = false,length = 20)
     RouteStatus status;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "route",cascade=CascadeType.ALL ,orphanRemoval = true)
+    private List<RouteDayEntity> routeDays;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RouteScheduleEntity> routeSchedules;
+
+    public void updateWeekDays(Collection<WeekDay> newWeekDays) {
+        this.routeDays.clear();
+
+        for (WeekDay weekDay : new HashSet<>(newWeekDays)) {
+            this.routeDays.add(new RouteDayEntity(this, weekDay));
+        }
+    }
+
+    public void updateSchedules(Collection<LocalTime> newSchedules) {
+        this.routeSchedules.clear();
+        for (LocalTime schedule : new HashSet<>(newSchedules)) {
+            this.routeSchedules.add(new RouteScheduleEntity(this, schedule));
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null) return false;
-        if (!(o instanceof RouteEntity other)) return false;
-
-        return id != null && id.equals(other.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        RouteEntity entity = (RouteEntity) o;
+        return Objects.equals(flightNumber, entity.flightNumber);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hashCode(flightNumber);
     }
-
 }

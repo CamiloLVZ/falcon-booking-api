@@ -10,13 +10,9 @@ import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
-import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
-import com.falcon.booking.persistence.repository.AirportRepository;
-import com.falcon.booking.persistence.repository.RouteRepository;
+import com.falcon.booking.persistence.repository.*;
 import com.falcon.booking.persistence.specification.RouteSpecifications;
-import com.falcon.booking.web.dto.Route.CreateRouteDto;
-import com.falcon.booking.web.dto.Route.ResponseRouteDto;
-import com.falcon.booking.web.dto.Route.UpdateRouteDto;
+import com.falcon.booking.web.dto.Route.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -24,19 +20,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+
 @Service
 public class RouteService {
 
     private final RouteRepository routeRepository;
     private final AirportRepository airportRepository;
     private final AirplaneTypeRepository airplaneTypeRepository;
+    private final RouteDayRepository routeDayRepository;
+    private final RouteScheduleRepository routeScheduleRepository;
     private final RouteMapper routeMapper;
 
     @Autowired
-    public RouteService(RouteRepository routeRepository, AirportRepository airportRepository, AirplaneTypeRepository airplaneTypeRepository, RouteMapper routeMapper) {
+    public RouteService(RouteRepository routeRepository, AirportRepository airportRepository, AirplaneTypeRepository airplaneTypeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper) {
         this.routeRepository = routeRepository;
         this.airportRepository = airportRepository;
         this.airplaneTypeRepository = airplaneTypeRepository;
+        this.routeDayRepository = routeDayRepository;
+        this.routeScheduleRepository = routeScheduleRepository;
         this.routeMapper = routeMapper;
     }
 
@@ -178,4 +179,36 @@ public class RouteService {
 
         return routeMapper.toResponseDto(entityToUpdate);
     }
+
+    @Transactional
+    public ResponseRouteDto setRouteDays(String flightNumber, AddRouteDaysRequestDto dto){
+        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
+        RouteEntity routeEntity = routeRepository.findByFlightNumber(normalizedFlightNumber).
+                orElseThrow(()->new RouteDoesNotExistException(flightNumber));
+
+        routeDayRepository.deleteAllByRoute(routeEntity);
+        routeDayRepository.flush();
+
+        routeEntity.updateWeekDays(dto.weekDays());
+
+        return routeMapper.toResponseDto(routeEntity);
+    }
+
+    @Transactional
+    public ResponseRouteDto setRouteSchedules(String flightNumber, AddRouteScheduleRequestDto dto){
+
+
+        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
+        RouteEntity routeEntity = routeRepository.findByFlightNumber(normalizedFlightNumber).
+                orElseThrow(()->new RouteDoesNotExistException(flightNumber));
+
+        routeScheduleRepository.deleteAllByRoute(routeEntity);
+        routeScheduleRepository.flush();
+
+        routeEntity.updateSchedules(dto.schedules());
+
+        return routeMapper.toResponseDto(routeEntity);
+    }
+
+
 }
