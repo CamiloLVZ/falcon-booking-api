@@ -31,9 +31,9 @@ public class AirplaneTypeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AirplaneTypeResponseDto>> getAirplaneTypeByStatus(@RequestParam(required = false) String producer,
-                                                                                 @RequestParam(required = false) String model,
-                                                                                 @RequestParam(required = false) AirplaneTypeStatus status) {
+    public ResponseEntity<List<AirplaneTypeResponseDto>> getAllAirplanesType(@RequestParam(required = false) String producer,
+                                                                           @RequestParam(required = false) String model,
+                                                                           @RequestParam(required = false) AirplaneTypeStatus status) {
 
         return ResponseEntity.ok(airplaneTypeService.getAirplaneTypes(producer, model, status));
     }
