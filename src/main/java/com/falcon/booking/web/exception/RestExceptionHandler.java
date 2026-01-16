@@ -107,5 +107,10 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(RouteDraftInvalidUpdateException.class)
+    public ResponseEntity<Error> handleException(RouteDraftInvalidUpdateException exception){
+        Error error = new Error("route-can-not-change-origin-or-destination", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 
 }
