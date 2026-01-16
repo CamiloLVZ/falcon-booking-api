@@ -1,5 +1,6 @@
 package com.falcon.booking.web.dto.AirplaneTypeDto;
 
+import com.falcon.booking.domain.common.utils.StringNormalizer;
 import jakarta.validation.constraints.*;
 
 public record CorrectAirplaneTypeDto(
@@ -11,8 +12,8 @@ public record CorrectAirplaneTypeDto(
         {
 
     public CorrectAirplaneTypeDto {
-        producer = (producer != null) ? producer.trim().toUpperCase() : null;
-        model = (model != null) ? model.trim().toUpperCase() : null;
+        producer = StringNormalizer.normalize(producer);
+        model = StringNormalizer.normalize(model);
     }
 
 }

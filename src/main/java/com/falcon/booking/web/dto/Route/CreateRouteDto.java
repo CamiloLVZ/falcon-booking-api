@@ -1,5 +1,6 @@
 package com.falcon.booking.web.dto.Route;
 
+import com.falcon.booking.domain.common.utils.StringNormalizer;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -26,4 +27,12 @@ public record CreateRouteDto(
         @Positive(message = "length minutes must be a integer greater than zero")
         Integer lengthMinutes
 ) {
+
+        public CreateRouteDto{
+                flightNumber = StringNormalizer.normalize(flightNumber);
+                airportOriginIataCode= StringNormalizer.normalize(airportOriginIataCode);
+                airportDestinationIataCode =StringNormalizer.normalize(airportDestinationIataCode);
+        }
+
+
 }
