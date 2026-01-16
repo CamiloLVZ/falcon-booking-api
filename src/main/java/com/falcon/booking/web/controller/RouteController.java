@@ -40,7 +40,9 @@ public class RouteController {
     }
 
     @GetMapping("/{flightNumber}")
-    public ResponseEntity<ResponseRouteDto> getRouteByFlightNumber(@PathVariable String flightNumber){
+    public ResponseEntity<ResponseRouteDto> getRouteByFlightNumber(@PathVariable
+                                                                       @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
+                                                                       String flightNumber){
         return ResponseEntity.ok(routeService.getRouteByFlightNumber(flightNumber));
     }
 
@@ -85,4 +87,10 @@ public class RouteController {
         return ResponseEntity.ok(routeService.setRouteSchedules(flightNumber, schedules));
     }
 
+    @GetMapping("/{flightNumber}/schedules")
+    public ResponseEntity<ResponseRouteDto> getRouteSchedules(@PathVariable
+                                                                       @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
+                                                                       String flightNumber){
+        return ResponseEntity.ok(routeService.getRouteByFlightNumber(flightNumber));
+    }
 }

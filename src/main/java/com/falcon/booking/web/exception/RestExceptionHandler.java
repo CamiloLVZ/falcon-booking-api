@@ -6,6 +6,7 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExist
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
 import com.falcon.booking.domain.exception.Route.*;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class RestExceptionHandler {
@@ -28,6 +30,15 @@ public class RestExceptionHandler {
         });
 
         return ResponseEntity.badRequest().body(errors);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Error> handleValidationExceptions(ConstraintViolationException exception) {
+
+        String firstMessage = exception.getConstraintViolations().iterator().next().getMessage();
+
+        Error error = new Error("invalid-arguments", firstMessage);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(InvalidSearchCriteriaException.class)
