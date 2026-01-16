@@ -30,6 +30,9 @@ public class AirportEntity {
     @JoinColumn(name = "id_country", nullable = false)
     private CountryEntity country;
 
+    @Column(nullable = false, length = 20)
+    private String timezone;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
