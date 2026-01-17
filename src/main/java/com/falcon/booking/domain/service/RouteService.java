@@ -11,7 +11,7 @@ import com.falcon.booking.domain.valueobject.WeekDay;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.*;
 import com.falcon.booking.persistence.specification.RouteSpecifications;
-import com.falcon.booking.web.dto.Route.*;
+import com.falcon.booking.web.dto.route.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;

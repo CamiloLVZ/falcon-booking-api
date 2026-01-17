@@ -1,4 +1,4 @@
-package com.falcon.booking.web.dto.Route;
+package com.falcon.booking.web.dto.route;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
 import jakarta.validation.constraints.Positive;

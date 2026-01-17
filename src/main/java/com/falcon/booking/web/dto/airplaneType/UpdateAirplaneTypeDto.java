@@ -1,4 +1,4 @@
-package com.falcon.booking.web.dto.AirplaneTypeDto;
+package com.falcon.booking.web.dto.airplaneType;
 
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import jakarta.validation.constraints.Positive;

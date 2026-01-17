@@ -1,14 +1,14 @@
-package com.falcon.booking.web.dto.Route;
+package com.falcon.booking.web.dto.route;
 
 import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.web.dto.AirplaneTypeDto.AirplaneTypeResponseDto;
+import com.falcon.booking.web.dto.airplaneType.ResponseAirplaneTypeDto;
 import com.falcon.booking.web.dto.AirportDto;
 
 public record ResponseRouteDto(
         String flightNumber,
         AirportDto airportOrigin,
         AirportDto airportDestination,
-        AirplaneTypeResponseDto defaultAirplaneType,
+        ResponseAirplaneTypeDto defaultAirplaneType,
         int lengthMinutes,
         RouteStatus status
 ) {

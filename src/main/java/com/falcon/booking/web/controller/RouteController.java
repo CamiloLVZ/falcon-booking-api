@@ -2,10 +2,8 @@ package com.falcon.booking.web.controller;
 
 import com.falcon.booking.domain.service.RouteService;
 import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.domain.valueobject.WeekDay;
-import com.falcon.booking.web.dto.Route.*;
+import com.falcon.booking.web.dto.route.*;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -88,9 +86,9 @@ public class RouteController {
     }
 
     @GetMapping("/{flightNumber}/schedules")
-    public ResponseEntity<ResponseRouteDto> getRouteSchedules(@PathVariable
+    public ResponseEntity<RouteWithSchedulesDto> getRouteSchedules(@PathVariable
                                                                        @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                                        String flightNumber){
-        return ResponseEntity.ok(routeService.getRouteByFlightNumber(flightNumber));
+        return ResponseEntity.ok(routeService.getRouteWithSchedules(flightNumber));
     }
 }
