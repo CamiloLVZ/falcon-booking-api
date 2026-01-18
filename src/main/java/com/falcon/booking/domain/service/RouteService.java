@@ -11,6 +11,7 @@ import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.*;
 import com.falcon.booking.persistence.specification.RouteSpecifications;
 import com.falcon.booking.web.dto.route.*;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 
 @Service
@@ -181,48 +183,41 @@ public class RouteService {
     }
 
     @Transactional
-    public RouteWithSchedulesDto setRouteDays(String flightNumber, AddRouteDaysRequestDto dto){
-
+    public RouteWithSchedulesDto setRouteOperatingSchedules(String flightNumber, AddRouteScheduleRequestDto requestDto) {
         RouteEntity routeEntity = getRouteEntity(flightNumber);
-
-        routeDayRepository.deleteAllByRoute(routeEntity);
-        routeDayRepository.flush();
-
-        routeEntity.updateWeekDays(dto.weekDays());
-
+        if (requestDto.weekDays() != null) {
+            setRouteDays(routeEntity, requestDto.weekDays());
+        }
+        if(requestDto.schedules() != null) {
+            setRouteSchedules(routeEntity, requestDto.schedules());
+        }
         return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
     }
 
     @Transactional
-    public RouteWithSchedulesDto setRouteSchedules(String flightNumber, AddRouteScheduleRequestDto dto){
-        RouteEntity routeEntity = getRouteEntity(flightNumber);
+    public void setRouteDays (RouteEntity routeEntity, Set<DayOfWeek> days) {
+
+        routeDayRepository.deleteAllByRoute(routeEntity);
+        routeDayRepository.flush();
+        routeEntity.updateWeekDays(days);
+    }
+
+    @Transactional
+    public void setRouteSchedules(RouteEntity routeEntity, Set<LocalTime> schedules){
 
         routeScheduleRepository.deleteAllByRoute(routeEntity);
         routeScheduleRepository.flush();
-
-        routeEntity.updateSchedules(dto.schedules());
-
-        return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
+        routeEntity.updateSchedules(schedules);
     }
 
     @Transactional
     public RouteWithSchedulesDto getRouteWithSchedules(String flightNumber){
 
         RouteEntity routeEntity = getRouteEntity(flightNumber);
-
-        List<DayOfWeek> weekDays = new ArrayList<>();
-        for(RouteDayEntity routeDay : routeEntity.getRouteDays()){
-            weekDays.add(routeDay.getWeekDay());
-        }
-
-        List<LocalTime> schedules = new ArrayList<>();
-        for(RouteScheduleEntity schedule : routeEntity.getRouteSchedules()){
-            schedules.add(schedule.getDepartureLocalTime());
-        }
-
-        return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), weekDays, schedules);
+        return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
 
     }
+
 
 
 }

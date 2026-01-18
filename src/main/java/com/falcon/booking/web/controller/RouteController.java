@@ -60,33 +60,26 @@ public class RouteController {
         return ResponseEntity.ok(routeService.updateRoute(flightNumber, updateRouteDto));
     }
 
-    @PutMapping("/{flightNumber}/activate")
+    @PatchMapping("/{flightNumber}/activate")
     public ResponseEntity<ResponseRouteDto> activateDto(@PathVariable
                                                             @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                             String flightNumber){
         return ResponseEntity.ok(routeService.activateRoute(flightNumber));
     }
-    @PutMapping("/{flightNumber}/deactivate")
+    @PatchMapping("/{flightNumber}/deactivate")
     public ResponseEntity<ResponseRouteDto> deactivateDto(@PathVariable
                                                         @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                         String flightNumber){
         return ResponseEntity.ok(routeService.deactivateRoute(flightNumber));
     }
 
-    @PutMapping("/{flightNumber}/days")
-    public ResponseEntity<RouteWithSchedulesDto> setRouteDays(@PathVariable
-                                                             @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
-                                                             String flightNumber,
-                                                         @RequestBody AddRouteDaysRequestDto weekDays){
-        return ResponseEntity.ok(routeService.setRouteDays(flightNumber, weekDays));
-    }
 
-    @PutMapping("/{flightNumber}/schedules")
-    public ResponseEntity<RouteWithSchedulesDto> setRouteSchedules(@PathVariable
+    @PatchMapping("/{flightNumber}/schedules")
+    public ResponseEntity<RouteWithSchedulesDto> setRouteOperatingSchedules(@PathVariable
                                                          @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                          String flightNumber,
                                                               @RequestBody AddRouteScheduleRequestDto schedules){
-        return ResponseEntity.ok(routeService.setRouteSchedules(flightNumber, schedules));
+        return ResponseEntity.ok(routeService.setRouteOperatingSchedules(flightNumber, schedules));
     }
 
     @GetMapping("/{flightNumber}/schedules")
