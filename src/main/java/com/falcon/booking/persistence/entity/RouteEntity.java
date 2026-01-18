@@ -1,17 +1,14 @@
 package com.falcon.booking.persistence.entity;
 
 import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.domain.valueobject.WeekDay;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.HashSet;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table(name = "route")
@@ -52,10 +49,10 @@ public class RouteEntity {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteScheduleEntity> routeSchedules;
 
-    public void updateWeekDays(Collection<WeekDay> newWeekDays) {
+    public void updateWeekDays(Collection<DayOfWeek> newWeekDays) {
         this.routeDays.clear();
 
-        for (WeekDay weekDay : new HashSet<>(newWeekDays)) {
+        for (DayOfWeek weekDay : new HashSet<>(newWeekDays)) {
             this.routeDays.add(new RouteDayEntity(this, weekDay));
         }
     }
@@ -65,6 +62,22 @@ public class RouteEntity {
         for (LocalTime schedule : new HashSet<>(newSchedules)) {
             this.routeSchedules.add(new RouteScheduleEntity(this, schedule));
         }
+    }
+
+    public Set<DayOfWeek> getOperatingDays(){
+        Set<DayOfWeek> weekDays = new HashSet<>();
+        for(RouteDayEntity routeDay : routeDays){
+            weekDays.add(routeDay.getWeekDay());
+        }
+        return weekDays;
+    }
+
+    public Set<LocalTime> getOperatingSchedules(){
+        Set<LocalTime> schedules = new HashSet<>();
+        for(RouteScheduleEntity routeSchedule : routeSchedules){
+            schedules.add(routeSchedule.getDepartureLocalTime());
+        }
+        return schedules;
     }
 
     @Override

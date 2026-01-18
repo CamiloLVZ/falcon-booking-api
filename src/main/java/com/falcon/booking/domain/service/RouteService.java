@@ -7,7 +7,6 @@ import com.falcon.booking.domain.exception.Route.*;
 import com.falcon.booking.domain.mapper.RouteMapper;
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.domain.valueobject.WeekDay;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.*;
 import com.falcon.booking.persistence.specification.RouteSpecifications;
@@ -17,6 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +42,19 @@ public class RouteService {
         this.routeMapper = routeMapper;
     }
 
+    public RouteEntity getRouteEntity(String flightNumber){
+        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
+        return routeRepository.findByFlightNumber(normalizedFlightNumber)
+                .orElseThrow(()-> new RouteDoesNotExistException(normalizedFlightNumber));
+    }
+
    public ResponseRouteDto getRouteByFlightNumber(String flightNumber) {
 
-        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
+        return routeMapper.toResponseDto(getRouteEntity(flightNumber));
+    }
 
-        RouteEntity routeEntity = routeRepository.findByFlightNumber(normalizedFlightNumber).
-                orElseThrow(()->new RouteDoesNotExistException(flightNumber));
-        return routeMapper.toResponseDto(routeEntity);
+    public List<RouteEntity> getAllRoutesByStatus(RouteStatus status) {
+        return routeRepository.findAllByStatus(status);
     }
 
     public List<ResponseRouteDto> getAllRoutes(String airportOrigin_iataCode,
@@ -101,10 +107,8 @@ public class RouteService {
 
 @Transactional
     public ResponseRouteDto updateRoute(String flightNumber, UpdateRouteDto updateRouteDto) {
-        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
 
-        RouteEntity entityToUpdate = routeRepository.findByFlightNumber(normalizedFlightNumber)
-                .orElseThrow(()-> new RouteDoesNotExistException(flightNumber));
+        RouteEntity entityToUpdate = getRouteEntity(flightNumber);
 
         boolean hasOnlyDraftModifications = updateRouteDto.airportDestinationIataCode()!=null||updateRouteDto.airportOriginIataCode()!=null;
 
@@ -143,10 +147,7 @@ public class RouteService {
 
     @Transactional
     public ResponseRouteDto activateRoute(String flightNumber) {
-        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
-
-        RouteEntity entityToUpdate = routeRepository.findByFlightNumber(normalizedFlightNumber)
-                .orElseThrow(()-> new RouteDoesNotExistException(flightNumber));
+        RouteEntity entityToUpdate = getRouteEntity(flightNumber);
 
         switch (entityToUpdate.getStatus()){
             case ACTIVE: break;
@@ -164,10 +165,8 @@ public class RouteService {
 
     @Transactional
     public ResponseRouteDto deactivateRoute(String flightNumber) {
-        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
 
-        RouteEntity entityToUpdate = routeRepository.findByFlightNumber(normalizedFlightNumber)
-                .orElseThrow(()-> new RouteDoesNotExistException(flightNumber));
+        RouteEntity entityToUpdate = getRouteEntity(flightNumber);
 
         switch (entityToUpdate.getStatus()){
             case ACTIVE: { entityToUpdate.setStatus(RouteStatus.INACTIVE);
@@ -182,41 +181,36 @@ public class RouteService {
     }
 
     @Transactional
-    public ResponseRouteDto setRouteDays(String flightNumber, AddRouteDaysRequestDto dto){
-        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
-        RouteEntity routeEntity = routeRepository.findByFlightNumber(normalizedFlightNumber).
-                orElseThrow(()->new RouteDoesNotExistException(flightNumber));
+    public RouteWithSchedulesDto setRouteDays(String flightNumber, AddRouteDaysRequestDto dto){
+
+        RouteEntity routeEntity = getRouteEntity(flightNumber);
 
         routeDayRepository.deleteAllByRoute(routeEntity);
         routeDayRepository.flush();
 
         routeEntity.updateWeekDays(dto.weekDays());
 
-        return routeMapper.toResponseDto(routeEntity);
+        return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
     }
 
     @Transactional
-    public ResponseRouteDto setRouteSchedules(String flightNumber, AddRouteScheduleRequestDto dto){
-        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
-        RouteEntity routeEntity = routeRepository.findByFlightNumber(normalizedFlightNumber).
-                orElseThrow(()->new RouteDoesNotExistException(flightNumber));
+    public RouteWithSchedulesDto setRouteSchedules(String flightNumber, AddRouteScheduleRequestDto dto){
+        RouteEntity routeEntity = getRouteEntity(flightNumber);
 
         routeScheduleRepository.deleteAllByRoute(routeEntity);
         routeScheduleRepository.flush();
 
         routeEntity.updateSchedules(dto.schedules());
 
-        return routeMapper.toResponseDto(routeEntity);
+        return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
     }
 
     @Transactional
     public RouteWithSchedulesDto getRouteWithSchedules(String flightNumber){
-        String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
-        RouteEntity routeEntity = routeRepository.findByFlightNumber(normalizedFlightNumber).
-                orElseThrow(()->new RouteDoesNotExistException(flightNumber));
 
+        RouteEntity routeEntity = getRouteEntity(flightNumber);
 
-        List<WeekDay> weekDays = new ArrayList<>();
+        List<DayOfWeek> weekDays = new ArrayList<>();
         for(RouteDayEntity routeDay : routeEntity.getRouteDays()){
             weekDays.add(routeDay.getWeekDay());
         }
@@ -226,7 +220,7 @@ public class RouteService {
             schedules.add(schedule.getDepartureLocalTime());
         }
 
-        return new RouteWithSchedulesDto(normalizedFlightNumber, weekDays, schedules);
+        return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), weekDays, schedules);
 
     }
 

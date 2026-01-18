@@ -1,8 +1,7 @@
 package com.falcon.booking.web.dto.route;
 
-import com.falcon.booking.domain.valueobject.WeekDay;
-
+import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.List;
+import java.util.Collection;
 
-public record RouteWithSchedulesDto(String flightNumber, List<WeekDay> weekDays, List<LocalTime> schedules){ }
+public record RouteWithSchedulesDto(String flightNumber, Collection<DayOfWeek> weekDays, Collection<LocalTime> schedules){ }

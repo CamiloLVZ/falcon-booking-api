@@ -1,7 +1,9 @@
 package com.falcon.booking.web.controller;
 
+import com.falcon.booking.domain.service.FlightService;
 import com.falcon.booking.domain.service.RouteService;
 import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
 import com.falcon.booking.web.dto.route.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -19,10 +21,12 @@ import java.util.List;
 public class RouteController {
 
     private final RouteService routeService;
+    private final FlightService flightService;
 
     @Autowired
-    public RouteController(RouteService routeService) {
+    public RouteController(RouteService routeService, FlightService flightService) {
         this.routeService = routeService;
+        this.flightService = flightService;
     }
 
     @GetMapping
@@ -70,7 +74,7 @@ public class RouteController {
     }
 
     @PutMapping("/{flightNumber}/days")
-    public ResponseEntity<ResponseRouteDto> setRouteDays(@PathVariable
+    public ResponseEntity<RouteWithSchedulesDto> setRouteDays(@PathVariable
                                                              @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                              String flightNumber,
                                                          @RequestBody AddRouteDaysRequestDto weekDays){
@@ -78,7 +82,7 @@ public class RouteController {
     }
 
     @PutMapping("/{flightNumber}/schedules")
-    public ResponseEntity<ResponseRouteDto> setRouteSchedules(@PathVariable
+    public ResponseEntity<RouteWithSchedulesDto> setRouteSchedules(@PathVariable
                                                          @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                          String flightNumber,
                                                               @RequestBody AddRouteScheduleRequestDto schedules){
@@ -91,4 +95,20 @@ public class RouteController {
                                                                        String flightNumber){
         return ResponseEntity.ok(routeService.getRouteWithSchedules(flightNumber));
     }
+
+
+    @PostMapping("/{flightNumber}/generateFlights")
+    public ResponseEntity<ResponseFlightsGeneratedDto> generateFlightsForRoute(@PathVariable
+                                                                                   @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
+                                                                                   String flightNumber){
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateFlightsForRoute(flightNumber));
+    }
+
+    @PostMapping("/generateFlights")
+    public ResponseEntity<List<ResponseFlightsGeneratedDto>> generateFlightForAllRoutes(){
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateFlightsForAllRoutes());
+    }
+
+
 }

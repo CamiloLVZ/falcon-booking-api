@@ -1,10 +1,11 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.domain.valueobject.WeekDay;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.DayOfWeek;
 
 @Entity
 @Table(name = "route_day", uniqueConstraints = {
@@ -18,7 +19,7 @@ import lombok.Setter;
 @Setter
 public class RouteDayEntity {
 
-    public RouteDayEntity(RouteEntity route, WeekDay weekDay) {
+    public RouteDayEntity(RouteEntity route, DayOfWeek weekDay) {
         this.route = route;
         this.weekDay = weekDay;
     }
@@ -33,6 +34,6 @@ public class RouteDayEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name="week_day",nullable = false, length = 10)
-    private WeekDay weekDay;
+    private DayOfWeek weekDay;
 
 }

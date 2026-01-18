@@ -5,6 +5,7 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExist
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
+import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
 import com.falcon.booking.domain.exception.Route.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -136,4 +137,11 @@ public class RestExceptionHandler {
         Error error = new Error("data-format-invalid", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(FlightDoesNotExistException.class)
+    public ResponseEntity<Error> handleException(FlightDoesNotExistException exception) {
+        Error error = new Error("flight-does-not-exist", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
 }
