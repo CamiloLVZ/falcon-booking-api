@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 public record CreateFlightDto(
                                 @NotBlank(message = "Flight number can not be blank")
@@ -14,5 +14,5 @@ public record CreateFlightDto(
 
                                 @NotNull(message = "departureDateTime is required")
                                 @Future(message = "departureDateTime must be future")
-                                OffsetDateTime departureDateTime) {
+                                LocalDateTime departureDateTime) {
 }

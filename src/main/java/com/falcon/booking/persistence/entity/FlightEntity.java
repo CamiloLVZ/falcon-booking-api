@@ -1,5 +1,6 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.domain.exception.Flight.FlightInvalidStatusChangeException;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,6 +18,13 @@ import java.util.Objects;
 @Getter
 @Setter
 public class FlightEntity {
+
+    public FlightEntity(RouteEntity route, AirplaneTypeEntity airplaneType, OffsetDateTime departureDateTime, FlightStatus status) {
+        this.route = route;
+        this.airplaneType = airplaneType;
+        this.departureDateTime = departureDateTime;
+        this.status = status;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,11 +45,48 @@ public class FlightEntity {
     @Column(nullable = false)
     FlightStatus status;
 
-    public FlightEntity(RouteEntity route, AirplaneTypeEntity airplaneType, OffsetDateTime departureDateTime, FlightStatus status) {
-        this.route = route;
-        this.airplaneType = airplaneType;
-        this.departureDateTime = departureDateTime;
-        this.status = status;
+    public boolean isScheduled() {
+        return this.status.equals(FlightStatus.SCHEDULED);
+    }
+
+    public boolean isInBoarding() {
+        return this.status.equals(FlightStatus.BOARDING);
+    }
+
+    public boolean isCompleted() {
+        return this.status.equals(FlightStatus.COMPLETED);
+    }
+
+    public boolean isCanceled() {
+        return this.status.equals(FlightStatus.CANCELED);
+    }
+
+    public void cancel(){
+        if(this.status.equals(FlightStatus.BOARDING))
+            throw new FlightInvalidStatusChangeException(FlightStatus.BOARDING, FlightStatus.CANCELED);
+
+        if(this.status.equals(FlightStatus.COMPLETED))
+            throw new FlightInvalidStatusChangeException(FlightStatus.COMPLETED, FlightStatus.CANCELED);
+
+        this.status = FlightStatus.CANCELED;
+    }
+
+    public void startBoarding(){
+        if(this.status.equals(FlightStatus.COMPLETED))
+            throw new FlightInvalidStatusChangeException(FlightStatus.COMPLETED, FlightStatus.BOARDING);
+
+        if(this.status.equals(FlightStatus.CANCELED))
+            throw new FlightInvalidStatusChangeException(FlightStatus.CANCELED, FlightStatus.BOARDING);
+
+        this.status = FlightStatus.BOARDING;
+    }
+
+    public void markAsComplete(){
+        if(this.status.equals(FlightStatus.CANCELED))
+            throw new FlightInvalidStatusChangeException(FlightStatus.CANCELED, FlightStatus.COMPLETED);
+        if(this.status.equals(FlightStatus.SCHEDULED))
+            throw new FlightInvalidStatusChangeException(FlightStatus.SCHEDULED, FlightStatus.COMPLETED);
+        this.status = FlightStatus.COMPLETED;
     }
 
     @Override

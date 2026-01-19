@@ -3,9 +3,11 @@ package com.falcon.booking.web.controller;
 import com.falcon.booking.domain.service.FlightService;
 import com.falcon.booking.domain.service.RouteService;
 import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.web.dto.flight.ResponseFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
 import com.falcon.booking.web.dto.route.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Validated
@@ -103,5 +106,15 @@ public class RouteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateFlightsForAllRoutes());
     }
 
+    @GetMapping("/{flightNumber}/flights")
+    public ResponseEntity<List<ResponseFlightDto>> getAllFlightsByRouteAndDates(@Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
+                                                                                @NotNull @PathVariable String flightNumber,
+                                                                                @RequestParam @NotNull(message = "dateFrom is required")
+                                                                                LocalDate dateFrom,
+                                                                                @RequestParam @NotNull(message = "dateTo is required")
+                                                                                LocalDate dateTo
+    ){
+        return ResponseEntity.ok(flightService.getAllFlightsByRouteAndDates(flightNumber, dateFrom, dateTo));
+    }
 
 }

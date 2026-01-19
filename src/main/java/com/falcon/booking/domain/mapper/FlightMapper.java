@@ -7,6 +7,8 @@ import com.falcon.booking.web.dto.flight.ResponseFlightDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +25,14 @@ public class FlightMapper {
     public ResponseFlightDto toDto(FlightEntity flightEntity) {
 
         AirplaneTypeInFlightDto airplaneTypeDto = airplaneTypeMapper.toInFlightDto(flightEntity.getAirplaneType());
+        ZoneId timezone = ZoneId.of(flightEntity.getRoute().getAirportOrigin().getTimezone());
+        LocalDateTime localDepartureDateTime = flightEntity.getDepartureDateTime().atZoneSameInstant(timezone).toLocalDateTime();
+
 
         return new ResponseFlightDto(flightEntity.getId(), flightEntity.getRoute().getFlightNumber(),
                 flightEntity.getRoute().getAirportOrigin().getIataCode(),
                 flightEntity.getRoute().getAirportDestination().getIataCode(),flightEntity.getDepartureDateTime(),
-                airplaneTypeDto, flightEntity.getStatus());
+                localDepartureDateTime, airplaneTypeDto, flightEntity.getStatus());
     }
     public List<ResponseFlightDto> toDto (List<FlightEntity> entities){
         List<ResponseFlightDto> dtoList = new ArrayList<>();

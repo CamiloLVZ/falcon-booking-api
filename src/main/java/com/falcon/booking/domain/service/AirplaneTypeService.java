@@ -31,9 +31,13 @@ public class AirplaneTypeService {
         this.airplaneTypeMapper = airplaneTypeMapper;
     }
 
-    public ResponseAirplaneTypeDto getAirplaneTypeById(Long id) {
-        AirplaneTypeEntity airplaneTypeEntity = airplaneTypeRepository.findById(id).
+    public AirplaneTypeEntity getAirplaneTypeEntity(Long id){
+       return airplaneTypeRepository.findById(id).
                 orElseThrow(() -> new AirplaneTypeDoesNotExistException(id));
+    }
+
+    public ResponseAirplaneTypeDto getAirplaneTypeById(Long id) {
+        AirplaneTypeEntity airplaneTypeEntity = getAirplaneTypeEntity(id);
         return airplaneTypeMapper.toResponseDto(airplaneTypeEntity);
     }
 

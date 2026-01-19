@@ -5,6 +5,8 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExist
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
+import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
+import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
 import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
 import com.falcon.booking.domain.exception.Route.*;
 import jakarta.validation.ConstraintViolationException;
@@ -12,8 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +36,19 @@ public class RestExceptionHandler {
 
         return ResponseEntity.badRequest().body(errors);
     }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Error> handleException(MissingServletRequestParameterException exception){
+        Error error = new Error("required-parameter-not-found", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Error> handleException(MethodArgumentTypeMismatchException exception){
+        Error error = new Error("invalid-argument-type", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Error> handleValidationExceptions(ConstraintViolationException exception) {
@@ -144,4 +161,28 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(RouteNotActiveException.class)
+    public ResponseEntity<Error> handleException(RouteNotActiveException exception) {
+        Error error = new Error("route-not-active", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(DateToBeforeDateFromException.class)
+    public ResponseEntity<Error> handleException(DateToBeforeDateFromException exception){
+        Error error = new Error("date-to-before-date-from", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(FlightAlreadyExistsException.class)
+    public ResponseEntity<Error> handleException(FlightAlreadyExistsException exception){
+        Error error = new Error("flight-already-exists", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
+    @ExceptionHandler(FlightCanNotChangeAirplaneTypeException.class)
+    public ResponseEntity<Error> handleException(    FlightCanNotChangeAirplaneTypeException exception){
+        Error error = new Error("flight-can-not-change-airplane-type", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }
