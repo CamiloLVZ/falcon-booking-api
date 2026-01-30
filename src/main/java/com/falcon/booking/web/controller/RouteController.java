@@ -98,12 +98,12 @@ public class RouteController {
                                                                                    @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                                                    String flightNumber){
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateFlightsForRoute(flightNumber));
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateAllFlightsForRoute(flightNumber));
     }
 
     @PostMapping("/generateFlights")
     public ResponseEntity<List<ResponseFlightsGeneratedDto>> generateFlightForAllRoutes(){
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateFlightsForAllRoutes());
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateAllFlightsForAllRoutes());
     }
 
     @GetMapping("/{flightNumber}/flights")
