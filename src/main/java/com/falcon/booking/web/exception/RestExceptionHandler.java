@@ -8,6 +8,9 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvali
 import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
 import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
+import com.falcon.booking.domain.exception.Passenger.PassengerAlreadyExistsException;
+import com.falcon.booking.domain.exception.Passenger.PassengerDoesNotExistException;
+import com.falcon.booking.domain.exception.Passenger.PassengerHasDifferentPassportNumberException;
 import com.falcon.booking.domain.exception.Route.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -181,8 +184,27 @@ public class RestExceptionHandler {
 
 
     @ExceptionHandler(FlightCanNotChangeAirplaneTypeException.class)
-    public ResponseEntity<Error> handleException(    FlightCanNotChangeAirplaneTypeException exception){
+    public ResponseEntity<Error> handleException(FlightCanNotChangeAirplaneTypeException exception){
         Error error = new Error("flight-can-not-change-airplane-type", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(PassengerAlreadyExistsException.class)
+    public ResponseEntity<Error> handleException(PassengerAlreadyExistsException exception){
+        Error error = new Error("passenger-already-exists", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(PassengerDoesNotExistException.class)
+    public ResponseEntity<Error> handleException(PassengerDoesNotExistException exception){
+        Error error = new Error("passenger-does-not-exist", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(PassengerHasDifferentPassportNumberException.class)
+    public ResponseEntity<Error> handleException(PassengerHasDifferentPassportNumberException exception){
+        Error error = new Error("passenger-has-different-passport-number", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
 }

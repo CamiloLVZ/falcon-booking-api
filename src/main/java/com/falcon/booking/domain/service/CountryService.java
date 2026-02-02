@@ -22,11 +22,15 @@ public class CountryService {
         this.countryMapper = countryMapper;
     }
 
-    public CountryDto getCountryByIsoCode(String isoCode) {
+    public CountryEntity getCountryEntityByIsoCode(String isoCode) {
         String isoCodeNormalized= StringNormalizer.normalize(isoCode);
-        CountryEntity countryEntity = countryRepository.findByIsoCode(isoCodeNormalized).
+        return countryRepository.findByIsoCode(isoCodeNormalized).
                 orElseThrow( ()->new CountryDoesNotExistException(isoCode) );
+    }
 
+    public CountryDto getCountryByIsoCode(String isoCode) {
+
+        CountryEntity countryEntity = getCountryEntityByIsoCode(isoCode);
         return countryMapper.toDto(countryEntity);
     }
 
