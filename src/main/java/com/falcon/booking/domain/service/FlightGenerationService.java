@@ -109,7 +109,6 @@ public class FlightGenerationService {
 
         List<FlightEntity> flightEntities = new ArrayList<>();
         for (OffsetDateTime departureDateTime : departureTimes) {
-            System.out.println(departureDateTime);
             if (!existingDepartures.contains(departureDateTime)) {
                 flightEntities.add(new FlightEntity(
                         route,
