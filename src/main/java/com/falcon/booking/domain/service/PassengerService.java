@@ -49,6 +49,11 @@ public class PassengerService {
 
     @Transactional
     public ResponsePassengerDto addPassenger(AddPassengerDto addPassengerDto){
+        return passengerMapper.toResponseDto(createOrGetPassenger(addPassengerDto));
+    }
+
+    @Transactional
+    public PassengerEntity createOrGetPassenger(AddPassengerDto addPassengerDto){
         PassengerEntity newPassengerEntity = passengerMapper.toEntity(addPassengerDto);
         CountryEntity country = countryService.getCountryEntityByIsoCode(addPassengerDto.nationalityIsoCode());
         newPassengerEntity.setCountryNationality(country);
@@ -64,9 +69,9 @@ public class PassengerService {
             oldPassengerEntity.setLastName(newPassengerEntity.getLastName());
             oldPassengerEntity.setGender(newPassengerEntity.getGender());
             oldPassengerEntity.setDateOfBirth(newPassengerEntity.getDateOfBirth());
-            return passengerMapper.toResponseDto(passengerRepository.save(oldPassengerEntity));
+            return passengerRepository.save(oldPassengerEntity);
         }else {
-            return passengerMapper.toResponseDto(passengerRepository.save(newPassengerEntity));
+            return passengerRepository.save(newPassengerEntity);
         }
 
     }
