@@ -5,10 +5,7 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExist
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
-import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
-import com.falcon.booking.domain.exception.Flight.FlightCanNotBeReservedException;
-import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
-import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
+import com.falcon.booking.domain.exception.Flight.*;
 import com.falcon.booking.domain.exception.Passenger.PassengerAlreadyExistsException;
 import com.falcon.booking.domain.exception.Passenger.PassengerDoesNotExistException;
 import com.falcon.booking.domain.exception.Passenger.PassengerHasDifferentPassportNumberException;
@@ -196,6 +193,12 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(OutOfFlightCheckInTimeException.class)
+    public ResponseEntity<Error> handleException(OutOfFlightCheckInTimeException exception){
+        Error error = new Error("out-of-check-in-time", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(PassengerAlreadyExistsException.class)
     public ResponseEntity<Error> handleException(PassengerAlreadyExistsException exception){
         Error error = new Error("passenger-already-exists", exception.getMessage());
@@ -248,5 +251,17 @@ public class RestExceptionHandler {
     public ResponseEntity<Error> handleException(PassengerNotFoundInReservationException exception){
         Error error = new Error("passenger-not-found-in-reservation", exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(InvalidCheckInPassengerReservationException.class)
+    public ResponseEntity<Error> handleException(InvalidCheckInPassengerReservationException exception){
+        Error error = new Error("invalid-status-for-check-in", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidBoardingPassengerReservationException.class)
+    public ResponseEntity<Error> handleException(InvalidBoardingPassengerReservationException exception){
+        Error error = new Error("invalid-status-for-boarding", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }

@@ -24,6 +24,8 @@ public interface FlightRepository extends JpaRepository<FlightEntity, Long>, Jpa
     @Query("SELECT f FROM FlightEntity f WHERE f.status = :status AND f.departureDateTime <= :now")
     List<FlightEntity> findAllFlightsToComplete(@Param("status")FlightStatus status, @Param("now") OffsetDateTime now);
 
+    List<FlightEntity> findAllByStatusNotAndStatusNot(FlightStatus status, FlightStatus status2);
+
     @Query("SELECT f.departureDateTime FROM FlightEntity f " +
             "WHERE f.route = :route " +
             "AND f.departureDateTime IN :departureTimes")

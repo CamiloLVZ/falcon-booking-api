@@ -177,5 +177,27 @@ public class ReservationService {
         return reservationMapper.toResponseDto(reservationEntity);
     }
 
+    @Transactional
+    public ResponsePassengerReservationDto checkInByIdentificationNumber(String reservationNumber, String identificationNumber, String countryIsoCode) {
+        PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
+        return passengerReservationMapper.toResponseDto(checkIn(reservationNumber, passenger));
+    }
+
+    public PassengerReservationEntity checkIn(String reservationNumber, PassengerEntity passenger) {
+        ReservationEntity reservationEntity = getReservationEntityByNumber(reservationNumber);
+        return reservationEntity.checkInPassenger(passenger);
+    }
+
+    @Transactional
+    public ResponsePassengerReservationDto boardByIdentificationNumber(String reservationNumber, String identificationNumber, String countryIsoCode) {
+        PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
+        return passengerReservationMapper.toResponseDto(board(reservationNumber, passenger));
+    }
+
+    public PassengerReservationEntity board(String reservationNumber, PassengerEntity passenger) {
+        ReservationEntity reservationEntity = getReservationEntityByNumber(reservationNumber);
+        return reservationEntity.board(passenger);
+    }
+
 }
 

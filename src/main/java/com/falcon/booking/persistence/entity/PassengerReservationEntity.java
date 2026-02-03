@@ -1,6 +1,10 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.domain.exception.Flight.OutOfFlightCheckInTimeException;
+import com.falcon.booking.domain.exception.Reservation.InvalidBoardingPassengerReservationException;
+import com.falcon.booking.domain.exception.Reservation.InvalidCheckInPassengerReservationException;
 import com.falcon.booking.domain.exception.Reservation.ReservationInvalidStatusChangeException;
+import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.PassengerReservationStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -63,23 +67,24 @@ public class PassengerReservationEntity {
         this.status = PassengerReservationStatus.CANCELED;
     }
 
-
-    public void markAsCheckedIn(){
-        if(this.status == PassengerReservationStatus.CHECKED_IN) return;
-
+    public void checkIn() {
         if(!this.status.equals(PassengerReservationStatus.RESERVED)){
-            throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.CHECKED_IN);
+            throw new InvalidCheckInPassengerReservationException(this.status);
         }
-        this.status = PassengerReservationStatus.CHECKED_IN;
+        if(!this.flight.getStatus().equals(FlightStatus.BOARDING)){
+            throw new OutOfFlightCheckInTimeException(this.flight.getId());
+        }
+            this.status = PassengerReservationStatus.CHECKED_IN;
     }
 
-    public void markAsBoarded(){
-        if(this.status == PassengerReservationStatus.BOARDED) return;
-
+    public void board(){
         if(!this.status.equals(PassengerReservationStatus.CHECKED_IN)){
-            throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.BOARDED);
+            throw new InvalidBoardingPassengerReservationException(this.status);
         }
-        this.status = PassengerReservationStatus.BOARDED;
+        if(!this.flight.getStatus().equals(FlightStatus.BOARDING)){
+            throw new OutOfFlightCheckInTimeException(this.flight.getId());
+        }
+        this.status = PassengerReservationStatus.CHECKED_IN;
     }
 
     @Override

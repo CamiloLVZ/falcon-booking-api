@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -45,8 +46,15 @@ public class FlightEntity {
     @Column(nullable = false)
     FlightStatus status;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "flight", orphanRemoval = true, cascade = CascadeType.ALL)
+    public List<PassengerReservationEntity> reservations;
+
     public boolean isScheduled() {
         return this.status.equals(FlightStatus.SCHEDULED);
+    }
+
+    public boolean isCheckInAvailable() {
+        return this.status.equals(FlightStatus.CHECK_IN_AVAILABLE);
     }
 
     public boolean isInBoarding() {
@@ -61,37 +69,46 @@ public class FlightEntity {
         return this.status.equals(FlightStatus.CANCELED);
     }
 
-    public void cancel(){
-        if(this.status.equals(FlightStatus.BOARDING))
-            throw new FlightInvalidStatusChangeException(FlightStatus.BOARDING, FlightStatus.CANCELED);
+    public boolean canBeReserved() {
+        return (this.isScheduled() || this.isCheckInAvailable());
+    }
 
-        if(this.status.equals(FlightStatus.COMPLETED))
-            throw new FlightInvalidStatusChangeException(FlightStatus.COMPLETED, FlightStatus.CANCELED);
+    public void cancel(){
+        if (this.isCanceled() ) return;
+
+        if(this.isInBoarding() || this.isCompleted())
+            throw new FlightInvalidStatusChangeException(this.status, FlightStatus.CANCELED);
 
         this.status = FlightStatus.CANCELED;
     }
 
-    public void startBoarding(){
-        if(this.status.equals(FlightStatus.COMPLETED))
-            throw new FlightInvalidStatusChangeException(FlightStatus.COMPLETED, FlightStatus.BOARDING);
+    public void startCheckIn(){
+        if (this.isCheckInAvailable() ) return;
 
-        if(this.status.equals(FlightStatus.CANCELED))
-            throw new FlightInvalidStatusChangeException(FlightStatus.CANCELED, FlightStatus.BOARDING);
+        if(!this.isScheduled())
+            throw new FlightInvalidStatusChangeException(this.status, FlightStatus.CHECK_IN_AVAILABLE);
+
+        this.status = FlightStatus.CHECK_IN_AVAILABLE;
+    }
+
+    public void startBoarding(){
+        if (this.isInBoarding() ) return;
+
+        if(!this.isCheckInAvailable())
+            throw new FlightInvalidStatusChangeException(this.status, FlightStatus.BOARDING);
 
         this.status = FlightStatus.BOARDING;
     }
 
-    public void markAsComplete(){
-        if(this.status.equals(FlightStatus.CANCELED))
-            throw new FlightInvalidStatusChangeException(FlightStatus.CANCELED, FlightStatus.COMPLETED);
-        if(this.status.equals(FlightStatus.SCHEDULED))
-            throw new FlightInvalidStatusChangeException(FlightStatus.SCHEDULED, FlightStatus.COMPLETED);
+    public void markAsCompleted(){
+        if (this.isCompleted() ) return;
+
+        if(!this.isInBoarding())
+            throw new FlightInvalidStatusChangeException(this.status, FlightStatus.COMPLETED);
+
         this.status = FlightStatus.COMPLETED;
     }
 
-    public boolean canBeReserved() {
-        return this.status.equals(FlightStatus.SCHEDULED);
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -105,6 +122,5 @@ public class FlightEntity {
     public int hashCode() {
         return Objects.hashCode(id);
     }
-
 
 }

@@ -33,9 +33,14 @@ public class FlightService {
 
     @Value("${app.generation.horizon-days}")
     int flightGenerationDaysHorizon;
-
-    @Value("${app.flight.boarding.window-hours}")
-    int hoursBeforeFlightStartsBoarding;
+    @Value("${app.flight.check-in.hours-before-to-start}")
+    int checkInHoursBeforeToStart;
+    @Value("${app.flight.check-in.hours-before-to-close}")
+    int checkInHoursBeforeToClose;
+    @Value("${app.flight.boarding.minutes-before-to-start}")
+    int boardingMinutesBeforeToStart;
+    @Value("${app.flight.boarding.minutes-before-to-close}")
+    int boardingMinutesBeforeToClose;
 
     private static final Logger logger = LoggerFactory.getLogger(FlightService.class);
 
@@ -165,19 +170,35 @@ public class FlightService {
         return flightMapper.toDto(flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, offsetDateTimeFrom, offsetDateTimeTo));
     }
 
+    public void updateFlightStatus(FlightEntity flight, OffsetDateTime now){
+        OffsetDateTime departureDateTime = flight.getDepartureDateTime();
+        OffsetDateTime checkInStart = departureDateTime.minusHours(checkInHoursBeforeToStart);
+        OffsetDateTime checkInEnd = departureDateTime.minusHours(checkInHoursBeforeToClose);
+        OffsetDateTime boardingStart = departureDateTime.minusMinutes(boardingMinutesBeforeToStart);
+        OffsetDateTime boardingEnd = departureDateTime.minusMinutes(boardingMinutesBeforeToClose);
+
+        boolean isInCheckInRange = !now.isBefore(checkInStart) && !now.isAfter(checkInEnd);
+        boolean isInBoardingRange = !now.isBefore(boardingStart) && !now.isAfter(boardingEnd);
+
+        if(now.isAfter(departureDateTime)) {
+            flight.markAsCompleted();
+            return;
+        }
+        if(isInCheckInRange && !flight.isCheckInAvailable()) {
+            flight.startCheckIn();
+            return;
+        }
+        if (isInBoardingRange && !flight.isInBoarding())
+            flight.startBoarding();
+    }
+
     @Transactional
     public void updateFlightsStatus(){
-        OffsetDateTime now = OffsetDateTime.now();
-        OffsetDateTime latestDepartureForBoarding = now.plusHours(hoursBeforeFlightStartsBoarding);
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        List<FlightEntity> flightsToUpdate = flightRepository.findAllByStatusNotAndStatusNot(FlightStatus.CANCELED, FlightStatus.COMPLETED);
 
-        List<FlightEntity> flightsToStartBoarding = flightRepository.findAllFlightsToStartBoarding(FlightStatus.SCHEDULED, latestDepartureForBoarding);
-        List<FlightEntity> flightsToComplete = flightRepository.findAllFlightsToComplete(FlightStatus.BOARDING, now);
-
-        for(FlightEntity flight : flightsToStartBoarding){
-            flight.startBoarding();
-        }
-        for(FlightEntity flight : flightsToComplete){
-            flight.markAsComplete();
+        for(FlightEntity flight : flightsToUpdate){
+            updateFlightStatus(flight, now);
         }
     }
 

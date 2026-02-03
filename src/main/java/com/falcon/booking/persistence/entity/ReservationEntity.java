@@ -57,6 +57,18 @@ public class ReservationEntity {
         this.number = number.trim().toUpperCase();
     }
 
+    PassengerReservationEntity findPassengerReservation(PassengerEntity passenger) {
+        boolean passengerFound = false;
+        for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
+            if(passengerReservation.getPassenger().equals(passenger)){
+                passengerFound = true;
+                return passengerReservation;
+            }
+        }
+        throw new PassengerNotFoundInReservationException(passenger.getIdentificationNumber(),passenger.getCountryNationality().getIsoCode() , this.number );
+
+    }
+
     public void cancel(){
         this.status = ReservationStatus.CANCELED;
         for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
@@ -65,19 +77,11 @@ public class ReservationEntity {
     }
 
     public void cancelPassenger(PassengerEntity passenger){
-        boolean passengerFound = false;
-        for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
-            if(passengerReservation.getPassenger().equals(passenger)){
-                passengerFound = true;
-                passengerReservation.cancel();
-            }
-        }
+        PassengerReservationEntity passengerReservation = findPassengerReservation(passenger);
+        passengerReservation.cancel();
         if(this.allPassengerCanceled()){
             this.status = ReservationStatus.CANCELED;
         }
-
-        if(!passengerFound)
-            throw new PassengerNotFoundInReservationException(passenger.getIdentificationNumber(),passenger.getCountryNationality().getIsoCode() , this.number );
     }
 
     public boolean allPassengerCanceled(){
@@ -87,6 +91,18 @@ public class ReservationEntity {
             }
         }
         return true;
+    }
+
+    public PassengerReservationEntity checkInPassenger(PassengerEntity passenger) {
+        PassengerReservationEntity passengerReservation = findPassengerReservation(passenger);
+        passengerReservation.checkIn();
+        return passengerReservation;
+    }
+
+    public PassengerReservationEntity board(PassengerEntity passenger) {
+        PassengerReservationEntity passengerReservation = findPassengerReservation(passenger);
+        passengerReservation.board();
+        return passengerReservation;
     }
 
     @Override
@@ -101,4 +117,6 @@ public class ReservationEntity {
     public int hashCode() {
         return Objects.hashCode(number);
     }
+
+
 }
