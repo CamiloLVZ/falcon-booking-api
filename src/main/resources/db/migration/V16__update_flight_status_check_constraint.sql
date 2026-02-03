@@ -1,0 +1,5 @@
+ALTER TABLE flight
+DROP CONSTRAINT chk_flight_status;
+
+ALTER TABLE flight ADD CONSTRAINT chk_flight_status
+        CHECK (status IN ('SCHEDULED', 'CHECK_IN_AVAILABLE' , 'BOARDING', 'COMPLETED', 'CANCELED'));
