@@ -11,9 +11,9 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "passenger_reservation", uniqueConstraints = {
-        @UniqueConstraint(name="uk_passenger_reservation_passenger_reservation", columnNames = {"id_passenger", "id_reservation"}),
-        @UniqueConstraint(name = "uk_passenger_reservation_flight_seat_number", columnNames = {"id_flight", "seat_number"})
+        @UniqueConstraint(name = "uk_passenger_reservation_passenger_reservation", columnNames = {"id_passenger", "id_reservation"})
 })
+
 @NoArgsConstructor
 @Getter
 public class PassengerReservationEntity {
@@ -54,6 +54,16 @@ public class PassengerReservationEntity {
         this.seatNumber = seatNumber;
     }
 
+    public void cancel(){
+        if(this.status == PassengerReservationStatus.CANCELED) return;
+
+        if(!(this.status.equals(PassengerReservationStatus.RESERVED) || this.status.equals(PassengerReservationStatus.CHECKED_IN))){
+            throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.CANCELED);
+        }
+        this.status = PassengerReservationStatus.CANCELED;
+    }
+
+
     public void markAsCheckedIn(){
         if(this.status == PassengerReservationStatus.CHECKED_IN) return;
 
@@ -61,15 +71,6 @@ public class PassengerReservationEntity {
             throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.CHECKED_IN);
         }
         this.status = PassengerReservationStatus.CHECKED_IN;
-    }
-
-    public void markAsCanceled(){
-        if(this.status == PassengerReservationStatus.CANCELED) return;
-
-        if(!(this.status.equals(PassengerReservationStatus.RESERVED) || this.status.equals(PassengerReservationStatus.CHECKED_IN))){
-            throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.CANCELED);
-        }
-        this.status = PassengerReservationStatus.CANCELED;
     }
 
     public void markAsBoarded(){

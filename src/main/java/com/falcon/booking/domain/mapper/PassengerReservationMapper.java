@@ -18,7 +18,7 @@ public class PassengerReservationMapper {
 
 
     public ResponsePassengerReservationDto toResponseDto(PassengerReservationEntity entity) {
-        return new ResponsePassengerReservationDto(passengerMapper.toResponseDto(entity.getPassenger()), entity.getSeatNumber());
+        return new ResponsePassengerReservationDto(passengerMapper.toResponseDto(entity.getPassenger()), entity.getSeatNumber(), entity.getStatus());
     }
 
     public List<ResponsePassengerReservationDto> toResponseDto(List<PassengerReservationEntity> entities) {

@@ -1,11 +1,14 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.domain.exception.Reservation.PassengerNotFoundInReservationException;
+import com.falcon.booking.domain.valueobject.PassengerReservationStatus;
 import com.falcon.booking.domain.valueobject.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -43,14 +46,8 @@ public class ReservationEntity {
     @Column(nullable = false)
     private ReservationStatus status;
 
-
-    public void markAsReserved(){
-        this.status = ReservationStatus.RESERVED;
-    }
-
-    public void markAsCanceled(){
-        this.status = ReservationStatus.CANCELED;
-    }
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PassengerReservationEntity> passengerReservations;
 
     public void setContactEmail(String contactEmail) {
         this.contactEmail = contactEmail.trim().toLowerCase();
@@ -58,6 +55,38 @@ public class ReservationEntity {
 
     private void setNumber(String number) {
         this.number = number.trim().toUpperCase();
+    }
+
+    public void cancel(){
+        this.status = ReservationStatus.CANCELED;
+        for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
+            passengerReservation.cancel();
+        }
+    }
+
+    public void cancelPassenger(PassengerEntity passenger){
+        boolean passengerFound = false;
+        for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
+            if(passengerReservation.getPassenger().equals(passenger)){
+                passengerFound = true;
+                passengerReservation.cancel();
+            }
+        }
+        if(this.allPassengerCanceled()){
+            this.status = ReservationStatus.CANCELED;
+        }
+
+        if(!passengerFound)
+            throw new PassengerNotFoundInReservationException(passenger.getIdentificationNumber(),passenger.getCountryNationality().getIsoCode() , this.number );
+    }
+
+    public boolean allPassengerCanceled(){
+        for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
+            if(!passengerReservation.getStatus().equals(PassengerReservationStatus.CANCELED)){
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

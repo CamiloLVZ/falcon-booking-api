@@ -12,10 +12,7 @@ import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
 import com.falcon.booking.domain.exception.Passenger.PassengerAlreadyExistsException;
 import com.falcon.booking.domain.exception.Passenger.PassengerDoesNotExistException;
 import com.falcon.booking.domain.exception.Passenger.PassengerHasDifferentPassportNumberException;
-import com.falcon.booking.domain.exception.Reservation.DuplicateSeatNumberInReservationException;
-import com.falcon.booking.domain.exception.Reservation.ReservationMustHavePassengersException;
-import com.falcon.booking.domain.exception.Reservation.SeatNumberAlreadyTakenException;
-import com.falcon.booking.domain.exception.Reservation.SeatNumberOutOfRangeException;
+import com.falcon.booking.domain.exception.Reservation.*;
 import com.falcon.booking.domain.exception.Route.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -29,7 +26,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class RestExceptionHandler {
@@ -242,6 +238,15 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(ReservationDoesNotExistException.class)
+    public ResponseEntity<Error> handleException(ReservationDoesNotExistException exception){
+        Error error = new Error("reservation-does-not-exist", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
 
-
+    @ExceptionHandler(PassengerNotFoundInReservationException.class)
+    public ResponseEntity<Error> handleException(PassengerNotFoundInReservationException exception){
+        Error error = new Error("passenger-not-found-in-reservation", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
 }

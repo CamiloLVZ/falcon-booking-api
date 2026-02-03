@@ -1,8 +1,10 @@
 package com.falcon.booking.web.controller;
 
 import com.falcon.booking.domain.service.PassengerService;
+import com.falcon.booking.domain.service.ReservationService;
 import com.falcon.booking.web.dto.passenger.AddPassengerDto;
 import com.falcon.booking.web.dto.passenger.ResponsePassengerDto;
+import com.falcon.booking.web.dto.reservation.ResponseReservationDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,16 +14,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/passengers")
 @Validated
 public class PassengerController {
 
     private final PassengerService passengerService;
+    private final ReservationService reservationService;
 
     @Autowired
-    public PassengerController(PassengerService passengerService) {
+    public PassengerController(PassengerService passengerService, ReservationService reservationService) {
         this.passengerService = passengerService;
+        this.reservationService = reservationService;
     }
 
     @GetMapping("/{id}")
@@ -38,6 +44,12 @@ public class PassengerController {
     @GetMapping("/passport/{passportNumber}")
     public ResponseEntity<ResponsePassengerDto> getPassengerByPassportNumber(@PathVariable("passportNumber") String passportNumber) {
         return ResponseEntity.ok(passengerService.getPassengerByPassportNumber(passportNumber));
+    }
+
+    @GetMapping("/reservations")
+    public ResponseEntity<List<ResponseReservationDto>> getAllReservationByPassenger(@RequestParam @NotBlank String identificationNumber,
+                                                                                  @RequestParam @NotBlank @Size(min = 2, max = 2) String countryIsoCode) {
+        return ResponseEntity.ok(reservationService.getAllReservationsByPassengerIdentificationNumber(identificationNumber, countryIsoCode));
     }
 
     @PostMapping
