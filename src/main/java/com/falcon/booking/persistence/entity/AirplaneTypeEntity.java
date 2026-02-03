@@ -40,6 +40,10 @@ public class AirplaneTypeEntity {
     @Column(nullable = false, length = 20)
     private AirplaneTypeStatus status;
 
+    public int getTotalSeats() {
+        return  this.economySeats + this.firstClassSeats;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -52,5 +56,6 @@ public class AirplaneTypeEntity {
     public int hashCode() {
         return Objects.hash(producer, model);
     }
+
 
 }

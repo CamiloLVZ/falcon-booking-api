@@ -89,6 +89,10 @@ public class FlightEntity {
         this.status = FlightStatus.COMPLETED;
     }
 
+    public boolean canBeReserved() {
+        return this.status.equals(FlightStatus.SCHEDULED);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -101,4 +105,6 @@ public class FlightEntity {
     public int hashCode() {
         return Objects.hashCode(id);
     }
+
+
 }

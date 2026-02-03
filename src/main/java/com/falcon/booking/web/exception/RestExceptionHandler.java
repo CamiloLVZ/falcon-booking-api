@@ -6,11 +6,16 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExist
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
 import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
+import com.falcon.booking.domain.exception.Flight.FlightCanNotBeReservedException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
 import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
 import com.falcon.booking.domain.exception.Passenger.PassengerAlreadyExistsException;
 import com.falcon.booking.domain.exception.Passenger.PassengerDoesNotExistException;
 import com.falcon.booking.domain.exception.Passenger.PassengerHasDifferentPassportNumberException;
+import com.falcon.booking.domain.exception.Reservation.DuplicateSeatNumberInReservationException;
+import com.falcon.booking.domain.exception.Reservation.ReservationMustHavePassengersException;
+import com.falcon.booking.domain.exception.Reservation.SeatNumberAlreadyTakenException;
+import com.falcon.booking.domain.exception.Reservation.SeatNumberOutOfRangeException;
 import com.falcon.booking.domain.exception.Route.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -189,6 +194,12 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(FlightCanNotBeReservedException.class)
+    public ResponseEntity<Error> handleException(FlightCanNotBeReservedException exception){
+        Error error = new Error("flight-not-able-to-make-reservations", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(PassengerAlreadyExistsException.class)
     public ResponseEntity<Error> handleException(PassengerAlreadyExistsException exception){
         Error error = new Error("passenger-already-exists", exception.getMessage());
@@ -206,5 +217,31 @@ public class RestExceptionHandler {
         Error error = new Error("passenger-has-different-passport-number", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(SeatNumberAlreadyTakenException.class)
+    public ResponseEntity<Error> handleException(SeatNumberAlreadyTakenException exception){
+        Error error = new Error("seat-is-already-taken", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(SeatNumberOutOfRangeException.class)
+    public ResponseEntity<Error> handleException(SeatNumberOutOfRangeException exception){
+        Error error = new Error("seat-number-out-of-range", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(DuplicateSeatNumberInReservationException.class)
+    public ResponseEntity<Error> handleException(DuplicateSeatNumberInReservationException exception){
+        Error error = new Error("seat-duplicated-in-request", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ReservationMustHavePassengersException.class)
+    public ResponseEntity<Error> handleException(ReservationMustHavePassengersException exception){
+        Error error = new Error("reservation-with-no-passengers", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
 
 }
