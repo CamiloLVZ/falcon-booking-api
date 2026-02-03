@@ -195,7 +195,13 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(OutOfFlightCheckInTimeException.class)
     public ResponseEntity<Error> handleException(OutOfFlightCheckInTimeException exception){
-        Error error = new Error("out-of-check-in-time", exception.getMessage());
+        Error error = new Error("flight-out-of-check-in-time", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(OutOfFlightBoardingTimeException.class)
+    public ResponseEntity<Error> handleException(OutOfFlightBoardingTimeException exception){
+        Error error = new Error("flight-out-of-boarding-time", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 

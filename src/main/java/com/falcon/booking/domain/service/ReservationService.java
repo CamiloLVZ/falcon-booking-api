@@ -11,6 +11,7 @@ import com.falcon.booking.domain.mapper.FlightMapper;
 import com.falcon.booking.domain.mapper.PassengerReservationMapper;
 import com.falcon.booking.domain.mapper.ReservationMapper;
 import com.falcon.booking.domain.valueobject.PassengerReservationStatus;
+import com.falcon.booking.domain.valueobject.ReservationStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
@@ -93,6 +94,15 @@ public class ReservationService {
     public List<ResponseReservationDto> getAllReservationsByPassengerIdentificationNumber(String identificationNumber, String countryIsoCode) {
         PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
         return reservationMapper.toResponseDto(getReservationsByPassenger(passenger));
+    }
+
+    public List<ReservationEntity> getAllReservationEntitiesActiveByFlight(FlightEntity flight) {
+        return reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED);
+    }
+
+    public List<ResponseReservationDto> getAllReservationsByFlight(Long flightId) {
+        FlightEntity flight = flightService.getFlightEntity(flightId);
+        return reservationMapper.toResponseDto(getAllReservationEntitiesActiveByFlight(flight));
     }
 
     @Transactional

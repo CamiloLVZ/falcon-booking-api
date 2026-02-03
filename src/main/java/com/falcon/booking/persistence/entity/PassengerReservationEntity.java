@@ -1,5 +1,6 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.domain.exception.Flight.OutOfFlightBoardingTimeException;
 import com.falcon.booking.domain.exception.Flight.OutOfFlightCheckInTimeException;
 import com.falcon.booking.domain.exception.Reservation.InvalidBoardingPassengerReservationException;
 import com.falcon.booking.domain.exception.Reservation.InvalidCheckInPassengerReservationException;
@@ -71,7 +72,7 @@ public class PassengerReservationEntity {
         if(!this.status.equals(PassengerReservationStatus.RESERVED)){
             throw new InvalidCheckInPassengerReservationException(this.status);
         }
-        if(!this.flight.getStatus().equals(FlightStatus.BOARDING)){
+        if(!this.flight.getStatus().equals(FlightStatus.CHECK_IN_AVAILABLE)){
             throw new OutOfFlightCheckInTimeException(this.flight.getId());
         }
             this.status = PassengerReservationStatus.CHECKED_IN;
@@ -82,9 +83,9 @@ public class PassengerReservationEntity {
             throw new InvalidBoardingPassengerReservationException(this.status);
         }
         if(!this.flight.getStatus().equals(FlightStatus.BOARDING)){
-            throw new OutOfFlightCheckInTimeException(this.flight.getId());
+            throw new OutOfFlightBoardingTimeException(this.flight.getId());
         }
-        this.status = PassengerReservationStatus.CHECKED_IN;
+        this.status = PassengerReservationStatus.BOARDED;
     }
 
     @Override

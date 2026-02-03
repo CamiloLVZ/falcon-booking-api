@@ -2,6 +2,7 @@ package com.falcon.booking.web.controller;
 
 import com.falcon.booking.domain.service.ReservationService;
 import com.falcon.booking.web.dto.reservation.AddReservationDto;
+import com.falcon.booking.web.dto.reservation.ResponsePassengerReservationDto;
 import com.falcon.booking.web.dto.reservation.ResponseReservationDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/reservations")
@@ -26,6 +29,11 @@ public class ReservationController {
     @GetMapping("/{reservationNumber}")
     public ResponseEntity<ResponseReservationDto> getReservation(@PathVariable String reservationNumber) {
         return ResponseEntity.ok(reservationService.getReservationByNumber(reservationNumber));
+    }
+
+    @GetMapping("/flight/{flightId}")
+    public ResponseEntity<List<ResponseReservationDto>> getAllReservationsByFlight(@PathVariable Long flightId) {
+        return ResponseEntity.ok(reservationService.getAllReservationsByFlight(flightId));
     }
 
     @PatchMapping("/{reservationNumber}/cancel")
@@ -48,6 +56,20 @@ public class ReservationController {
     @PostMapping
     public ResponseEntity<ResponseReservationDto> addReservation(@RequestBody @Valid AddReservationDto addReservationDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationService.addReservation(addReservationDto));
+    }
+
+    @PatchMapping("/{reservationNumber}/check-in")
+    public ResponseEntity<ResponsePassengerReservationDto> checkInPassenger(@PathVariable String reservationNumber,
+                                                                            @RequestParam @NotBlank String identificationNumber,
+                                                                            @RequestParam @NotBlank @Size(min = 2, max = 2) String countryIsoCode){
+        return ResponseEntity.ok(reservationService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
+    }
+
+    @PatchMapping("/{reservationNumber}/board")
+    public ResponseEntity<ResponsePassengerReservationDto> boardPassenger(@PathVariable String reservationNumber,
+                                                                            @RequestParam @NotBlank String identificationNumber,
+                                                                            @RequestParam @NotBlank @Size(min = 2, max = 2) String countryIsoCode){
+        return ResponseEntity.ok(reservationService.boardByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
     }
 
 }
