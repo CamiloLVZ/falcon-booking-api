@@ -11,6 +11,7 @@ CREATE TABLE reservation(
 );
 CREATE INDEX idx_reservation_id_flight ON reservation(id_flight);
 
+
 CREATE TABLE passenger_reservation(
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     id_passenger BIGINT NOT NULL,
