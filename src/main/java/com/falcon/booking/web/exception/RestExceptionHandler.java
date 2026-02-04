@@ -168,6 +168,12 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(RouteNotActivableException.class)
+    public ResponseEntity<Error> handleException(RouteNotActivableException exception) {
+        Error error = new Error("route-is-not-activable", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Error> handleException(HttpMessageNotReadableException exception) {
         Error error = new Error("data-format-invalid", exception.getMessage());

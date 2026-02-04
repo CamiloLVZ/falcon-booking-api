@@ -1,5 +1,7 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.domain.exception.Route.RouteInvalidStatusChangeException;
+import com.falcon.booking.domain.exception.Route.RouteNotActivableException;
 import com.falcon.booking.domain.valueobject.RouteStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -48,6 +50,73 @@ public class RouteEntity {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteScheduleEntity> routeSchedules;
+
+    public void activate(){
+        if(this.isActive())return;
+        checkIsActivable();
+        this.status = RouteStatus.ACTIVE;
+    }
+
+    private void checkIsActivable() {
+        List<String> errors = new ArrayList<>();
+        if (airportOrigin != null && airportDestination != null) {
+            if (airportOrigin.getId().equals(airportDestination.getId())) {
+                errors.add("Same airport origin and destination");
+            }
+        } else {
+            errors.add("Route must have origin and destination defined");
+        }
+
+        if (routeDays == null || routeDays.isEmpty()) {
+            errors.add("Route must have at least one operating weekday");
+        }
+
+        if (routeSchedules == null || routeSchedules.isEmpty()) {
+            errors.add("Route must have at least one operating schedule");
+        }
+
+        if (lengthMinutes == null || lengthMinutes <= 0) {
+            errors.add("Route duration must be greater than 0");
+        }
+
+        if (defaultAirplaneType == null) {
+            errors.add("Route must have default airplane type");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new RouteNotActivableException( String.join(", ", errors));
+        }
+    }
+
+    public void deactivate(){
+        if(this.isInactive())return;
+
+        if(!this.isActive())
+            throw new RouteInvalidStatusChangeException(this.status, RouteStatus.DRAFT);
+
+        this.status = RouteStatus.INACTIVE;
+    }
+
+    public void markAsDraft(){
+        if(this.isDraft())return;
+
+        if(this.status!=null)
+            throw new RouteInvalidStatusChangeException(this.status, RouteStatus.DRAFT);
+
+        this.status = RouteStatus.DRAFT;
+    }
+
+    public boolean isActive(){
+        return this.status.equals(RouteStatus.ACTIVE);
+    }
+
+    public boolean isInactive(){
+        return this.status.equals(RouteStatus.INACTIVE);
+    }
+
+    public boolean isDraft(){
+        return this.status.equals(RouteStatus.DRAFT);
+    }
 
     public void updateWeekDays(Collection<DayOfWeek> newWeekDays) {
         this.routeDays.clear();

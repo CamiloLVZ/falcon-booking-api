@@ -1,11 +1,8 @@
 package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
-import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
-import com.falcon.booking.domain.exception.AirportDoesNotExistException;
 import com.falcon.booking.domain.exception.Route.*;
 import com.falcon.booking.domain.mapper.RouteMapper;
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.*;
@@ -32,22 +29,22 @@ public class RouteService {
     private static final Logger logger = LoggerFactory.getLogger(RouteService.class);
 
     private final RouteRepository routeRepository;
-    private final AirportRepository airportRepository;
-    private final AirplaneTypeRepository airplaneTypeRepository;
     private final RouteDayRepository routeDayRepository;
     private final RouteScheduleRepository routeScheduleRepository;
     private final RouteMapper routeMapper;
     private final FlightGenerationService flightGenerationService;
+    private final AirplaneTypeService airplaneTypeService;
+    private final AirportService airportService;
 
     @Autowired
-    public RouteService(RouteRepository routeRepository, AirportRepository airportRepository, AirplaneTypeRepository airplaneTypeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper, FlightGenerationService flightGenerationService) {
+    public RouteService(RouteRepository routeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper, FlightGenerationService flightGenerationService, AirplaneTypeService airplaneTypeService, AirportService airportService) {
         this.routeRepository = routeRepository;
-        this.airportRepository = airportRepository;
-        this.airplaneTypeRepository = airplaneTypeRepository;
         this.routeDayRepository = routeDayRepository;
         this.routeScheduleRepository = routeScheduleRepository;
         this.routeMapper = routeMapper;
         this.flightGenerationService = flightGenerationService;
+        this.airplaneTypeService = airplaneTypeService;
+        this.airportService = airportService;
     }
 
     public RouteEntity getRouteEntity(String flightNumber){
@@ -89,28 +86,22 @@ public class RouteService {
 
         if(routeRepository.existsByFlightNumber(createRouteDto.flightNumber()))
             throw new RouteAlreadyExistsException(createRouteDto.flightNumber());
-
         if(createRouteDto.airportOriginIataCode().equals(createRouteDto.airportDestinationIataCode()))
             throw new RouteSameOriginAndDestinationException();
 
-        AirplaneTypeEntity airplaneType = airplaneTypeRepository.findById(createRouteDto.idDefaultAirplaneType())
-                .orElseThrow(()-> new AirplaneTypeDoesNotExistException(createRouteDto.idDefaultAirplaneType()));
-
-        if(!airplaneType.getStatus().equals(AirplaneTypeStatus.ACTIVE))
+        AirplaneTypeEntity airplaneType = airplaneTypeService.getAirplaneTypeEntity(createRouteDto.idDefaultAirplaneType());
+        if(!airplaneType.isActive())
             throw new RouteAirplaneTypeIsNotActiveException(createRouteDto.idDefaultAirplaneType());
 
-        AirportEntity airportOrigin = airportRepository.findByIataCode(createRouteDto.airportOriginIataCode())
-                .orElseThrow(()->new AirportDoesNotExistException(createRouteDto.airportOriginIataCode()));
-
-        AirportEntity airportDestination = airportRepository.findByIataCode(createRouteDto.airportDestinationIataCode())
-                .orElseThrow(()->new AirportDoesNotExistException(createRouteDto.airportDestinationIataCode()));
+        AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(createRouteDto.airportOriginIataCode());
+        AirportEntity airportDestination = airportService.getAirportEntityByIataCode(createRouteDto.airportDestinationIataCode());
 
         RouteEntity entityToSave = routeMapper.toEntity(createRouteDto);
 
         entityToSave.setAirportOrigin(airportOrigin);
         entityToSave.setAirportDestination(airportDestination);
         entityToSave.setDefaultAirplaneType(airplaneType);
-        entityToSave.setStatus(RouteStatus.DRAFT);
+        entityToSave.markAsDraft();
 
         return routeMapper.toResponseDto(routeRepository.save(entityToSave));
 
@@ -123,24 +114,21 @@ public class RouteService {
 
         boolean hasOnlyDraftModifications = updateRouteDto.airportDestinationIataCode()!=null||updateRouteDto.airportOriginIataCode()!=null;
 
-        if(hasOnlyDraftModifications && entityToUpdate.getStatus()!=RouteStatus.DRAFT)
-        {
+        if(hasOnlyDraftModifications && !entityToUpdate.isDraft()) {
             throw new RouteDraftInvalidUpdateException(flightNumber);
         }
 
         if (updateRouteDto.airportOriginIataCode() != null){
-            AirportEntity airportOrigin = airportRepository.findByIataCode(updateRouteDto.airportOriginIataCode())
-                    .orElseThrow(()->new AirportDoesNotExistException(updateRouteDto.airportOriginIataCode()));
+            AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(updateRouteDto.airportOriginIataCode());
             entityToUpdate.setAirportOrigin(airportOrigin);
         }
 
         if (updateRouteDto.airportDestinationIataCode() != null){
-            AirportEntity airportDestination = airportRepository.findByIataCode(updateRouteDto.airportDestinationIataCode())
-                            .orElseThrow(()->new AirportDoesNotExistException(updateRouteDto.airportDestinationIataCode()));
+            AirportEntity airportDestination = airportService.getAirportEntityByIataCode(updateRouteDto.airportDestinationIataCode());
            entityToUpdate.setAirportDestination(airportDestination);
         }
 
-        if(entityToUpdate.getAirportOrigin().getId().equals(entityToUpdate.getAirportDestination().getId())){
+        if(entityToUpdate.getAirportOrigin().equals(entityToUpdate.getAirportDestination())){
             throw new RouteSameOriginAndDestinationException();
         }
 
@@ -148,8 +136,7 @@ public class RouteService {
             entityToUpdate.setLengthMinutes(updateRouteDto.lengthMinutes());
 
         if (updateRouteDto.idDefaultAirplaneType() != null){
-            AirplaneTypeEntity airplaneType = airplaneTypeRepository.findById(updateRouteDto.idDefaultAirplaneType())
-                    .orElseThrow(()-> new AirplaneTypeDoesNotExistException(updateRouteDto.idDefaultAirplaneType()));
+            AirplaneTypeEntity airplaneType = airplaneTypeService.getAirplaneTypeEntity(updateRouteDto.idDefaultAirplaneType());
             entityToUpdate.setDefaultAirplaneType(airplaneType);
         }
 
@@ -159,17 +146,8 @@ public class RouteService {
     @Transactional
     public ResponseRouteDto activateRoute(String flightNumber) {
         RouteEntity routeEntity = getRouteEntity(flightNumber);
+        routeEntity.activate();
 
-        switch (routeEntity.getStatus()){
-            case ACTIVE: return routeMapper.toResponseDto(routeEntity);
-
-            case INACTIVE: routeEntity.setStatus(RouteStatus.ACTIVE);
-
-            case DRAFT: {
-                //TODO extra verification for DRAFT->ACTIVE
-                routeEntity.setStatus(RouteStatus.ACTIVE);
-            }
-        }
         try {
             ResponseFlightsGeneratedDto result = flightGenerationService.generateFlightsForRoute(routeEntity);
             logger.info("Route {} activated with {} flights generated", flightNumber, result.flightsGenerated());
@@ -185,15 +163,7 @@ public class RouteService {
     public ResponseRouteDto deactivateRoute(String flightNumber) {
 
         RouteEntity entityToUpdate = getRouteEntity(flightNumber);
-
-        switch (entityToUpdate.getStatus()){
-            case ACTIVE: { entityToUpdate.setStatus(RouteStatus.INACTIVE);
-                break;
-            }
-            case INACTIVE: return routeMapper.toResponseDto(entityToUpdate);
-
-            case DRAFT: throw new RouteInvalidStatusChangeException(RouteStatus.DRAFT, RouteStatus.INACTIVE);
-        }
+        entityToUpdate.deactivate();
 
         return routeMapper.toResponseDto(entityToUpdate);
     }

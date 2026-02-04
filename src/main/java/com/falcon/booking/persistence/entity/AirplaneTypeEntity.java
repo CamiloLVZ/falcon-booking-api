@@ -1,5 +1,6 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -42,6 +43,45 @@ public class AirplaneTypeEntity {
 
     public int getTotalSeats() {
         return  this.economySeats + this.firstClassSeats;
+    }
+
+    public void activate(){
+        if(this.isActive()) return;
+        if(!(this.status==null || this.isInactive())){
+            throw new AirplaneTypeInvalidStatusChangeException(this.status, AirplaneTypeStatus.ACTIVE);
+        }
+
+        this.status = AirplaneTypeStatus.ACTIVE;
+    }
+
+    public void deactivate(){
+        if(this.isInactive()) return;
+        if(!this.isActive()){
+            throw new AirplaneTypeInvalidStatusChangeException(this.status, AirplaneTypeStatus.INACTIVE);
+        }
+
+        this.status = AirplaneTypeStatus.INACTIVE;
+    }
+
+    public void retire(){
+        if(this.isRetired()) return;
+        if(!this.isInactive()){
+            throw new AirplaneTypeInvalidStatusChangeException(this.status, AirplaneTypeStatus.RETIRED);
+        }
+
+        this.status = AirplaneTypeStatus.RETIRED;
+    }
+
+    public boolean isActive(){
+        return this.status.equals(AirplaneTypeStatus.ACTIVE);
+    }
+
+    public boolean isInactive(){
+        return this.status.equals(AirplaneTypeStatus.INACTIVE);
+    }
+
+    public boolean isRetired(){
+        return this.status.equals(AirplaneTypeStatus.RETIRED);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class FlightGenerationService {
 
     @Transactional
     public ResponseFlightsGeneratedDto generateFlightsForRoute(RouteEntity route) {
-        if(!route.getStatus().equals(RouteStatus.ACTIVE)) {
+        if(!route.isActive()) {
             throw new InvalidRouteStatusForFlightGenerationException(route.getStatus());
         }
 

@@ -162,7 +162,7 @@ public class FlightService {
 
         if(dateTo.isBefore(dateFrom)) throw new DateToBeforeDateFromException();
         RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
-        if (routeEntity.getStatus() != RouteStatus.ACTIVE)
+        if (!routeEntity.isActive())
             throw new RouteNotActiveException(routeEntity.getFlightNumber());
 
         ZoneId timezone = ZoneId.of(routeEntity.getAirportOrigin().getTimezone());

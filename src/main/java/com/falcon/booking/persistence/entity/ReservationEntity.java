@@ -58,10 +58,8 @@ public class ReservationEntity {
     }
 
     PassengerReservationEntity findPassengerReservation(PassengerEntity passenger) {
-        boolean passengerFound = false;
         for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
             if(passengerReservation.getPassenger().equals(passenger)){
-                passengerFound = true;
                 return passengerReservation;
             }
         }
@@ -70,10 +68,10 @@ public class ReservationEntity {
     }
 
     public void cancel(){
-        this.status = ReservationStatus.CANCELED;
         for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
             passengerReservation.cancel();
         }
+        this.status = ReservationStatus.CANCELED;
     }
 
     public void cancelPassenger(PassengerEntity passenger){
