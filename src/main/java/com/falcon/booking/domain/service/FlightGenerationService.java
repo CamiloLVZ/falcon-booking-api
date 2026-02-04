@@ -1,5 +1,6 @@
 package com.falcon.booking.domain.service;
 
+import com.falcon.booking.domain.exception.Route.InvalidRouteStatusForFlightGenerationException;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
@@ -36,13 +37,14 @@ public class FlightGenerationService {
 
     @Transactional
     public ResponseFlightsGeneratedDto generateFlightsForRoute(RouteEntity route) {
+        if(!route.getStatus().equals(RouteStatus.ACTIVE)) {
+            throw new InvalidRouteStatusForFlightGenerationException(route.getStatus());
+        }
+
         ZoneId timeZoneId = ZoneId.of(route.getAirportOrigin().getTimezone());
         LocalDate currentDate = LocalDate.now(timeZoneId);
         LocalDate horizonDate = currentDate.plusDays(flightGenerationDaysHorizon);
-
-        int totalGenerated = 0;
-        if(route.getStatus().equals(RouteStatus.ACTIVE))
-            totalGenerated = generateFlightsForRouteInRange(route, currentDate, horizonDate);
+        int totalGenerated = generateFlightsForRouteInRange(route, currentDate, horizonDate);
 
         return new ResponseFlightsGeneratedDto(
                 route.getFlightNumber(),

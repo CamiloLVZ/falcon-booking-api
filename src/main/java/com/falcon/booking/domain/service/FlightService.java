@@ -5,6 +5,7 @@ import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotBeRescheduledException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
 import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
+import com.falcon.booking.domain.exception.Route.RouteHasNotSchedulesToGenerateFlightsException;
 import com.falcon.booking.domain.exception.Route.RouteNotActiveException;
 import com.falcon.booking.domain.mapper.FlightMapper;
 import com.falcon.booking.domain.valueobject.FlightStatus;
@@ -241,6 +242,8 @@ public class FlightService {
 
     public ResponseFlightsGeneratedDto generateAllFlightsForRoute(String flightNumber) {
         RouteEntity route = routeService.getRouteEntity(flightNumber);
+        if(route.getOperatingDays().isEmpty() || route.getOperatingSchedules().isEmpty())
+            throw new RouteHasNotSchedulesToGenerateFlightsException(flightNumber);
 
         return flightGenerationService.generateFlightsForRoute(route);
     }

@@ -150,6 +150,24 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(RouteNotActiveException.class)
+    public ResponseEntity<Error> handleException(RouteNotActiveException exception) {
+        Error error = new Error("route-not-active", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(RouteHasNotSchedulesToGenerateFlightsException.class)
+    public ResponseEntity<Error> handleException(RouteHasNotSchedulesToGenerateFlightsException exception) {
+        Error error = new Error("route-has-not-schedules-for-flights", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidRouteStatusForFlightGenerationException.class)
+    public ResponseEntity<Error> handleException(InvalidRouteStatusForFlightGenerationException exception) {
+        Error error = new Error("invalid-route-status-to-generate-flights", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Error> handleException(HttpMessageNotReadableException exception) {
         Error error = new Error("data-format-invalid", exception.getMessage());
@@ -159,12 +177,6 @@ public class RestExceptionHandler {
     @ExceptionHandler(FlightDoesNotExistException.class)
     public ResponseEntity<Error> handleException(FlightDoesNotExistException exception) {
         Error error = new Error("flight-does-not-exist", exception.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(RouteNotActiveException.class)
-    public ResponseEntity<Error> handleException(RouteNotActiveException exception) {
-        Error error = new Error("route-not-active", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
