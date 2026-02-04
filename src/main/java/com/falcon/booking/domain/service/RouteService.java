@@ -158,7 +158,7 @@ public class RouteService {
         RouteEntity routeEntity = getRouteEntity(flightNumber);
 
         switch (routeEntity.getStatus()){
-            case ACTIVE: break;
+            case ACTIVE: return routeMapper.toResponseDto(routeEntity);
 
             case INACTIVE: routeEntity.setStatus(RouteStatus.ACTIVE);
 

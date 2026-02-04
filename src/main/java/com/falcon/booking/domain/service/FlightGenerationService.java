@@ -1,6 +1,7 @@
 package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.valueobject.FlightStatus;
+import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;
@@ -23,6 +24,9 @@ public class FlightGenerationService {
     @Value("${app.generation.horizon-days}")
     int flightGenerationDaysHorizon;
 
+    @Value("${app.generation.minimum-hours-before-departure}")
+    int minimumHoursBeforeDeparture;
+
     private final FlightRepository flightRepository;
 
     @Autowired
@@ -36,7 +40,9 @@ public class FlightGenerationService {
         LocalDate currentDate = LocalDate.now(timeZoneId);
         LocalDate horizonDate = currentDate.plusDays(flightGenerationDaysHorizon);
 
-        int totalGenerated = generateFlightsForRouteInRange(route, currentDate, horizonDate);
+        int totalGenerated = 0;
+        if(route.getStatus().equals(RouteStatus.ACTIVE))
+            totalGenerated = generateFlightsForRouteInRange(route, currentDate, horizonDate);
 
         return new ResponseFlightsGeneratedDto(
                 route.getFlightNumber(),
@@ -93,12 +99,16 @@ public class FlightGenerationService {
     }
 
     private List<FlightEntity> generateFlightsBySchedules(Set<LocalTime> routeSchedules, LocalDate date, ZoneId timeZoneId, RouteEntity route) {
+        OffsetDateTime minimumDepartureTime = OffsetDateTime.now().plusHours(minimumHoursBeforeDeparture);
 
         List<OffsetDateTime> departureTimes = new ArrayList<>();
         for (LocalTime time : routeSchedules) {
             LocalDateTime datetime = LocalDateTime.of(date, time);
             OffsetDateTime departureDateTime = datetime.atZone(timeZoneId).toOffsetDateTime();
-            departureTimes.add(departureDateTime);
+            if(departureDateTime.isAfter(minimumDepartureTime)) {
+                departureTimes.add(departureDateTime);
+            }
+
         }
 
         List<OffsetDateTime> existingDeparturesList = flightRepository.findExistingDepartureTimes(route, departureTimes);
@@ -109,6 +119,7 @@ public class FlightGenerationService {
 
         List<FlightEntity> flightEntities = new ArrayList<>();
         for (OffsetDateTime departureDateTime : departureTimes) {
+
             if (!existingDepartures.contains(departureDateTime)) {
                 flightEntities.add(new FlightEntity(
                         route,
