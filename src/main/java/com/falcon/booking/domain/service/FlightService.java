@@ -181,6 +181,7 @@ public class FlightService {
         boolean isInCheckInRange = !now.isBefore(checkInStart) && !now.isAfter(checkInEnd);
         boolean isInBoardingRange = !now.isBefore(boardingStart) && !now.isAfter(boardingEnd);
 
+        flight.correctStatusByTime(now);
         if(now.isAfter(departureDateTime)) {
             flight.markAsCompleted();
             return;

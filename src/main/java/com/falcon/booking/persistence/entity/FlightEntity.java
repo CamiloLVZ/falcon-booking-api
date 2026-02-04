@@ -109,6 +109,15 @@ public class FlightEntity {
         this.status = FlightStatus.COMPLETED;
     }
 
+    public void correctStatusByTime(OffsetDateTime now) {
+
+        if (isCompleted() || isCanceled()) return;
+
+        if (now.isAfter(departureDateTime)) {
+            this.status = FlightStatus.COMPLETED;
+        }
+
+    }
 
     @Override
     public boolean equals(Object o) {
