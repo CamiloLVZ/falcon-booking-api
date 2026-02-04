@@ -37,13 +37,13 @@ public class AirplaneTypeService {
                 orElseThrow(() -> new AirplaneTypeDoesNotExistException(id));
     }
 
-    @Transactional(readOnly = true)
+    //@Transactional(readOnly = true)
     public ResponseAirplaneTypeDto getAirplaneTypeById(Long id) {
         AirplaneTypeEntity airplaneTypeEntity = getAirplaneTypeEntity(id);
         return airplaneTypeMapper.toResponseDto(airplaneTypeEntity);
     }
 
-    @Transactional(readOnly = true)
+    //@Transactional(readOnly = true)
     public List<ResponseAirplaneTypeDto> getAirplaneTypes(String producer, String model, AirplaneTypeStatus status) {
 
         producer = StringNormalizer.normalize(producer);

@@ -77,10 +77,6 @@ public class ReservationService {
                 .orElseThrow(()->new ReservationDoesNotExistException(normalizedReservationNumber));
     }
 
-    public ResponseReservationDto getReservationByNumber(String reservationNumber) {
-        return reservationMapper.toResponseDto(getReservationEntityByNumber(reservationNumber));
-    }
-
     public List<ReservationEntity> getReservationsByPassenger(PassengerEntity passenger) {
         List<PassengerReservationEntity> passengerReservations = passengerReservationRepository.findAllByPassenger(passenger);
         List<ReservationEntity> reservations = new ArrayList<>();
@@ -90,16 +86,22 @@ public class ReservationService {
         return reservations;
     }
 
-    @Transactional
+    public List<ReservationEntity> getAllReservationEntitiesActiveByFlight(FlightEntity flight) {
+        return reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseReservationDto getReservationByNumber(String reservationNumber) {
+        return reservationMapper.toResponseDto(getReservationEntityByNumber(reservationNumber));
+    }
+
+    @Transactional(readOnly = true)
     public List<ResponseReservationDto> getAllReservationsByPassengerIdentificationNumber(String identificationNumber, String countryIsoCode) {
         PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
         return reservationMapper.toResponseDto(getReservationsByPassenger(passenger));
     }
 
-    public List<ReservationEntity> getAllReservationEntitiesActiveByFlight(FlightEntity flight) {
-        return reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED);
-    }
-
+    @Transactional(readOnly = true)
     public List<ResponseReservationDto> getAllReservationsByFlight(Long flightId) {
         FlightEntity flight = flightService.getFlightEntity(flightId);
         return reservationMapper.toResponseDto(getAllReservationEntitiesActiveByFlight(flight));

@@ -107,19 +107,18 @@ public class PassengerService {
             return passengerMapper.toResponseDto(passengerEntity);
         }
     }
-
+    @Transactional(readOnly = true)
     public ResponsePassengerDto getPassengerById(Long id){
         return passengerMapper.toResponseDto(getPassengerEntityById(id));
     }
 
+    @Transactional(readOnly = true)
     public ResponsePassengerDto getPassengerByPassportNumber(String passportNumber){
         return passengerMapper.toResponseDto(getPassengerEntityByPassportNumber(passportNumber));
     }
 
+    @Transactional(readOnly = true)
     public ResponsePassengerDto getPassengerByIdentificationNumber(String identificationNumber, String nationalityIsoCode){
         return passengerMapper.toResponseDto(getPassengerEntityByIdentificationNumber(identificationNumber, nationalityIsoCode));
     }
-
-
-
 }

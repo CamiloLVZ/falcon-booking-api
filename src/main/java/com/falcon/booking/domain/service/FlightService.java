@@ -72,6 +72,7 @@ public class FlightService {
                 .orElseThrow( () -> new FlightDoesNotExistException(id));
     }
 
+    @Transactional(readOnly = true)
     public ResponseFlightDto getFlightById(Long id) {
         FlightEntity flightEntity = getFlightEntity(id);
 
@@ -92,13 +93,13 @@ public class FlightService {
         FlightEntity entityToSave = new FlightEntity(route, route.getDefaultAirplaneType(),
                                                 offsetDepartureDateTime, FlightStatus.SCHEDULED);
 
-       FlightEntity entitySaved = flightRepository.save(entityToSave);
+        FlightEntity entitySaved = flightRepository.save(entityToSave);
 
-       return flightMapper.toDto(entitySaved);
+        return flightMapper.toDto(entitySaved);
     }
 
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ResponseFlightDto> getAllFlights(String flightNumber, FlightStatus flightStatus, LocalDate dateFrom, LocalDate dateTo) {
 
         RouteEntity route = routeService.getRouteEntity(flightNumber);
@@ -156,6 +157,7 @@ public class FlightService {
         return flightMapper.toDto(flightRepository.save(flightToUpdate));
     }
 
+    @Transactional(readOnly = true)
     public List<ResponseFlightDto> getAllFlightsByRouteAndDates(String flightNumber, LocalDate dateFrom, LocalDate dateTo) {
 
         if(dateTo.isBefore(dateFrom)) throw new DateToBeforeDateFromException();

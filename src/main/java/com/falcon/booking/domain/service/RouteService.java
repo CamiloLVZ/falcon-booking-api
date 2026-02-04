@@ -56,15 +56,18 @@ public class RouteService {
                 .orElseThrow(()-> new RouteDoesNotExistException(normalizedFlightNumber));
     }
 
-   public ResponseRouteDto getRouteByFlightNumber(String flightNumber) {
-
-        return routeMapper.toResponseDto(getRouteEntity(flightNumber));
-    }
-
+    @Transactional(readOnly = true)
     public List<RouteEntity> getAllRoutesByStatus(RouteStatus status) {
         return routeRepository.findAllByStatus(status);
     }
 
+    @Transactional(readOnly = true)
+    public ResponseRouteDto getRouteByFlightNumber(String flightNumber) {
+
+        return routeMapper.toResponseDto(getRouteEntity(flightNumber));
+    }
+
+    @Transactional(readOnly = true)
     public List<ResponseRouteDto> getAllRoutes(String airportOrigin_iataCode,
                                         String airportDestination_iataCode,
                                         RouteStatus status) {
@@ -207,7 +210,6 @@ public class RouteService {
         return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
     }
 
-    @Transactional
     public void setRouteDays (RouteEntity routeEntity, Set<DayOfWeek> days) {
 
         routeDayRepository.deleteAllByRoute(routeEntity);
@@ -215,7 +217,6 @@ public class RouteService {
         routeEntity.updateWeekDays(days);
     }
 
-    @Transactional
     public void setRouteSchedules(RouteEntity routeEntity, Set<LocalTime> schedules){
 
         routeScheduleRepository.deleteAllByRoute(routeEntity);
@@ -223,7 +224,7 @@ public class RouteService {
         routeEntity.updateSchedules(schedules);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public RouteWithSchedulesDto getRouteWithSchedules(String flightNumber){
 
         RouteEntity routeEntity = getRouteEntity(flightNumber);

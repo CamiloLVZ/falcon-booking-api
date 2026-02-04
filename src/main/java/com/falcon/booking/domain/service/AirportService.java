@@ -8,6 +8,7 @@ import com.falcon.booking.persistence.repository.AirportRepository;
 import com.falcon.booking.web.dto.AirportDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,19 +24,25 @@ public class AirportService {
         this.airportMapper = airportMapper;
     }
 
-    public AirportDto getAirportByIataCode(String iataCode) {
-        AirportEntity airportEntity= airportRepository.findByIataCode(iataCode).orElseThrow(
+    public AirportEntity getAirportEntityByIataCode(String iataCode) {
+        String normalizedIataCode = StringNormalizer.normalize(iataCode);
+
+        return airportRepository.findByIataCode(normalizedIataCode).orElseThrow(
                 () -> new AirportDoesNotExistException(iataCode)
         );
-
-        return airportMapper.toDto(airportEntity);
     }
 
+    @Transactional(readOnly = true)
+    public AirportDto getAirportByIataCode(String iataCode) {
+        return airportMapper.toDto(getAirportEntityByIataCode(iataCode));
+    }
+
+    @Transactional(readOnly = true)
     public List<AirportDto> getAllAirports() {
         List<AirportEntity> airportEntities = airportRepository.findAll();
         return airportMapper.toDto(airportEntities);
     }
-
+    @Transactional(readOnly = true)
     public List<AirportDto> getAirportsByCountryIsoCode(String isoCode) {
         String isoCodeNormalized= StringNormalizer.normalize(isoCode);
         List<AirportEntity> airportEntities = airportRepository.findAllByCountryIsoCode(isoCodeNormalized);
