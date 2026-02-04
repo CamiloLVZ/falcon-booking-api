@@ -1,7 +1,7 @@
 package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
-import com.falcon.booking.domain.exception.AirportDoesNotExistException;
+import com.falcon.booking.domain.exception.AirportNotFoundException;
 import com.falcon.booking.domain.mapper.AirportMapper;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.repository.AirportRepository;
@@ -28,7 +28,7 @@ public class AirportService {
         String normalizedIataCode = StringNormalizer.normalize(iataCode);
 
         return airportRepository.findByIataCode(normalizedIataCode).orElseThrow(
-                () -> new AirportDoesNotExistException(iataCode)
+                () -> new AirportNotFoundException(iataCode)
         );
     }
 

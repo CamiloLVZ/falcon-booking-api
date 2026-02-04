@@ -50,7 +50,7 @@ public class RouteService {
     public RouteEntity getRouteEntity(String flightNumber){
         String normalizedFlightNumber = StringNormalizer.normalize(flightNumber);
         return routeRepository.findByFlightNumber(normalizedFlightNumber)
-                .orElseThrow(()-> new RouteDoesNotExistException(normalizedFlightNumber));
+                .orElseThrow(()-> new RouteNotFoundException(normalizedFlightNumber));
     }
 
     @Transactional(readOnly = true)

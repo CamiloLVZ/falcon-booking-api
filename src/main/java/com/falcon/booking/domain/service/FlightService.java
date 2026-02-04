@@ -4,7 +4,7 @@ import com.falcon.booking.domain.exception.DateToBeforeDateFromException;
 import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotBeRescheduledException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
-import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
+import com.falcon.booking.domain.exception.Flight.FlightNotFoundException;
 import com.falcon.booking.domain.exception.Route.RouteHasNotSchedulesToGenerateFlightsException;
 import com.falcon.booking.domain.exception.Route.RouteNotActiveException;
 import com.falcon.booking.domain.mapper.FlightMapper;
@@ -69,7 +69,7 @@ public class FlightService {
 
     public FlightEntity getFlightEntity(Long id){
         return flightRepository.findById(id)
-                .orElseThrow( () -> new FlightDoesNotExistException(id));
+                .orElseThrow( () -> new FlightNotFoundException(id));
     }
 
     @Transactional(readOnly = true)

@@ -6,7 +6,7 @@ import com.falcon.booking.domain.exception.Reservation.DuplicateSeatNumberInRese
 import com.falcon.booking.domain.exception.Reservation.ReservationMustHavePassengersException;
 import com.falcon.booking.domain.exception.Reservation.SeatNumberAlreadyTakenException;
 import com.falcon.booking.domain.exception.Reservation.SeatNumberOutOfRangeException;
-import com.falcon.booking.domain.exception.Reservation.ReservationDoesNotExistException;
+import com.falcon.booking.domain.exception.Reservation.ReservationNotFoundException;
 import com.falcon.booking.domain.mapper.FlightMapper;
 import com.falcon.booking.domain.mapper.PassengerReservationMapper;
 import com.falcon.booking.domain.mapper.ReservationMapper;
@@ -74,7 +74,7 @@ public class ReservationService {
     public ReservationEntity getReservationEntityByNumber(String reservationNumber) {
         String normalizedReservationNumber = StringNormalizer.normalize(reservationNumber);
         return reservationRepository.findByNumber(normalizedReservationNumber)
-                .orElseThrow(()->new ReservationDoesNotExistException(normalizedReservationNumber));
+                .orElseThrow(()->new ReservationNotFoundException(normalizedReservationNumber));
     }
 
     public List<ReservationEntity> getReservationsByPassenger(PassengerEntity passenger) {

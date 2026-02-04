@@ -2,7 +2,7 @@ package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.Passenger.PassengerAlreadyExistsException;
-import com.falcon.booking.domain.exception.Passenger.PassengerDoesNotExistException;
+import com.falcon.booking.domain.exception.Passenger.PassengerNotFoundException;
 import com.falcon.booking.domain.exception.Passenger.PassengerHasDifferentPassportNumberException;
 import com.falcon.booking.domain.mapper.PassengerMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
@@ -30,13 +30,13 @@ public class PassengerService {
 
     public PassengerEntity getPassengerEntityById(Long id){
         return passengerRepository.findById(id).orElseThrow(
-                ()->new PassengerDoesNotExistException(id));
+                ()->new PassengerNotFoundException(id));
     }
 
     public PassengerEntity getPassengerEntityByPassportNumber(String passportNumber){
         String normalizedPassportNumber = StringNormalizer.normalize(passportNumber);
         return passengerRepository.findByPassportNumber(normalizedPassportNumber).orElseThrow(
-                ()->new PassengerDoesNotExistException(passportNumber));
+                ()->new PassengerNotFoundException(passportNumber));
     }
 
     public PassengerEntity getPassengerEntityByIdentificationNumber(String identificationNumber, String nationalityIsoCode){
@@ -44,7 +44,7 @@ public class PassengerService {
         CountryEntity country = countryService.getCountryEntityByIsoCode(nationalityIsoCode);
         
         return passengerRepository.findByIdentificationNumberAndCountryNationality(normalizedIdentificationNumber, country).orElseThrow(
-                ()->new PassengerDoesNotExistException(identificationNumber, country.getIsoCode()));
+                ()->new PassengerNotFoundException(identificationNumber, country.getIsoCode()));
     }
 
     @Transactional

@@ -2,8 +2,7 @@ package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExistsException;
-import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
-import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneNotFoundException;
 import com.falcon.booking.domain.mapper.AirplaneTypeMapper;
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
@@ -13,6 +12,8 @@ import com.falcon.booking.web.dto.airplaneType.ResponseAirplaneTypeDto;
 import com.falcon.booking.web.dto.airplaneType.CorrectAirplaneTypeDto;
 import com.falcon.booking.web.dto.airplaneType.CreateAirplaneTypeDto;
 import com.falcon.booking.web.dto.airplaneType.UpdateAirplaneTypeDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.List;
 @Service
 public class AirplaneTypeService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AirplaneTypeService.class);
     private final AirplaneTypeRepository airplaneTypeRepository;
     private final AirplaneTypeMapper airplaneTypeMapper;
 
@@ -34,7 +36,7 @@ public class AirplaneTypeService {
 
     public AirplaneTypeEntity getAirplaneTypeEntity(Long id){
         return airplaneTypeRepository.findById(id).
-                orElseThrow(() -> new AirplaneTypeDoesNotExistException(id));
+                orElseThrow(() -> new AirplaneNotFoundException(id));
     }
 
     public ResponseAirplaneTypeDto getAirplaneTypeById(Long id) {
