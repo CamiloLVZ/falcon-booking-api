@@ -174,15 +174,15 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(FlightDoesNotExistException.class)
-    public ResponseEntity<Error> handleException(FlightDoesNotExistException exception) {
-        Error error = new Error("flight-does-not-exist", exception.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
     @ExceptionHandler(DateToBeforeDateFromException.class)
     public ResponseEntity<Error> handleException(DateToBeforeDateFromException exception){
         Error error = new Error("date-to-before-date-from", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(FlightDoesNotExistException.class)
+    public ResponseEntity<Error> handleException(FlightDoesNotExistException exception) {
+        Error error = new Error("flight-does-not-exist", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -191,7 +191,6 @@ public class RestExceptionHandler {
         Error error = new Error("flight-already-exists", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
-
 
     @ExceptionHandler(FlightCanNotChangeAirplaneTypeException.class)
     public ResponseEntity<Error> handleException(FlightCanNotChangeAirplaneTypeException exception){
@@ -202,6 +201,12 @@ public class RestExceptionHandler {
     @ExceptionHandler(FlightCanNotBeReservedException.class)
     public ResponseEntity<Error> handleException(FlightCanNotBeReservedException exception){
         Error error = new Error("flight-not-able-to-make-reservations", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(FlightCanNotBeRescheduledException.class)
+    public ResponseEntity<Error> handleException(FlightCanNotBeRescheduledException exception){
+        Error error = new Error("flight-can-not-be-re-scheduled", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
