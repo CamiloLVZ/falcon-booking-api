@@ -16,6 +16,7 @@ import com.falcon.booking.web.dto.airplaneType.UpdateAirplaneTypeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -36,11 +37,13 @@ public class AirplaneTypeService {
                 orElseThrow(() -> new AirplaneTypeDoesNotExistException(id));
     }
 
+    @Transactional(readOnly = true)
     public ResponseAirplaneTypeDto getAirplaneTypeById(Long id) {
         AirplaneTypeEntity airplaneTypeEntity = getAirplaneTypeEntity(id);
         return airplaneTypeMapper.toResponseDto(airplaneTypeEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ResponseAirplaneTypeDto> getAirplaneTypes(String producer, String model, AirplaneTypeStatus status) {
 
         producer = StringNormalizer.normalize(producer);
@@ -56,6 +59,7 @@ public class AirplaneTypeService {
         return airplaneTypeMapper.toResponseDto(entites);
     }
 
+    @Transactional
     public ResponseAirplaneTypeDto addAirplaneType(CreateAirplaneTypeDto createAirplaneTypeDto) {
         String producer = createAirplaneTypeDto.producer();
         String model = createAirplaneTypeDto.model();
@@ -69,6 +73,7 @@ public class AirplaneTypeService {
         return airplaneTypeMapper.toResponseDto(entityCreated);
     }
 
+    @Transactional
     public ResponseAirplaneTypeDto updateAirplaneType(Long id, UpdateAirplaneTypeDto updateAirplaneTypeDto) {
 
        AirplaneTypeEntity entityToUpdate = airplaneTypeRepository.findById(id).
@@ -83,6 +88,7 @@ public class AirplaneTypeService {
         return airplaneTypeMapper.toResponseDto(updatedEntity);
     }
 
+    @Transactional
     public ResponseAirplaneTypeDto correctAirplaneType(Long id, CorrectAirplaneTypeDto correctAirplaneTypeDto) {
 
         AirplaneTypeEntity entityToCorrect = airplaneTypeRepository.findById(id).
@@ -102,10 +108,11 @@ public class AirplaneTypeService {
 
         entityToCorrect.setProducer(producerToValidate);
         entityToCorrect.setModel(modelToValidate);
-        return airplaneTypeMapper.toResponseDto(airplaneTypeRepository.save(entityToCorrect));
+        return airplaneTypeMapper.toResponseDto(entityToCorrect);
 
     }
 
+    @Transactional
     public ResponseAirplaneTypeDto deactivateAirplaneType(Long id) {
 
         AirplaneTypeEntity entityToDeactivate = airplaneTypeRepository.findById(id).
@@ -118,9 +125,10 @@ public class AirplaneTypeService {
             throw new AirplaneTypeInvalidStatusChangeException(entityToDeactivate.getStatus(), AirplaneTypeStatus.INACTIVE);
 
         entityToDeactivate.setStatus(AirplaneTypeStatus.INACTIVE);
-        return airplaneTypeMapper.toResponseDto(airplaneTypeRepository.save(entityToDeactivate));
+        return airplaneTypeMapper.toResponseDto(entityToDeactivate);
     }
 
+    @Transactional
     public ResponseAirplaneTypeDto activateAirplaneType(Long id) {
 
         AirplaneTypeEntity entityToActivate = airplaneTypeRepository.findById(id).
@@ -135,9 +143,10 @@ public class AirplaneTypeService {
             return airplaneTypeMapper.toResponseDto(entityToActivate);
 
         entityToActivate.setStatus(AirplaneTypeStatus.ACTIVE);
-        return airplaneTypeMapper.toResponseDto(airplaneTypeRepository.save(entityToActivate));
+        return airplaneTypeMapper.toResponseDto(entityToActivate);
     }
 
+    @Transactional
     public ResponseAirplaneTypeDto retireAirplaneType(Long id) {
 
         AirplaneTypeEntity entityToRetire = airplaneTypeRepository.findById(id).
