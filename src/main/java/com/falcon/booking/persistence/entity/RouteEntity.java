@@ -107,14 +107,17 @@ public class RouteEntity {
     }
 
     public boolean isActive(){
+        if (this.status==null) return false;
         return this.status.equals(RouteStatus.ACTIVE);
     }
 
     public boolean isInactive(){
+        if (this.status==null) return false;
         return this.status.equals(RouteStatus.INACTIVE);
     }
 
     public boolean isDraft(){
+        if (this.status==null) return false;
         return this.status.equals(RouteStatus.DRAFT);
     }
 

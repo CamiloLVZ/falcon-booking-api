@@ -45,6 +45,10 @@ public class AirplaneTypeEntity {
         return  this.economySeats + this.firstClassSeats;
     }
 
+    public String getFullName() {
+        return producer + " " + model;
+    }
+
     public void activate(){
         if(this.isActive()) return;
         if(!(this.status==null || this.isInactive())){
@@ -73,14 +77,17 @@ public class AirplaneTypeEntity {
     }
 
     public boolean isActive(){
+        if (this.status==null) return false;
         return this.status.equals(AirplaneTypeStatus.ACTIVE);
     }
 
     public boolean isInactive(){
+        if (this.status==null) return false;
         return this.status.equals(AirplaneTypeStatus.INACTIVE);
     }
 
     public boolean isRetired(){
+        if (this.status==null) return false;
         return this.status.equals(AirplaneTypeStatus.RETIRED);
     }
 
