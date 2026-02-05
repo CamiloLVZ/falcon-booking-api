@@ -60,32 +60,49 @@ public class PassengerReservationEntity {
     }
 
     public void cancel(){
-        if(this.status == PassengerReservationStatus.CANCELED) return;
+        if(this.isCanceled()) return;
 
-        if(!(this.status.equals(PassengerReservationStatus.RESERVED) || this.status.equals(PassengerReservationStatus.CHECKED_IN))){
+        if(!(this.isReserved() || this.isCheckedIn())){
             throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.CANCELED);
         }
         this.status = PassengerReservationStatus.CANCELED;
     }
 
     public void checkIn() {
-        if(!this.status.equals(PassengerReservationStatus.RESERVED)){
+        if(!this.isReserved()){
             throw new InvalidCheckInPassengerReservationException(this.status);
         }
-        if(!this.flight.getStatus().equals(FlightStatus.CHECK_IN_AVAILABLE)){
+        if(!this.flight.isCheckInAvailable()){
             throw new OutOfFlightCheckInTimeException(this.flight.getId());
         }
             this.status = PassengerReservationStatus.CHECKED_IN;
     }
 
     public void board(){
-        if(!this.status.equals(PassengerReservationStatus.CHECKED_IN)){
+        if(!this.isCheckedIn() || this.isBoarded()){
             throw new InvalidBoardingPassengerReservationException(this.status);
         }
-        if(!this.flight.getStatus().equals(FlightStatus.BOARDING)){
+        if(!this.flight.isInBoarding()){
             throw new OutOfFlightBoardingTimeException(this.flight.getId());
         }
         this.status = PassengerReservationStatus.BOARDED;
+    }
+
+    public boolean isReserved(){
+        if (this.status==null) return false;
+        return this.status.equals(PassengerReservationStatus.RESERVED);
+    }
+    public boolean isCheckedIn(){
+        if (this.status==null) return false;
+        return this.status.equals(PassengerReservationStatus.RESERVED);
+    }
+    public boolean isCanceled(){
+        if (this.status==null) return false;
+        return this.status.equals(PassengerReservationStatus.RESERVED);
+    }
+    public boolean isBoarded(){
+        if (this.status==null) return false;
+        return this.status.equals(PassengerReservationStatus.RESERVED);
     }
 
     @Override
