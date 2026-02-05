@@ -70,6 +70,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToSave = airplaneTypeMapper.toEntity(createAirplaneTypeDto);
         entityToSave.activate();
         AirplaneTypeEntity entityCreated = airplaneTypeRepository.save(entityToSave);
+        logger.info("Airplane Type created: {}", entityCreated.getFullName());
         return airplaneTypeMapper.toResponseDto(entityCreated);
     }
 
@@ -82,6 +83,7 @@ public class AirplaneTypeService {
         if(updateAirplaneTypeDto.firstClassSeats()!=null) entityToUpdate.setFirstClassSeats(updateAirplaneTypeDto.firstClassSeats());
         if(updateAirplaneTypeDto.status()!=null) entityToUpdate.setStatus(updateAirplaneTypeDto.status());
 
+        logger.info("Airplane Type {} updated", entityToUpdate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToUpdate);
     }
 
@@ -104,6 +106,7 @@ public class AirplaneTypeService {
 
         entityToCorrect.setProducer(producerToValidate);
         entityToCorrect.setModel(modelToValidate);
+        logger.info("Airplane Type {} corrected", entityToCorrect.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToCorrect);
     }
 
@@ -113,6 +116,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToDeactivate = getAirplaneTypeEntity(id);
         entityToDeactivate.deactivate();
 
+        logger.info("Airplane Type {} changed status to INACTIVE", entityToDeactivate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToDeactivate);
     }
 
@@ -122,6 +126,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToActivate = getAirplaneTypeEntity(id);
         entityToActivate.activate();
 
+        logger.info("Airplane Type {} changed status to ACTIVE", entityToActivate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToActivate);
     }
 
@@ -131,6 +136,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToRetire = getAirplaneTypeEntity(id);
         entityToRetire.retire();
 
+        logger.info("Airplane Type {} changed status to RETIRED", entityToRetire.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToRetire);
     }
 

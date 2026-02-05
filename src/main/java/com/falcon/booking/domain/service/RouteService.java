@@ -65,16 +65,14 @@ public class RouteService {
     }
 
     @Transactional(readOnly = true)
-    public List<ResponseRouteDto> getAllRoutes(String airportOrigin_iataCode,
-                                        String airportDestination_iataCode,
-                                        RouteStatus status) {
+    public List<ResponseRouteDto> getAllRoutes(String airportOriginIataCode, String airportDestinationIataCode, RouteStatus status) {
 
-        String normalizedAirportOrigin_iataCode = StringNormalizer.normalize(airportOrigin_iataCode);
-        String normalizedAirportDestination_iataCode = StringNormalizer.normalize(airportDestination_iataCode);
+        String normalizedAirportOriginIataCode = StringNormalizer.normalize(airportOriginIataCode);
+        String normalizedAirportDestinationIataCode = StringNormalizer.normalize(airportDestinationIataCode);
 
         Specification<RouteEntity> specification = Specification.allOf();
-        specification = specification.and(RouteSpecifications.hasOriginIataCode(normalizedAirportOrigin_iataCode));
-        specification = specification.and(RouteSpecifications.hasDestinationIataCode(normalizedAirportDestination_iataCode));
+        specification = specification.and(RouteSpecifications.hasOriginIataCode(normalizedAirportOriginIataCode));
+        specification = specification.and(RouteSpecifications.hasDestinationIataCode(normalizedAirportDestinationIataCode));
         specification = specification.and(RouteSpecifications.hasStatus(status));
 
         List<RouteEntity> entities = routeRepository.findAll(specification);
@@ -103,6 +101,7 @@ public class RouteService {
         entityToSave.setDefaultAirplaneType(airplaneType);
         entityToSave.markAsDraft();
 
+        logger.info("Route {} created: {} -> {}. {}", entityToSave.getFlightNumber(), airportOrigin.getIataCode(), airportDestination.getIataCode(), airplaneType.getFullName());
         return routeMapper.toResponseDto(routeRepository.save(entityToSave));
 
     }
@@ -140,6 +139,7 @@ public class RouteService {
             entityToUpdate.setDefaultAirplaneType(airplaneType);
         }
 
+        logger.info("Route number {} was updated",entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
     }
 
@@ -150,11 +150,11 @@ public class RouteService {
 
         try {
             ResponseFlightsGeneratedDto result = flightGenerationService.generateFlightsForRoute(routeEntity);
-            logger.info("Route {} activated with {} flights generated", flightNumber, result.flightsGenerated());
+            logger.info("Route {} activated with {} flights generated", routeEntity.getFlightNumber(), result.flightsGenerated());
             return routeMapper.toResponseDto(routeEntity);
 
         } catch (Exception e) {
-            logger.error("Route {} activated but failed flights generation: {}", flightNumber, e.getMessage());
+            logger.error("Route {} activated but failed flights generation: {}", routeEntity.getFlightNumber(), e.getMessage());
             throw e;
         }
     }
@@ -164,7 +164,7 @@ public class RouteService {
 
         RouteEntity entityToUpdate = getRouteEntity(flightNumber);
         entityToUpdate.deactivate();
-
+        logger.info("Route {} deactivated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
     }
 
@@ -177,6 +177,7 @@ public class RouteService {
         if(requestDto.schedules() != null) {
             setRouteSchedules(routeEntity, requestDto.schedules());
         }
+        logger.info("Route {} set operating schedules: {}, {} ", routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
         return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
     }
 

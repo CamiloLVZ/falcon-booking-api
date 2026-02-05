@@ -10,12 +10,16 @@ import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
 import com.falcon.booking.web.dto.passenger.AddPassengerDto;
 import com.falcon.booking.web.dto.passenger.ResponsePassengerDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PassengerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PassengerService.class);
 
     private final PassengerRepository passengerRepository;
     private final PassengerMapper passengerMapper;
@@ -71,7 +75,10 @@ public class PassengerService {
             oldPassengerEntity.setDateOfBirth(newPassengerEntity.getDateOfBirth());
             return passengerRepository.save(oldPassengerEntity);
         }else {
-            return passengerRepository.save(newPassengerEntity);
+
+            PassengerEntity passengerCreated = passengerRepository.save(newPassengerEntity);
+            logger.info("Passenger created with id: {}", passengerCreated.getId());
+            return passengerCreated;
         }
 
     }
@@ -104,6 +111,7 @@ public class PassengerService {
             throw new PassengerAlreadyExistsException(newPassportNumber);
         }else{
             passengerEntity.setPassportNumber(newPassportNumber);
+            logger.info("Passenger {} updated passport number to {}", passengerEntity.getId(), newPassportNumber);
             return passengerMapper.toResponseDto(passengerEntity);
         }
     }
