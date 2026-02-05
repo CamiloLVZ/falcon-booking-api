@@ -50,26 +50,32 @@ public class FlightEntity {
     public List<PassengerReservationEntity> reservations;
 
     public boolean isScheduled() {
+        if (this.status==null) return false;
         return this.status.equals(FlightStatus.SCHEDULED);
     }
 
     public boolean isCheckInAvailable() {
+        if (this.status==null) return false;
         return this.status.equals(FlightStatus.CHECK_IN_AVAILABLE);
     }
 
     public boolean isInBoarding() {
+        if (this.status==null) return false;
         return this.status.equals(FlightStatus.BOARDING);
     }
 
     public boolean isCompleted() {
+        if (this.status==null) return false;
         return this.status.equals(FlightStatus.COMPLETED);
     }
 
     public boolean isCanceled() {
+        if (this.status==null) return false;
         return this.status.equals(FlightStatus.CANCELED);
     }
 
     public boolean canBeReserved() {
+        if (this.status==null) return false;
         return (this.isScheduled() || this.isCheckInAvailable());
     }
 

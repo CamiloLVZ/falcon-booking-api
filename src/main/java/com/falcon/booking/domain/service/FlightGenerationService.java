@@ -2,13 +2,10 @@ package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.exception.Route.InvalidRouteStatusForFlightGenerationException;
 import com.falcon.booking.domain.valueobject.FlightStatus;
-import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,8 +16,6 @@ import java.util.*;
 
 @Service
 public class FlightGenerationService {
-
-    private static final Logger logger = LoggerFactory.getLogger(FlightGenerationService.class);
 
     @Value("${app.generation.horizon-days}")
     int flightGenerationDaysHorizon;
