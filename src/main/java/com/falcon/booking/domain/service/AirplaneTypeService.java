@@ -2,8 +2,7 @@ package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExistsException;
-import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeDoesNotExistException;
-import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
+import com.falcon.booking.domain.exception.AirplaneType.AirplaneNotFoundException;
 import com.falcon.booking.domain.mapper.AirplaneTypeMapper;
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
@@ -13,6 +12,8 @@ import com.falcon.booking.web.dto.airplaneType.ResponseAirplaneTypeDto;
 import com.falcon.booking.web.dto.airplaneType.CorrectAirplaneTypeDto;
 import com.falcon.booking.web.dto.airplaneType.CreateAirplaneTypeDto;
 import com.falcon.booking.web.dto.airplaneType.UpdateAirplaneTypeDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.List;
 @Service
 public class AirplaneTypeService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AirplaneTypeService.class);
     private final AirplaneTypeRepository airplaneTypeRepository;
     private final AirplaneTypeMapper airplaneTypeMapper;
 
@@ -34,7 +36,7 @@ public class AirplaneTypeService {
 
     public AirplaneTypeEntity getAirplaneTypeEntity(Long id){
         return airplaneTypeRepository.findById(id).
-                orElseThrow(() -> new AirplaneTypeDoesNotExistException(id));
+                orElseThrow(() -> new AirplaneNotFoundException(id));
     }
 
     public ResponseAirplaneTypeDto getAirplaneTypeById(Long id) {
@@ -68,6 +70,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToSave = airplaneTypeMapper.toEntity(createAirplaneTypeDto);
         entityToSave.activate();
         AirplaneTypeEntity entityCreated = airplaneTypeRepository.save(entityToSave);
+        logger.info("Airplane Type created: {}", entityCreated.getFullName());
         return airplaneTypeMapper.toResponseDto(entityCreated);
     }
 
@@ -80,6 +83,7 @@ public class AirplaneTypeService {
         if(updateAirplaneTypeDto.firstClassSeats()!=null) entityToUpdate.setFirstClassSeats(updateAirplaneTypeDto.firstClassSeats());
         if(updateAirplaneTypeDto.status()!=null) entityToUpdate.setStatus(updateAirplaneTypeDto.status());
 
+        logger.info("Airplane Type {} updated", entityToUpdate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToUpdate);
     }
 
@@ -102,6 +106,7 @@ public class AirplaneTypeService {
 
         entityToCorrect.setProducer(producerToValidate);
         entityToCorrect.setModel(modelToValidate);
+        logger.info("Airplane Type {} corrected", entityToCorrect.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToCorrect);
     }
 
@@ -111,6 +116,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToDeactivate = getAirplaneTypeEntity(id);
         entityToDeactivate.deactivate();
 
+        logger.info("Airplane Type {} changed status to INACTIVE", entityToDeactivate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToDeactivate);
     }
 
@@ -120,6 +126,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToActivate = getAirplaneTypeEntity(id);
         entityToActivate.activate();
 
+        logger.info("Airplane Type {} changed status to ACTIVE", entityToActivate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToActivate);
     }
 
@@ -129,6 +136,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToRetire = getAirplaneTypeEntity(id);
         entityToRetire.retire();
 
+        logger.info("Airplane Type {} changed status to RETIRED", entityToRetire.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToRetire);
     }
 

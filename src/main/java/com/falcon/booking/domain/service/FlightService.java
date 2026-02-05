@@ -4,7 +4,7 @@ import com.falcon.booking.domain.exception.DateToBeforeDateFromException;
 import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotBeRescheduledException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
-import com.falcon.booking.domain.exception.Flight.FlightDoesNotExistException;
+import com.falcon.booking.domain.exception.Flight.FlightNotFoundException;
 import com.falcon.booking.domain.exception.Route.RouteHasNotSchedulesToGenerateFlightsException;
 import com.falcon.booking.domain.exception.Route.RouteNotActiveException;
 import com.falcon.booking.domain.mapper.FlightMapper;
@@ -69,7 +69,7 @@ public class FlightService {
 
     public FlightEntity getFlightEntity(Long id){
         return flightRepository.findById(id)
-                .orElseThrow( () -> new FlightDoesNotExistException(id));
+                .orElseThrow( () -> new FlightNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
@@ -94,7 +94,7 @@ public class FlightService {
                                                 offsetDepartureDateTime, FlightStatus.SCHEDULED);
 
         FlightEntity entitySaved = flightRepository.save(entityToSave);
-
+        logger.info("Single flight generated for route {} with departure time {}", route.getFlightNumber(), offsetDepartureDateTime);
         return flightMapper.toDto(entitySaved);
     }
 
@@ -121,6 +121,7 @@ public class FlightService {
     public ResponseFlightDto cancelFlight(Long id) {
         FlightEntity flightEntity = getFlightEntity(id);
         flightEntity.cancel();
+        logger.info("Flight {} changed status to CANCELED", id);
         return flightMapper.toDto(flightEntity);
     }
 
@@ -141,7 +142,7 @@ public class FlightService {
         oldFlight.cancel();
         FlightEntity newFlightEntity = new FlightEntity(route, route.getDefaultAirplaneType(),
                 offsetDepartureDateTime, FlightStatus.SCHEDULED);
-
+        logger.info("Flight {} rescheduled. new departure: {}", id, newDepartureDateTime);
         return flightMapper.toDto(flightRepository.save(newFlightEntity));
     }
 
@@ -154,6 +155,7 @@ public class FlightService {
 
         AirplaneTypeEntity airplaneTypeEntity = airplaneTypeService.getAirplaneTypeEntity(idAirplaneType);
         flightToUpdate.setAirplaneType(airplaneTypeEntity);
+        logger.info("Flight {} changed airplane type to {}", id, airplaneTypeEntity.getFullName());
         return flightMapper.toDto(flightRepository.save(flightToUpdate));
     }
 
@@ -173,7 +175,7 @@ public class FlightService {
         return flightMapper.toDto(flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, offsetDateTimeFrom, offsetDateTimeTo));
     }
 
-    public void updateFlightStatus(FlightEntity flight, OffsetDateTime now){
+    public boolean updateFlightStatus(FlightEntity flight, OffsetDateTime now){
         OffsetDateTime departureDateTime = flight.getDepartureDateTime();
         OffsetDateTime checkInStart = departureDateTime.minusHours(checkInHoursBeforeToStart);
         OffsetDateTime checkInEnd = departureDateTime.minusHours(checkInHoursBeforeToClose);
@@ -186,24 +188,32 @@ public class FlightService {
         flight.correctStatusByTime(now);
         if(now.isAfter(departureDateTime)) {
             flight.markAsCompleted();
-            return;
+            return true;
         }
         if(isInCheckInRange && !flight.isCheckInAvailable()) {
             flight.startCheckIn();
-            return;
+            return true;
         }
-        if (isInBoardingRange && !flight.isInBoarding())
+        if (isInBoardingRange && !flight.isInBoarding()) {
             flight.startBoarding();
+            return true;
+        }
+        return false;
     }
 
     @Transactional
-    public void updateFlightsStatus(){
+    public int updateFlightsStatus(){
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         List<FlightEntity> flightsToUpdate = flightRepository.findAllByStatusNotAndStatusNot(FlightStatus.CANCELED, FlightStatus.COMPLETED);
 
+        int updatesCounter = 0;
+
         for(FlightEntity flight : flightsToUpdate){
-            updateFlightStatus(flight, now);
+            boolean updated = updateFlightStatus(flight, now);
+            if(updated)
+                updatesCounter++;
         }
+        return updatesCounter;
     }
 
     public List<ResponseFlightsGeneratedDto> generateAllFlightsForAllRoutes() {
@@ -238,7 +248,7 @@ public class FlightService {
                 ));
             }
         }
-        logger.info("Flights generation completed: {} success, {} failed for {} rroutes", successCount, failCount, routeEntities.size());
+        logger.info("Flights generation completed: {} success, {} failed for {} routes", successCount, failCount, routeEntities.size());
 
         return results;
     }
@@ -248,12 +258,12 @@ public class FlightService {
         if(route.getOperatingDays().isEmpty() || route.getOperatingSchedules().isEmpty())
             throw new RouteHasNotSchedulesToGenerateFlightsException(flightNumber);
 
-        return flightGenerationService.generateFlightsForRoute(route);
+        ResponseFlightsGeneratedDto responseDto = flightGenerationService.generateFlightsForRoute(route);
+        logger.info("Flights generated for route {} : {}", responseDto.flightNumber(), responseDto.flightsGenerated());
+        return responseDto;
     }
 
     public void generateFlightsForAllRoutesAtHorizon() {
-        logger.info("Starting daily flights generation");
-
         List<RouteEntity> routeEntities = routeService.getAllRoutesByStatus(RouteStatus.ACTIVE);
         int processedCount = 0;
         int skippedCount = 0;

@@ -6,7 +6,7 @@ import com.falcon.booking.domain.exception.Reservation.DuplicateSeatNumberInRese
 import com.falcon.booking.domain.exception.Reservation.ReservationMustHavePassengersException;
 import com.falcon.booking.domain.exception.Reservation.SeatNumberAlreadyTakenException;
 import com.falcon.booking.domain.exception.Reservation.SeatNumberOutOfRangeException;
-import com.falcon.booking.domain.exception.Reservation.ReservationDoesNotExistException;
+import com.falcon.booking.domain.exception.Reservation.ReservationNotFoundException;
 import com.falcon.booking.domain.mapper.FlightMapper;
 import com.falcon.booking.domain.mapper.PassengerReservationMapper;
 import com.falcon.booking.domain.mapper.ReservationMapper;
@@ -22,6 +22,8 @@ import com.falcon.booking.web.dto.reservation.AddPassengerReservationDto;
 import com.falcon.booking.web.dto.reservation.AddReservationDto;
 import com.falcon.booking.web.dto.reservation.ResponsePassengerReservationDto;
 import com.falcon.booking.web.dto.reservation.ResponseReservationDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class ReservationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReservationService.class);
 
     private final ReservationRepository reservationRepository;
     private final PassengerReservationRepository passengerReservationRepository;
@@ -74,7 +78,7 @@ public class ReservationService {
     public ReservationEntity getReservationEntityByNumber(String reservationNumber) {
         String normalizedReservationNumber = StringNormalizer.normalize(reservationNumber);
         return reservationRepository.findByNumber(normalizedReservationNumber)
-                .orElseThrow(()->new ReservationDoesNotExistException(normalizedReservationNumber));
+                .orElseThrow(()->new ReservationNotFoundException(normalizedReservationNumber));
     }
 
     public List<ReservationEntity> getReservationsByPassenger(PassengerEntity passenger) {
@@ -121,6 +125,7 @@ public class ReservationService {
 
         List<ResponsePassengerReservationDto> responsePassengerReservationDtos = passengerReservationMapper.toResponseDto(passengerReservationRepository.saveAll(passengerReservations));
 
+        logger.info("Created reservation number {} for flight {}. Passengers: {}", reservation.getNumber(), flightEntity.getId(), passengerReservations.size());
        return new ResponseReservationDto(reservation.getNumber(), reservation.getContactEmail(),
                reservation.getDatetimeReservation(), reservation.getStatus(), flightMapper.toDto(flightEntity), responsePassengerReservationDtos);
     }
@@ -179,6 +184,7 @@ public class ReservationService {
     public ReservationEntity cancelPassengerReservation(String reservationNumber, PassengerEntity passenger) {
         ReservationEntity reservation = getReservationEntityByNumber(reservationNumber);
         reservation.cancelPassenger(passenger);
+        logger.info("Passenger with id {} canceled in reservation {}", passenger.getId(), reservation.getNumber());
         return reservation;
     }
 
@@ -186,6 +192,7 @@ public class ReservationService {
     public ResponseReservationDto cancelReservation(String reservationNumber) {
         ReservationEntity reservationEntity = getReservationEntityByNumber(reservationNumber);
         reservationEntity.cancel();
+        logger.info("Reservation number {} has been canceled", reservationEntity.getNumber());
         return reservationMapper.toResponseDto(reservationEntity);
     }
 
@@ -197,6 +204,7 @@ public class ReservationService {
 
     public PassengerReservationEntity checkIn(String reservationNumber, PassengerEntity passenger) {
         ReservationEntity reservationEntity = getReservationEntityByNumber(reservationNumber);
+        logger.info("Passenger with id: {} has checked in for reservation {}", passenger.getId(), reservationEntity.getNumber());
         return reservationEntity.checkInPassenger(passenger);
     }
 
@@ -208,6 +216,7 @@ public class ReservationService {
 
     public PassengerReservationEntity board(String reservationNumber, PassengerEntity passenger) {
         ReservationEntity reservationEntity = getReservationEntityByNumber(reservationNumber);
+        logger.info("Passenger with id: {} has boarded for reservation {}", passenger.getId(), reservationEntity.getNumber());
         return reservationEntity.board(passenger);
     }
 
