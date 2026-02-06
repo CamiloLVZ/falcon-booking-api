@@ -1,0 +1,6 @@
+ALTER TABLE airport
+ALTER COLUMN iata_code TYPE VARCHAR(3);
+
+
+ALTER TABLE country
+ALTER COLUMN iso_code TYPE VARCHAR(3);
