@@ -1,6 +1,6 @@
 package com.falcon.booking.domain.service;
 
-import com.falcon.booking.domain.exception.CountryDoesNotExistException;
+import com.falcon.booking.domain.exception.CountryNotFoundException;
 import com.falcon.booking.domain.mapper.CountryMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.CountryRepository;
@@ -59,8 +59,8 @@ public class CountryServiceTest {
         given(countryRepository.findByIsoCode("US"))
                 .willReturn(Optional.empty());
 
-        CountryDoesNotExistException ex =
-                assertThrows(CountryDoesNotExistException.class,
+        CountryNotFoundException ex =
+                assertThrows(CountryNotFoundException.class,
                         ()-> countryService.getCountryEntityByIsoCode(" us "));
 
         assertThat(ex.getMessage()).contains("us");
@@ -91,8 +91,8 @@ public class CountryServiceTest {
         given(countryRepository.findByIsoCode("US"))
                 .willReturn(Optional.empty());
 
-        CountryDoesNotExistException ex =
-                assertThrows(CountryDoesNotExistException.class,
+        CountryNotFoundException ex =
+                assertThrows(CountryNotFoundException.class,
                         ()-> countryService.getCountryByIsoCode(" us "));
 
         assertThat(ex.getMessage()).contains("us");

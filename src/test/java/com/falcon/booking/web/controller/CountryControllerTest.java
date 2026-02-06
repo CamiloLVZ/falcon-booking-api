@@ -1,6 +1,6 @@
 package com.falcon.booking.web.controller;
 
-import com.falcon.booking.domain.exception.CountryDoesNotExistException;
+import com.falcon.booking.domain.exception.CountryNotFoundException;
 import com.falcon.booking.domain.service.AirportService;
 import com.falcon.booking.domain.service.CountryService;
 import com.falcon.booking.web.dto.CountryDto;
@@ -54,7 +54,7 @@ public class CountryControllerTest {
     @Test
     void shouldReturn404CountryNotFound_getCountry() throws Exception {
         given(countryService.getCountryByIsoCode("CO"))
-                .willThrow( new CountryDoesNotExistException("CO"));
+                .willThrow( new CountryNotFoundException("CO"));
 
         ResultActions response = mockMvc.perform(
                 get("/countries/CO")
