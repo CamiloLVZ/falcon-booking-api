@@ -1,5 +1,5 @@
 package com.falcon.booking.domain.valueobject;
 
-public enum Gender {
+public enum PassengerGender {
     M, F, O
 }

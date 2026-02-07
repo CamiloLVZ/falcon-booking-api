@@ -1,7 +1,7 @@
 package com.falcon.booking.persistence.entity;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
-import com.falcon.booking.domain.valueobject.Gender;
+import com.falcon.booking.domain.valueobject.PassengerGender;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +20,7 @@ import java.util.Objects;
 @Setter
 public class PassengerEntity {
 
-    public PassengerEntity(String firstName, String lastName, Gender gender, LocalDate dateOfBirth, String passportNumber, String identificationNumber) {
+    public PassengerEntity(String firstName, String lastName, PassengerGender gender, LocalDate dateOfBirth, String passportNumber, String identificationNumber) {
          setFirstName(firstName);
          setLastName(lastName);
          setGender(gender);
@@ -40,7 +40,7 @@ public class PassengerEntity {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    Gender gender;
+    PassengerGender gender;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_country_nationality", nullable = false)

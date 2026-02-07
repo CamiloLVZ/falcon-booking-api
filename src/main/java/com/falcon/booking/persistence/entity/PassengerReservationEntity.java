@@ -5,7 +5,6 @@ import com.falcon.booking.domain.exception.Flight.OutOfFlightCheckInTimeExceptio
 import com.falcon.booking.domain.exception.Reservation.InvalidBoardingPassengerReservationException;
 import com.falcon.booking.domain.exception.Reservation.InvalidCheckInPassengerReservationException;
 import com.falcon.booking.domain.exception.Reservation.ReservationInvalidStatusChangeException;
-import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.PassengerReservationStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -54,10 +53,6 @@ public class PassengerReservationEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PassengerReservationStatus status;
-
-    public void reassignSeat(Integer seatNumber){
-        this.seatNumber = seatNumber;
-    }
 
     public void cancel(){
         if(this.isCanceled()) return;

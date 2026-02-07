@@ -1,6 +1,6 @@
 package com.falcon.booking.web.dto.passenger;
 
-import com.falcon.booking.domain.valueobject.Gender;
+import com.falcon.booking.domain.valueobject.PassengerGender;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
@@ -10,7 +10,7 @@ public record AddPassengerDto(
         String firstName,
         @NotBlank @Size(min = 1, max = 100)
         String lastName,
-        Gender gender,
+        PassengerGender gender,
         @NotBlank @Size(min = 2, max = 2)
         String nationalityIsoCode,
         @NotNull @Past
