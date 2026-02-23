@@ -92,7 +92,7 @@ public class RouteEntity {
         if(this.isInactive())return;
 
         if(!this.isActive())
-            throw new RouteInvalidStatusChangeException(this.status, RouteStatus.DRAFT);
+            throw new RouteInvalidStatusChangeException(this.status, RouteStatus.INACTIVE);
 
         this.status = RouteStatus.INACTIVE;
     }
