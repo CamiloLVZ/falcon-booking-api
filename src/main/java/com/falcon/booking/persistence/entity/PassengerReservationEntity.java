@@ -89,15 +89,15 @@ public class PassengerReservationEntity {
     }
     public boolean isCheckedIn(){
         if (this.status==null) return false;
-        return this.status.equals(PassengerReservationStatus.RESERVED);
+        return this.status.equals(PassengerReservationStatus.CHECKED_IN);
     }
     public boolean isCanceled(){
         if (this.status==null) return false;
-        return this.status.equals(PassengerReservationStatus.RESERVED);
+        return this.status.equals(PassengerReservationStatus.CANCELED);
     }
     public boolean isBoarded(){
         if (this.status==null) return false;
-        return this.status.equals(PassengerReservationStatus.RESERVED);
+        return this.status.equals(PassengerReservationStatus.BOARDED);
     }
 
     @Override
