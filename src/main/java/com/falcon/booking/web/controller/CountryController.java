@@ -58,7 +58,7 @@ public class CountryController {
     }
 
     @Operation(summary = "Get all countries",
-            description = "Returns a list with all the country registered.")
+            description = "Returns a list with all registered countries.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Country list retrieved successfully, even if it is empty",
                     content = @Content(mediaType = "application/json", array = @ArraySchema (schema = @Schema(implementation = CountryDto.class))))
