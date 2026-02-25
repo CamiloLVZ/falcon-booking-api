@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/airplane-types")
+@RequestMapping("/v1/airplane-types")
 public class AirplaneTypeController {
 
     private final AirplaneTypeService airplaneTypeService;

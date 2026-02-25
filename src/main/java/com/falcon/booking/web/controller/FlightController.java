@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/flights")
+@RequestMapping("/v1/flights")
 @Validated
 public class FlightController {
 

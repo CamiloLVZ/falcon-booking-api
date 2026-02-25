@@ -20,7 +20,7 @@ import java.util.List;
 
 @Validated
 @RestController
-@RequestMapping("/routes")
+@RequestMapping("/v1/routes")
 public class RouteController {
 
     private final RouteService routeService;
