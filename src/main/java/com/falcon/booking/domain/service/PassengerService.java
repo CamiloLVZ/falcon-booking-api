@@ -73,6 +73,7 @@ public class PassengerService {
             oldPassengerEntity.setLastName(newPassengerEntity.getLastName());
             oldPassengerEntity.setGender(newPassengerEntity.getGender());
             oldPassengerEntity.setDateOfBirth(newPassengerEntity.getDateOfBirth());
+            oldPassengerEntity.setPassportNumber(newPassengerEntity.getPassportNumber());
             return passengerRepository.save(oldPassengerEntity);
         }else {
 
@@ -92,6 +93,9 @@ public class PassengerService {
             }
         }else{
             if(oldPassengerEntity != null){
+                if(oldPassengerEntity.getPassportNumber()==null)
+                    return;
+
                 if(!newPassengerEntity.getPassportNumber().equals(oldPassengerEntity.getPassportNumber())){
                     throw new PassengerHasDifferentPassportNumberException();
                 }
