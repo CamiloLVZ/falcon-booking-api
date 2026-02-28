@@ -21,7 +21,7 @@ public class CountryEntity {
     @Column(nullable = false, unique = true, length = 100)
     String name;
 
-    @Column(nullable = false, name = "iso_code", unique = true, columnDefinition = "bpchar", length = 2)
+    @Column(nullable = false, name = "iso_code", unique = true, length = 2)
     String isoCode;
 
     @Override

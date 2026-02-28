@@ -81,7 +81,6 @@ public class AirplaneTypeService {
 
         if(updateAirplaneTypeDto.economySeats()!=null) entityToUpdate.setEconomySeats(updateAirplaneTypeDto.economySeats());
         if(updateAirplaneTypeDto.firstClassSeats()!=null) entityToUpdate.setFirstClassSeats(updateAirplaneTypeDto.firstClassSeats());
-        if(updateAirplaneTypeDto.status()!=null) entityToUpdate.setStatus(updateAirplaneTypeDto.status());
 
         logger.info("Airplane Type {} updated", entityToUpdate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToUpdate);
@@ -91,9 +90,11 @@ public class AirplaneTypeService {
     public ResponseAirplaneTypeDto correctAirplaneType(Long id, CorrectAirplaneTypeDto correctAirplaneTypeDto) {
 
         AirplaneTypeEntity entityToCorrect = getAirplaneTypeEntity(id);
+        String newProducer = StringNormalizer.normalize(correctAirplaneTypeDto.producer());
+        String newModel = StringNormalizer.normalize(correctAirplaneTypeDto.model());
 
-        String producerToValidate= correctAirplaneTypeDto.producer() != null ? correctAirplaneTypeDto.producer(): entityToCorrect.getProducer();
-        String modelToValidate= correctAirplaneTypeDto.model() != null ? correctAirplaneTypeDto.model(): entityToCorrect.getModel();
+        String producerToValidate= newProducer != null ? newProducer: entityToCorrect.getProducer();
+        String modelToValidate= newModel != null ? newModel: entityToCorrect.getModel();
 
         boolean isChanging = !entityToCorrect.getModel().equals(modelToValidate)
                 || !entityToCorrect.getProducer().equals(producerToValidate);

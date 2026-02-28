@@ -17,7 +17,7 @@ public class AirportEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 3, unique = true, columnDefinition = "bpchar")
+    @Column(nullable = false, length = 3, unique = true)
     private String iataCode;
 
     @Column(nullable = false, length = 150)

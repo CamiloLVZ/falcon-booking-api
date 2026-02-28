@@ -2,7 +2,6 @@ package com.falcon.booking.persistence.specification;
 
 import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.RouteEntity;
-import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 

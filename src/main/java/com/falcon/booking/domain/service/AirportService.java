@@ -4,6 +4,7 @@ import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.AirportNotFoundException;
 import com.falcon.booking.domain.mapper.AirportMapper;
 import com.falcon.booking.persistence.entity.AirportEntity;
+import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.AirportRepository;
 import com.falcon.booking.web.dto.AirportDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +18,13 @@ public class AirportService {
 
     private final AirportRepository airportRepository;
     private final AirportMapper airportMapper;
+    private final CountryService countryService;
 
     @Autowired
-    public AirportService(AirportRepository airportRepository, AirportMapper airportMapper) {
+    public AirportService(AirportRepository airportRepository, AirportMapper airportMapper, CountryService countryService) {
         this.airportRepository = airportRepository;
         this.airportMapper = airportMapper;
+        this.countryService = countryService;
     }
 
     public AirportEntity getAirportEntityByIataCode(String iataCode) {
@@ -44,8 +47,8 @@ public class AirportService {
     }
     @Transactional(readOnly = true)
     public List<AirportDto> getAirportsByCountryIsoCode(String isoCode) {
-        String isoCodeNormalized= StringNormalizer.normalize(isoCode);
-        List<AirportEntity> airportEntities = airportRepository.findAllByCountryIsoCode(isoCodeNormalized);
+        CountryEntity country = countryService.getCountryEntityByIsoCode(isoCode);
+        List<AirportEntity> airportEntities = airportRepository.findAllByCountry(country);
 
         return airportMapper.toDto(airportEntities);
     }
