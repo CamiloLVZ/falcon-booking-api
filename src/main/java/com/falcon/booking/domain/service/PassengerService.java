@@ -73,7 +73,9 @@ public class PassengerService {
             oldPassengerEntity.setLastName(newPassengerEntity.getLastName());
             oldPassengerEntity.setGender(newPassengerEntity.getGender());
             oldPassengerEntity.setDateOfBirth(newPassengerEntity.getDateOfBirth());
-            oldPassengerEntity.setPassportNumber(newPassengerEntity.getPassportNumber());
+            if(newPassengerEntity.getPassportNumber()!=null)
+                oldPassengerEntity.setPassportNumber(newPassengerEntity.getPassportNumber());
+
             return passengerRepository.save(oldPassengerEntity);
         }else {
 
