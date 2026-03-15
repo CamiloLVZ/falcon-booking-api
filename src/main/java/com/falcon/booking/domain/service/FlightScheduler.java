@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 
 @Component
 public class FlightScheduler {
@@ -33,7 +35,7 @@ public class FlightScheduler {
     @Scheduled(cron = "0 1 0 * * *")
     public void generateFlightsForHorizonDay(){
         logger.info("Starting daily flights generation");
-        flightService.generateFlightsForAllRoutesAtHorizon();
+        flightService.startDailyFlightGeneration(LocalDate.now());
     }
 
 }

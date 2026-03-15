@@ -28,23 +28,24 @@ public class FlightEntity {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @SequenceGenerator(name = "flight_seq_gen", sequenceName = "flight_seq", allocationSize = 50)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "flight_seq_gen")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_route", nullable = false)
-    RouteEntity route;
+    private RouteEntity route;
 
     @Column(name = "departure_datetime", nullable = false)
-    OffsetDateTime departureDateTime;
+    private OffsetDateTime departureDateTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_airplane_type", nullable = false)
-    AirplaneTypeEntity airplaneType;
+    private AirplaneTypeEntity airplaneType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    FlightStatus status;
+    private FlightStatus status;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "flight", orphanRemoval = true, cascade = CascadeType.ALL)
     public List<PassengerReservationEntity> reservations;

@@ -1,10 +1,11 @@
 package com.falcon.booking.web.controller;
 
 import com.falcon.booking.domain.service.FlightService;
+import com.falcon.booking.domain.service.RouteActivationOrchestrator;
 import com.falcon.booking.domain.service.RouteService;
 import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
-import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
+import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import com.falcon.booking.web.dto.route.*;
 import com.falcon.booking.web.exception.Error;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,11 +36,13 @@ public class RouteController {
 
     private final RouteService routeService;
     private final FlightService flightService;
+    private final RouteActivationOrchestrator routeActivationOrchestrator;
 
     @Autowired
-    public RouteController(RouteService routeService, FlightService flightService) {
+    public RouteController(RouteService routeService, FlightService flightService, RouteActivationOrchestrator routeActivationOrchestrator) {
         this.routeService = routeService;
         this.flightService = flightService;
+        this.routeActivationOrchestrator = routeActivationOrchestrator;
     }
 
     @Operation(summary = "Get all routes",
@@ -139,7 +142,7 @@ public class RouteController {
                                                         @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                         @Parameter(description = "Route unique flight number", example = "AV1234")
                                                         String flightNumber) {
-        return ResponseEntity.ok(routeService.activateRoute(flightNumber));
+        return ResponseEntity.ok(routeActivationOrchestrator.activateRoute(flightNumber));
     }
 
     @Operation(summary = "Deactivate route",
@@ -204,33 +207,38 @@ public class RouteController {
 
 
     @Operation(summary = "Generate flights for a route",
-            description = "Generates scheduled flights for one route according to configured route schedules.")
+            description = "Generates scheduled flights for one route according to configured route schedules." +
+                    "This method works asynchronously, there is not posible to execute multiple generation for same route at same time")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Flights generated successfully for route",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightsGeneratedDto.class))),
+            @ApiResponse(responseCode = "202", description = "Flight generation for route process started successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightsGenerationDto.class))),
             @ApiResponse(responseCode = "400", description = "Error by invalid route state for generation",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Route not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PostMapping("/{flightNumber}/generateFlights")
-    public ResponseEntity<ResponseFlightsGeneratedDto> generateFlightsForRoute(@PathVariable
+    public ResponseEntity<ResponseFlightsGenerationDto> generateFlightsForRoute(@PathVariable
                                                                                @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                                                @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                                String flightNumber) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateAllFlightsForRoute(flightNumber));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startRouteFlightGeneration(flightNumber));
     }
 
+
+
     @Operation(summary = "Generate flights for all routes",
-            description = "Generates scheduled flights for all eligible active routes.")
+            description = "Generates scheduled flights for all active routes."+
+                    "This method works asynchronously, there is not posible to execute multiple generation at same time")
+
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Flights generated successfully",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseFlightsGeneratedDto.class))))
+            @ApiResponse(responseCode = "202", description = "Global flight generation process started successfully",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseFlightsGenerationDto.class))))
     })
     @PostMapping("/generateFlights")
-    public ResponseEntity<List<ResponseFlightsGeneratedDto>> generateFlightForAllRoutes() {
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.generateAllFlightsForAllRoutes());
+    public ResponseEntity<ResponseFlightsGenerationDto> generateFlightForAllRoutes() {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startGlobalFlightGeneration());
     }
 
     @Operation(summary = "Get route flights in date range",

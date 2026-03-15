@@ -10,7 +10,6 @@ import com.falcon.booking.web.dto.CountryDto;
 import com.falcon.booking.web.dto.airplaneType.AirplaneTypeInFlightDto;
 import com.falcon.booking.web.dto.airplaneType.ResponseAirplaneTypeDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
-import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
 import com.falcon.booking.web.dto.route.AddRouteScheduleRequestDto;
 import com.falcon.booking.web.dto.route.CreateRouteDto;
 import com.falcon.booking.web.dto.route.ResponseRouteDto;
@@ -225,18 +224,7 @@ public class RouteControllerTest {
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
     }
 
-    @DisplayName("Should return 201 created when flights are generated for route")
-    @Test
-    void shouldReturn201_generateFlightsForRoute() throws Exception {
-        ResponseFlightsGeneratedDto responseDto =
-                new ResponseFlightsGeneratedDto("AV1234", 10, LocalDate.now(), LocalDate.now().plusDays(30));
-        given(flightService.generateAllFlightsForRoute("AV1234")).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(post("/routes/AV1234/generateFlights").accept(MediaType.APPLICATION_JSON));
-
-        response.andExpect(status().isCreated())
-                .andExpect(jsonPath("$.flightNumber").value("AV1234"));
-    }
 
     @DisplayName("Should return 200 OK for flights by route and dates")
     @Test

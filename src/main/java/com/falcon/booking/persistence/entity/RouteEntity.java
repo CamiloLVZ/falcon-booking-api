@@ -46,10 +46,10 @@ public class RouteEntity {
     RouteStatus status;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route",cascade=CascadeType.ALL ,orphanRemoval = true)
-    private List<RouteDayEntity> routeDays;
+    private Set<RouteDayEntity> routeDays;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RouteScheduleEntity> routeSchedules;
+    private Set<RouteScheduleEntity> routeSchedules;
 
     public void activate(){
         if(this.isActive())return;

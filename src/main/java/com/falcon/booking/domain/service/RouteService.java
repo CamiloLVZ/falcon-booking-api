@@ -7,7 +7,6 @@ import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.*;
 import com.falcon.booking.persistence.specification.RouteSpecifications;
-import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
 import com.falcon.booking.web.dto.route.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,17 +31,15 @@ public class RouteService {
     private final RouteDayRepository routeDayRepository;
     private final RouteScheduleRepository routeScheduleRepository;
     private final RouteMapper routeMapper;
-    private final FlightGenerationService flightGenerationService;
     private final AirplaneTypeService airplaneTypeService;
     private final AirportService airportService;
 
     @Autowired
-    public RouteService(RouteRepository routeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper, FlightGenerationService flightGenerationService, AirplaneTypeService airplaneTypeService, AirportService airportService) {
+    public RouteService(RouteRepository routeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper, AirplaneTypeService airplaneTypeService, AirportService airportService, AsyncFlightGenerationService asyncFlightGenerationService) {
         this.routeRepository = routeRepository;
         this.routeDayRepository = routeDayRepository;
         this.routeScheduleRepository = routeScheduleRepository;
         this.routeMapper = routeMapper;
-        this.flightGenerationService = flightGenerationService;
         this.airplaneTypeService = airplaneTypeService;
         this.airportService = airportService;
     }
@@ -148,15 +145,8 @@ public class RouteService {
         RouteEntity routeEntity = getRouteEntity(flightNumber);
         routeEntity.activate();
 
-        try {
-            ResponseFlightsGeneratedDto result = flightGenerationService.generateFlightsForRoute(routeEntity);
-            logger.info("Route {} activated with {} flights generated", routeEntity.getFlightNumber(), result.flightsGenerated());
-            return routeMapper.toResponseDto(routeEntity);
-
-        } catch (Exception e) {
-            logger.error("Route {} activated but failed flights generation: {}", routeEntity.getFlightNumber(), e.getMessage());
-            throw e;
-        }
+        logger.info("Route {} activated.", routeEntity.getFlightNumber());
+        return routeMapper.toResponseDto(routeEntity);
     }
 
     @Transactional

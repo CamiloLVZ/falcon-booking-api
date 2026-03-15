@@ -5,23 +5,24 @@ import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotBeRescheduledException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
 import com.falcon.booking.domain.exception.Flight.FlightNotFoundException;
-import com.falcon.booking.domain.exception.Route.RouteHasNotSchedulesToGenerateFlightsException;
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationAlreadyRunningException;
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationNotFoundException;
 import com.falcon.booking.domain.exception.Route.RouteNotActiveException;
+import com.falcon.booking.domain.mapper.FlightGenerationMapper;
 import com.falcon.booking.domain.mapper.FlightMapper;
 import com.falcon.booking.domain.valueobject.FlightStatus;
-import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.entity.FlightEntity;
-import com.falcon.booking.persistence.entity.RouteEntity;
+import com.falcon.booking.persistence.entity.*;
+import com.falcon.booking.persistence.repository.FlightGenerationRepository;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import com.falcon.booking.persistence.specification.FlightSpecifications;
 import com.falcon.booking.web.dto.flight.CreateFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
-import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
+import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +33,7 @@ import java.util.*;
 @Service
 public class FlightService {
 
-    @Value("${app.generation.horizon-days}")
-    int flightGenerationDaysHorizon;
+    private final FlightGenerationMapper flightGenerationMapper;
     @Value("${app.flight.check-in.hours-before-to-start}")
     int checkInHoursBeforeToStart;
     @Value("${app.flight.check-in.hours-before-to-close}")
@@ -50,14 +50,18 @@ public class FlightService {
     private final RouteService routeService;
     private final AirplaneTypeService airplaneTypeService;
     private final FlightMapper flightMapper;
-    private final FlightGenerationService flightGenerationService;
+    private final AsyncFlightGenerationService asyncFlightGenerationService;
+    private final FlightGenerationRepository flightGenerationRepository;
+
     @Autowired
-    public FlightService(FlightRepository flightRepository, RouteService routeService, FlightMapper flightMapper, AirplaneTypeService airplaneTypeService, FlightGenerationService flightGenerationService) {
+    public FlightService(FlightRepository flightRepository, RouteService routeService, FlightMapper flightMapper, AirplaneTypeService airplaneTypeService, AsyncFlightGenerationService asyncFlightGenerationService, FlightGenerationRepository flightGenerationRepository, FlightGenerationMapper flightGenerationMapper) {
         this.flightRepository = flightRepository;
         this.routeService = routeService;
         this.flightMapper = flightMapper;
         this.airplaneTypeService = airplaneTypeService;
-        this.flightGenerationService = flightGenerationService;
+        this.asyncFlightGenerationService = asyncFlightGenerationService;
+        this.flightGenerationRepository = flightGenerationRepository;
+        this.flightGenerationMapper = flightGenerationMapper;
     }
 
     private OffsetDateTime toOffsetDateTime(LocalDate date, ZoneId zoneId) {
@@ -79,6 +83,16 @@ public class FlightService {
         return flightMapper.toDto(flightEntity);
     }
 
+    public ResponseFlightsGenerationDto getFlightGeneration(Long id){
+        FlightGenerationEntity entity = flightGenerationRepository.findById(id)
+                .orElseThrow(()-> new FlightGenerationNotFoundException(id));
+
+        return flightGenerationMapper.toDto(entity);
+    }
+
+    public List<ResponseFlightsGenerationDto> getAllFlightGenerations(){
+        return flightGenerationMapper.toDto(flightGenerationRepository.findAll());
+    }
 
     @Transactional
     public ResponseFlightDto addFlight(CreateFlightDto createFlightDto) {
@@ -216,81 +230,45 @@ public class FlightService {
         return updatesCounter;
     }
 
-    public List<ResponseFlightsGeneratedDto> generateAllFlightsForAllRoutes() {
-        logger.info("Starting flights generation for all he active routes");
+    public ResponseFlightsGenerationDto startGlobalFlightGeneration() {
+        try {
+            FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
+            FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);
+            asyncFlightGenerationService.executeGeneration(generationSaved.getId());
+            return flightGenerationMapper.toDto(generationSaved);
 
-        List<ResponseFlightsGeneratedDto> results = new ArrayList<>();
-        List<RouteEntity> routeEntities = routeService.getAllRoutesByStatus(RouteStatus.ACTIVE);
-
-        int successCount = 0;
-        int failCount = 0;
-
-        for (RouteEntity routeEntity : routeEntities) {
-            try {
-
-                ResponseFlightsGeneratedDto result = flightGenerationService.generateFlightsForRoute(routeEntity);
-                results.add(result);
-                successCount++;
-
-                logger.debug("Route {}: {} flights generated", routeEntity.getFlightNumber(), result.flightsGenerated());
-
-            } catch (Exception e) {
-                failCount++;
-                logger.error("Error at flight generation for route {}: {}", routeEntity.getFlightNumber(), e.getMessage());
-
-                ZoneId timeZoneId = ZoneId.of(routeEntity.getAirportOrigin().getTimezone());
-                LocalDate currentDate = LocalDate.now(timeZoneId);
-                results.add(new ResponseFlightsGeneratedDto(
-                        routeEntity.getFlightNumber(),
-                        0,
-                        currentDate,
-                        currentDate
-                ));
-            }
+        } catch (DataIntegrityViolationException e) {
+            throw new FlightGenerationAlreadyRunningException();
         }
-        logger.info("Flights generation completed: {} success, {} failed for {} routes", successCount, failCount, routeEntities.size());
-
-        return results;
     }
 
-    public ResponseFlightsGeneratedDto generateAllFlightsForRoute(String flightNumber) {
-        RouteEntity route = routeService.getRouteEntity(flightNumber);
-        if(route.getOperatingDays().isEmpty() || route.getOperatingSchedules().isEmpty())
-            throw new RouteHasNotSchedulesToGenerateFlightsException(flightNumber);
+    public ResponseFlightsGenerationDto startRouteFlightGeneration(String flightNumber) {
+        RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
+        if(!routeEntity.isActive())
+            throw new RouteNotActiveException(routeEntity.getFlightNumber());
 
-        ResponseFlightsGeneratedDto responseDto = flightGenerationService.generateFlightsForRoute(route);
-        logger.info("Flights generated for route {} : {}", responseDto.flightNumber(), responseDto.flightsGenerated());
-        return responseDto;
-    }
+        try {
+            FlightGenerationEntity generation = FlightGenerationEntity.startRouteGeneration(routeEntity.getId());
+            FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);
+            asyncFlightGenerationService.executeGeneration(generationSaved.getId());
+            return flightGenerationMapper.toDto(generationSaved);
 
-    public void generateFlightsForAllRoutesAtHorizon() {
-        List<RouteEntity> routeEntities = routeService.getAllRoutesByStatus(RouteStatus.ACTIVE);
-        int processedCount = 0;
-        int skippedCount = 0;
-        int errorCount = 0;
-
-        for (RouteEntity routeEntity : routeEntities) {
-            try {
-                ZoneId timeZoneId = ZoneId.of(routeEntity.getAirportOrigin().getTimezone());
-                LocalDate currentDate = LocalDate.now(timeZoneId);
-                LocalDate targetDate = currentDate.plusDays(flightGenerationDaysHorizon);
-
-                int generated = flightGenerationService.generateFlightsForRouteAtDate(routeEntity, targetDate);
-
-                if (generated > 0) {
-                    processedCount++;
-                    logger.debug("Route {}: {} flights generated for {}", routeEntity.getFlightNumber(), generated, targetDate);
-                } else {
-                    skippedCount++;
-                }
-
-            } catch (Exception e) {
-                errorCount++;
-                logger.error("Error at flights generations for route {} at horizon date: {}", routeEntity.getFlightNumber(), e.getMessage());
-            }
+        } catch (DataIntegrityViolationException e) {
+            throw new FlightGenerationAlreadyRunningException();
         }
-
-        logger.info("Daily flights generation completed: {} processed, {} skipped, {} errors", processedCount, skippedCount, errorCount);
     }
+
+    public void startDailyFlightGeneration(LocalDate targetDate) {
+
+        try {
+            FlightGenerationEntity generation = FlightGenerationEntity.startDailyGeneration(targetDate);
+            FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);
+            asyncFlightGenerationService.executeGeneration(generationSaved.getId());
+
+        } catch (DataIntegrityViolationException e) {
+            throw new FlightGenerationAlreadyRunningException();
+        }
+    }
+
 }
 
