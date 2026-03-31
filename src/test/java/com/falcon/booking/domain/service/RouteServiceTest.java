@@ -25,10 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -86,8 +83,8 @@ public class RouteServiceTest {
         route.setDefaultAirplaneType(createAirplaneType(AirplaneTypeStatus.ACTIVE));
         route.setLengthMinutes(60);
         route.setStatus(RouteStatus.DRAFT);
-        route.setRouteDays(new ArrayList<>(List.of(new RouteDayEntity(route, DayOfWeek.MONDAY))));
-        route.setRouteSchedules(new ArrayList<>(List.of(new RouteScheduleEntity(route, LocalTime.of(8, 0)))));
+        route.setRouteDays(new HashSet<>(List.of(new RouteDayEntity(route, DayOfWeek.MONDAY))));
+        route.setRouteSchedules(new HashSet<>(List.of(new RouteScheduleEntity(route, LocalTime.of(8, 0)))));
         return route;
     }
 

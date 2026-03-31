@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -45,11 +46,11 @@ public class RouteEntityTest {
         route.setLengthMinutes(60);
         route.setDefaultAirplaneType(createActiveAirplaneType());
 
-        List<RouteDayEntity> routeDays = new ArrayList<>();
+        Set<RouteDayEntity> routeDays = new HashSet<>();
         routeDays.add(new RouteDayEntity(route, DayOfWeek.MONDAY));
         route.setRouteDays(routeDays);
 
-        List<RouteScheduleEntity> routeSchedules = new ArrayList<>();
+        Set<RouteScheduleEntity> routeSchedules = new HashSet<>();
         routeSchedules.add(new RouteScheduleEntity(route, LocalTime.of(8, 0)));
         route.setRouteSchedules(routeSchedules);
 

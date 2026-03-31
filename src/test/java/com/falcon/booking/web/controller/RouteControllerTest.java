@@ -2,6 +2,7 @@ package com.falcon.booking.web.controller;
 
 import com.falcon.booking.domain.exception.Route.RouteNotFoundException;
 import com.falcon.booking.domain.service.FlightService;
+import com.falcon.booking.domain.service.RouteActivationOrchestrator;
 import com.falcon.booking.domain.service.RouteService;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
@@ -53,6 +54,9 @@ public class RouteControllerTest {
     @MockitoBean
     private FlightService flightService;
 
+    @MockitoBean
+    private RouteActivationOrchestrator routeActivationOrchestrator;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -72,7 +76,7 @@ public class RouteControllerTest {
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
         given(routeService.getRouteByFlightNumber("AV1234")).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(get("/routes/AV1234").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/routes/AV1234").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"))
@@ -84,7 +88,7 @@ public class RouteControllerTest {
     void shouldReturn404_getRouteByFlightNumber() throws Exception {
         given(routeService.getRouteByFlightNumber("AV1234")).willThrow(new RouteNotFoundException("AV1234"));
 
-        ResultActions response = mockMvc.perform(get("/routes/AV1234").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/routes/AV1234").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("route-does-not-exists"))
@@ -94,7 +98,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 400 invalid-arguments when flight number size is invalid")
     @Test
     void shouldReturn400InvalidArguments_getRouteByFlightNumber() throws Exception {
-        ResultActions response = mockMvc.perform(get("/routes/AV1").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/routes/AV1").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("invalid-arguments"));
@@ -106,7 +110,7 @@ public class RouteControllerTest {
         List<ResponseRouteDto> routes = List.of(createResponseRouteDto("AV1234"), createResponseRouteDto("AV5678"));
         given(routeService.getAllRoutes(null, null, null)).willReturn(routes);
 
-        ResultActions response = mockMvc.perform(get("/routes").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/routes").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -121,7 +125,7 @@ public class RouteControllerTest {
         given(routeService.addRoute(createRouteDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                post("/routes")
+                post("/v1/routes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRouteDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -137,7 +141,7 @@ public class RouteControllerTest {
         CreateRouteDto createRouteDto = new CreateRouteDto("", "BO", "", -1L, -1);
 
         ResultActions response = mockMvc.perform(
-                post("/routes")
+                post("/v1/routes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRouteDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -154,7 +158,7 @@ public class RouteControllerTest {
         given(routeService.updateRoute("AV1234", updateRouteDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                put("/routes/AV1234")
+                put("/v1/routes/AV1234")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRouteDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -168,9 +172,9 @@ public class RouteControllerTest {
     @Test
     void shouldReturn200_activateRoute() throws Exception {
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
-        given(routeService.activateRoute("AV1234")).willReturn(responseDto);
+        given(routeActivationOrchestrator.activateRoute("AV1234")).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(patch("/routes/AV1234/activate").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(patch("/v1/routes/AV1234/activate").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
@@ -182,7 +186,7 @@ public class RouteControllerTest {
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
         given(routeService.deactivateRoute("AV1234")).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(patch("/routes/AV1234/deactivate").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(patch("/v1/routes/AV1234/deactivate").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
@@ -201,7 +205,7 @@ public class RouteControllerTest {
         given(routeService.setRouteOperatingSchedules("AV1234", requestDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                patch("/routes/AV1234/schedules")
+                patch("/v1/routes/AV1234/schedules")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -218,7 +222,7 @@ public class RouteControllerTest {
                 new RouteWithSchedulesDto("AV1234", Set.of(DayOfWeek.MONDAY), Set.of(LocalTime.of(8, 0)));
         given(routeService.getRouteWithSchedules("AV1234")).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(get("/routes/AV1234/schedules").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/routes/AV1234/schedules").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
@@ -245,7 +249,7 @@ public class RouteControllerTest {
                 .willReturn(flights);
 
         ResultActions response = mockMvc.perform(
-                get("/routes/AV1234/flights")
+                get("/v1/routes/AV1234/flights")
                         .param("dateFrom", "2026-01-01")
                         .param("dateTo", "2026-01-02")
                         .accept(MediaType.APPLICATION_JSON)

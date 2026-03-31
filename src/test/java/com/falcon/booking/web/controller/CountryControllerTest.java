@@ -43,7 +43,7 @@ public class CountryControllerTest {
                 .willReturn(expectedDto);
 
         ResultActions response = mockMvc.perform(
-                get("/countries/CO")
+                get("/v1/countries/CO")
                 .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
@@ -58,7 +58,7 @@ public class CountryControllerTest {
                 .willThrow( new CountryNotFoundException("CO"));
 
         ResultActions response = mockMvc.perform(
-                get("/countries/CO")
+                get("/v1/countries/CO")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isNotFound())
@@ -72,7 +72,7 @@ public class CountryControllerTest {
         String isoCode="COL";
 
         ResultActions response = mockMvc.perform(
-                get("/countries/{isoCode}", isoCode)
+                get("/v1/countries/{isoCode}", isoCode)
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isBadRequest())
@@ -89,7 +89,7 @@ public class CountryControllerTest {
         List<CountryDto> countries = List.of(country1, country2, country3);
         given(countryService.getAllCountries()).willReturn(countries);
 
-        ResultActions response = mockMvc.perform(get("/countries")
+        ResultActions response = mockMvc.perform(get("/v1/countries")
                 .accept(MediaType.APPLICATION_JSON));
 
 
@@ -107,7 +107,7 @@ public class CountryControllerTest {
         List<CountryDto> countries = List.of();
         given(countryService.getAllCountries()).willReturn(countries);
 
-        ResultActions response = mockMvc.perform(get("/countries")
+        ResultActions response = mockMvc.perform(get("/v1/countries")
                 .accept(MediaType.APPLICATION_JSON));
 
 
@@ -125,7 +125,7 @@ public class CountryControllerTest {
         List<AirportDto> airports = List.of(airport1, airport2);
         given(airportService.getAirportsByCountryIsoCode("CO")).willReturn(airports);
 
-        ResultActions response = mockMvc.perform(get("/countries/CO/airports")
+        ResultActions response = mockMvc.perform(get("/v1/countries/CO/airports")
                 .accept(MediaType.APPLICATION_JSON));
 
 
@@ -141,7 +141,7 @@ public class CountryControllerTest {
         given(airportService.getAirportsByCountryIsoCode("CO"))
                 .willReturn(airports);
 
-        ResultActions response = mockMvc.perform(get("/countries/CO/airports")
+        ResultActions response = mockMvc.perform(get("/v1/countries/CO/airports")
                 .accept(MediaType.APPLICATION_JSON));
 
 
@@ -157,7 +157,7 @@ public class CountryControllerTest {
         given(airportService.getAirportsByCountryIsoCode("CO"))
                 .willThrow( new CountryNotFoundException("CO"));
 
-        ResultActions response = mockMvc.perform(get("/countries/CO/airports")
+        ResultActions response = mockMvc.perform(get("/v1/countries/CO/airports")
                 .accept(MediaType.APPLICATION_JSON));
 
 
@@ -173,7 +173,7 @@ public class CountryControllerTest {
         String isoCode="COL";
 
         ResultActions response = mockMvc.perform(
-                get("/countries/{isoCode}/airports", isoCode)
+                get("/v1/countries/{isoCode}/airports", isoCode)
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isBadRequest())

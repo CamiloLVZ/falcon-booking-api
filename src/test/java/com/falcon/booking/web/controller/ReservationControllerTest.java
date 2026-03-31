@@ -88,7 +88,7 @@ class ReservationControllerTest {
         ResponseReservationDto dto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
         given(reservationService.getReservationByNumber("ABC123")).willReturn(dto);
 
-        ResultActions response = mockMvc.perform(get("/reservations/ABC123").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/reservations/ABC123").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value("ABC123"))
@@ -100,7 +100,7 @@ class ReservationControllerTest {
     void shouldReturn404_getReservationByNumber() throws Exception {
         given(reservationService.getReservationByNumber("ABC123")).willThrow(new ReservationNotFoundException("ABC123"));
 
-        ResultActions response = mockMvc.perform(get("/reservations/ABC123").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/reservations/ABC123").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("reservation-does-not-exist"));
@@ -117,7 +117,7 @@ class ReservationControllerTest {
         given(reservationService.addReservation(request)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                post("/reservations")
+                post("/v1/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON)
@@ -134,7 +134,7 @@ class ReservationControllerTest {
                 List.of());
 
         ResultActions response = mockMvc.perform(
-                post("/reservations")
+                post("/v1/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalid))
                         .accept(MediaType.APPLICATION_JSON)
@@ -151,7 +151,7 @@ class ReservationControllerTest {
                 .willReturn(dto);
 
         ResultActions response = mockMvc.perform(
-                patch("/reservations/ABC123/cancel/passenger")
+                patch("/v1/reservations/ABC123/cancel/passenger")
                         .param("identificationNumber", "110011")
                         .param("countryIsoCode", "CO")
                         .accept(MediaType.APPLICATION_JSON)
@@ -165,7 +165,7 @@ class ReservationControllerTest {
     @Test
     void shouldReturn400_cancelPassengerByIdentification() throws Exception {
         ResultActions response = mockMvc.perform(
-                patch("/reservations/ABC123/cancel/passenger")
+                patch("/v1/reservations/ABC123/cancel/passenger")
                         .param("identificationNumber", "110011")
                         .param("countryIsoCode", "COL")
                         .accept(MediaType.APPLICATION_JSON)

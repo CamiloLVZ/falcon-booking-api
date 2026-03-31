@@ -1,11 +1,15 @@
 package com.falcon.booking.web.controller;
 
 import com.falcon.booking.domain.exception.Flight.FlightNotFoundException;
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationNotFoundException;
 import com.falcon.booking.domain.service.FlightService;
+import com.falcon.booking.domain.valueobject.FlightGenerationStatus;
+import com.falcon.booking.domain.valueobject.FlightGenerationType;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.web.dto.airplaneType.AirplaneTypeInFlightDto;
 import com.falcon.booking.web.dto.flight.CreateFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
+import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -53,27 +58,34 @@ class FlightControllerTest {
         );
     }
 
+    private ResponseFlightsGenerationDto createResponseFlightGenerationDto(Long id, FlightGenerationStatus status) {
+        return new ResponseFlightsGenerationDto(
+                id, status, FlightGenerationType.ROUTE, 1L, 400,
+                Instant.now(), Instant.now().plusMillis(1500), 10L, "/v1/flight-generations/"+id
+        );
+    }
+
     @DisplayName("Should return 200 OK and flight by id")
     @Test
     void shouldReturn200_getFlightById() throws Exception {
         ResponseFlightDto responseDto = createResponseDto(1L, "AV1234", FlightStatus.SCHEDULED);
         given(flightService.getFlightById(1L)).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(get("/flights/1").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/flights/1").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
     }
 
-    @DisplayName("Should return 400 when flight does not exist")
+    @DisplayName("Should return 404 when flight does not exist")
     @Test
     void shouldReturn400_getFlightById() throws Exception {
         given(flightService.getFlightById(1L)).willThrow(new FlightNotFoundException(1L));
 
-        ResultActions response = mockMvc.perform(get("/flights/1").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/flights/1").accept(MediaType.APPLICATION_JSON));
 
-        response.andExpect(status().isBadRequest())
+        response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("flight-does-not-exist"));
     }
 
@@ -89,7 +101,7 @@ class FlightControllerTest {
                 LocalDate.parse("2026-01-01"), LocalDate.parse("2026-01-31"))).willReturn(flights);
 
         ResultActions response = mockMvc.perform(
-                get("/flights")
+                get("/v1/flights")
                         .param("flightNumber", "AV1234")
                         .param("status", "SCHEDULED")
                         .param("dateFrom", "2026-01-01")
@@ -106,7 +118,7 @@ class FlightControllerTest {
     @Test
     void shouldReturn400_getAllFlights() throws Exception {
         ResultActions response = mockMvc.perform(
-                get("/flights")
+                get("/v1/flights")
                         .param("flightNumber", "AV1")
                         .accept(MediaType.APPLICATION_JSON)
         );
@@ -123,7 +135,7 @@ class FlightControllerTest {
         given(flightService.addFlight(createDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                post("/flights")
+                post("/v1/flights")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -139,7 +151,7 @@ class FlightControllerTest {
         CreateFlightDto invalidDto = new CreateFlightDto("", null);
 
         ResultActions response = mockMvc.perform(
-                post("/flights")
+                post("/v1/flights")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -156,7 +168,7 @@ class FlightControllerTest {
         given(flightService.rescheduleFLight(10L, newDeparture)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                post("/flights/10/reschedule")
+                post("/v1/flights/10/reschedule")
                         .param("newDepartureLocalDateTime", newDeparture.toString())
                         .accept(MediaType.APPLICATION_JSON)
         );
@@ -172,7 +184,7 @@ class FlightControllerTest {
         given(flightService.cancelFlight(1L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                patch("/flights/1/cancel")
+                patch("/v1/flights/1/cancel")
                         .accept(MediaType.APPLICATION_JSON)
         );
 
@@ -187,7 +199,7 @@ class FlightControllerTest {
         given(flightService.changeAirplaneType(1L, 5L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                patch("/flights/1/change-airplane-type")
+                patch("/v1/flights/1/change-airplane-type")
                         .param("idAirplaneType", "5")
                         .accept(MediaType.APPLICATION_JSON)
         );
@@ -200,7 +212,7 @@ class FlightControllerTest {
     @Test
     void shouldReturn400_changeAirplaneType() throws Exception {
         ResultActions response = mockMvc.perform(
-                patch("/flights/1/change-airplane-type")
+                patch("/v1/flights/1/change-airplane-type")
                         .accept(MediaType.APPLICATION_JSON)
         );
 
@@ -214,7 +226,7 @@ class FlightControllerTest {
         LocalDateTime pastDate = LocalDateTime.now().minusDays(1);
 
         ResultActions response = mockMvc.perform(
-                post("/flights/1/reschedule")
+                post("/v1/flights/1/reschedule")
                         .param("newDepartureLocalDateTime", pastDate.toString())
                         .accept(MediaType.APPLICATION_JSON)
         );
@@ -222,4 +234,29 @@ class FlightControllerTest {
         response.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("invalid-arguments"));
     }
+
+    @DisplayName("Should return 200 OK and flight generation by id")
+    @Test
+    void shouldReturn200_getFlightGenerationById() throws Exception {
+        ResponseFlightsGenerationDto responseDto = createResponseFlightGenerationDto(1L, FlightGenerationStatus.RUNNING);
+        given(flightService.getFlightGeneration(1L)).willReturn(responseDto);
+
+        ResultActions response = mockMvc.perform(get("/v1/flights/generations/1").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.generationId").value(1L))
+                .andExpect(jsonPath("$.status").value("RUNNING"));
+    }
+
+    @DisplayName("Should return 404 when flight does not exist")
+    @Test
+    void shouldReturn400_getFlightGeneration() throws Exception {
+        given(flightService.getFlightGeneration(1L)).willThrow(new FlightGenerationNotFoundException(1L));
+
+        ResultActions response = mockMvc.perform(get("/v1/flights/generations/1").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("flight-generation-does-not-exist"));
+    }
+
 }
