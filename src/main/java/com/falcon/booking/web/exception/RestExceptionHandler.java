@@ -6,6 +6,8 @@ import com.falcon.booking.domain.exception.AirplaneType.AirplaneNotFoundExceptio
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeInvalidStatusChangeException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeStatusInvalidException;
 import com.falcon.booking.domain.exception.Flight.*;
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationAlreadyRunningException;
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationNotFoundException;
 import com.falcon.booking.domain.exception.Passenger.PassengerAlreadyExistsException;
 import com.falcon.booking.domain.exception.Passenger.PassengerNotFoundException;
 import com.falcon.booking.domain.exception.Passenger.PassengerHasDifferentPassportNumberException;
@@ -230,7 +232,7 @@ public class RestExceptionHandler {
     public ResponseEntity<Error> handleException(FlightNotFoundException exception) {
         Error error = new Error("flight-does-not-exist", exception.getMessage());
         logger.warn(error.message());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(FlightAlreadyExistsException.class)
@@ -261,6 +263,20 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(FlightGenerationAlreadyRunningException.class)
+    public ResponseEntity<Error> handleException(FlightGenerationAlreadyRunningException exception){
+        Error error = new Error("flight-generation-already-running", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(FlightGenerationNotFoundException.class)
+    public ResponseEntity<Error> handleException(FlightGenerationNotFoundException exception){
+        Error error = new Error("flight-generation-does-not-exist", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(OutOfFlightCheckInTimeException.class)
     public ResponseEntity<Error> handleException(OutOfFlightCheckInTimeException exception){
         Error error = new Error("flight-out-of-check-in-time", exception.getMessage());
@@ -286,7 +302,7 @@ public class RestExceptionHandler {
     public ResponseEntity<Error> handleException(PassengerNotFoundException exception){
         Error error = new Error("passenger-does-not-exist", exception.getMessage());
         logger.warn(error.message());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(PassengerHasDifferentPassportNumberException.class)

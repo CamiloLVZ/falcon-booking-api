@@ -37,7 +37,7 @@ public class AirportControllerTest {
         given(airportService.getAirportByIataCode("BOG")).willReturn(expectedDto);
 
         ResultActions response = mockMvc.perform(
-                get("/airports/BOG").accept(MediaType.APPLICATION_JSON));
+                get("/v1/airports/BOG").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.iataCode").value(expectedDto.iataCode()))
@@ -52,7 +52,7 @@ public class AirportControllerTest {
         given(airportService.getAirportByIataCode("BOG")).willThrow(new AirportNotFoundException("BOG"));
 
         ResultActions response = mockMvc.perform(
-                get("/airports/BOG").accept(MediaType.APPLICATION_JSON));
+                get("/v1/airports/BOG").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("airport-does-not-exist"))
@@ -65,7 +65,7 @@ public class AirportControllerTest {
         String iataCode = "BOGG";
 
         ResultActions response = mockMvc.perform(
-                get("/airports/{iataCode}", iataCode).accept(MediaType.APPLICATION_JSON));
+                get("/v1/airports/{iataCode}", iataCode).accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("invalid-arguments"))
@@ -82,7 +82,7 @@ public class AirportControllerTest {
         given(airportService.getAllAirports()).willReturn(airports);
 
         ResultActions response = mockMvc.perform(
-                get("/airports").accept(MediaType.APPLICATION_JSON));
+                get("/v1/airports").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -98,7 +98,7 @@ public class AirportControllerTest {
         given(airportService.getAllAirports()).willReturn(airports);
 
         ResultActions response = mockMvc.perform(
-                get("/airports").accept(MediaType.APPLICATION_JSON));
+                get("/v1/airports").accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())

@@ -27,4 +27,9 @@ public interface FlightRepository extends JpaRepository<FlightEntity, Long>, Jpa
             @Param("departureTimes") List<OffsetDateTime> departureTimes
     );
 
+    @Query("""
+            SELECT f.departureDateTime FROM FlightEntity f
+            WHERE f.route.id = :routeId AND f.departureDateTime BETWEEN :start AND :end""")
+    List<OffsetDateTime> findExistingDepartureTimesInRange(Long routeId, OffsetDateTime start, OffsetDateTime end);
+
 }

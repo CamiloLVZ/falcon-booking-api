@@ -4,6 +4,7 @@ import com.falcon.booking.domain.service.FlightService;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.web.dto.flight.CreateFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
+import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import com.falcon.booking.web.exception.Error;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -148,11 +149,39 @@ public class FlightController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PatchMapping("/{id}/change-airplane-type")
-    public ResponseEntity<ResponseFlightDto> cancelFlight(@PathVariable Long id,
+    public ResponseEntity<ResponseFlightDto> changeAirplaneType(@PathVariable Long id,
                                                           @Parameter(description = "Airplane type numeric unique identifier", example = "10")
                                                           @RequestParam Long idAirplaneType) {
         return ResponseEntity.ok(flightService.changeAirplaneType(id, idAirplaneType));
     }
 
+
+    @Operation(summary = "Get all flight generations",
+            description = "Returns a list of all the historic flight generations.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Flight generations retrieved successfully, even if list is empty",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseFlightsGenerationDto.class)))),
+    })
+    @GetMapping("/generations")
+    public ResponseEntity<List<ResponseFlightsGenerationDto>> getAllFlightGenerations() {
+        return ResponseEntity.ok(flightService.getAllFlightGenerations());
+    }
+
+    @Operation(summary = "Get a flight generation by id",
+            description = "Returns a flight generation process record using its unique numeric identifier.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Flight generation retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightsGenerationDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid id argument",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "404", description = "Flight generation not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/generations/{id}")
+    public ResponseEntity<ResponseFlightsGenerationDto> getFlightsGeneration(@PathVariable
+                                                                                 @Parameter(description = "Flights generation unique identifier.", example = "10")
+                                                                                 Long id) {
+        return ResponseEntity.ok(flightService.getFlightGeneration(id));
+    }
 
 }

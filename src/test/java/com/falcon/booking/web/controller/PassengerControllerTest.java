@@ -62,7 +62,7 @@ public class PassengerControllerTest {
         given(passengerService.getPassengerById(1L)).willReturn(passengerDto);
 
         ResultActions response = mockMvc.perform(
-                get("/passengers/{id}", 1L)
+                get("/v1/passengers/{id}", 1L)
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
@@ -79,7 +79,7 @@ public class PassengerControllerTest {
                 .willReturn(passengerDto);
 
         ResultActions response = mockMvc.perform(
-                get("/passengers/identification")
+                get("/v1/passengers/identification")
                         .param("identificationNumber", "10001")
                         .param("countryIsoCode", "CO")
                         .accept(MediaType.APPLICATION_JSON));
@@ -96,7 +96,7 @@ public class PassengerControllerTest {
         given(passengerService.getPassengerByPassportNumber("AB1234")).willReturn(passengerDto);
 
         ResultActions response = mockMvc.perform(
-                get("/passengers/passport/{passportNumber}", "AB1234")
+                get("/v1/passengers/passport/{passportNumber}", "AB1234")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
@@ -107,7 +107,7 @@ public class PassengerControllerTest {
     @Test
     void shouldReturn400InvalidArguments_getByIdentification() throws Exception {
         ResultActions response = mockMvc.perform(
-                get("/passengers/identification")
+                get("/v1/passengers/identification")
                         .param("identificationNumber", "10001")
                         .param("countryIsoCode", "COL")
                         .accept(MediaType.APPLICATION_JSON));
@@ -125,7 +125,7 @@ public class PassengerControllerTest {
                 .willReturn(reservations);
 
         ResultActions response = mockMvc.perform(
-                get("/passengers/reservations")
+                get("/v1/passengers/reservations")
                         .param("identificationNumber", "10001")
                         .param("countryIsoCode", "CO")
                         .accept(MediaType.APPLICATION_JSON));
@@ -151,7 +151,7 @@ public class PassengerControllerTest {
         given(passengerService.addPassenger(addPassengerDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                post("/passengers")
+                post("/v1/passengers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(addPassengerDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -175,7 +175,7 @@ public class PassengerControllerTest {
         );
 
         ResultActions response = mockMvc.perform(
-                post("/passengers")
+                post("/v1/passengers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -199,7 +199,7 @@ public class PassengerControllerTest {
                         responseDto.identificationNumber()));
 
         ResultActions response = mockMvc.perform(
-                patch("/passengers/passport")
+                patch("/v1/passengers/passport")
                         .param("identificationNumber", "10001")
                         .param("countryIsoCode", "CO")
                         .param("newPassportNumber", "AB9999")
@@ -209,17 +209,17 @@ public class PassengerControllerTest {
                 .andExpect(jsonPath("$.passportNumber").value("AB9999"));
     }
 
-    @DisplayName("Should return 400 when passenger does not exist")
+    @DisplayName("Should return 404 when passenger does not exist")
     @Test
-    void shouldReturn400PassengerNotFound_getByPassport() throws Exception {
+    void shouldReturn404PassengerNotFound_getByPassport() throws Exception {
         given(passengerService.getPassengerByPassportNumber("XX0000"))
                 .willThrow(new PassengerNotFoundException("XX0000"));
 
         ResultActions response = mockMvc.perform(
-                get("/passengers/passport/{passportNumber}", "XX0000")
+                get("/v1/passengers/passport/{passportNumber}", "XX0000")
                         .accept(MediaType.APPLICATION_JSON));
 
-        response.andExpect(status().isBadRequest())
+        response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("passenger-does-not-exist"))
                 .andExpect(jsonPath("$.message").exists());
     }

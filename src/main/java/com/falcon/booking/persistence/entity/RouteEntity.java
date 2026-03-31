@@ -46,10 +46,10 @@ public class RouteEntity {
     RouteStatus status;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route",cascade=CascadeType.ALL ,orphanRemoval = true)
-    private List<RouteDayEntity> routeDays;
+    private Set<RouteDayEntity> routeDays;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RouteScheduleEntity> routeSchedules;
+    private Set<RouteScheduleEntity> routeSchedules;
 
     public void activate(){
         if(this.isActive())return;
@@ -122,14 +122,21 @@ public class RouteEntity {
     }
 
     public void updateWeekDays(Collection<DayOfWeek> newWeekDays) {
-        this.routeDays.clear();
+        if(this.routeDays == null) {
+            this.routeDays = new HashSet<>();
+        }
 
+        this.routeDays.clear();
         for (DayOfWeek weekDay : new HashSet<>(newWeekDays)) {
             this.routeDays.add(new RouteDayEntity(this, weekDay));
         }
     }
 
     public void updateSchedules(Collection<LocalTime> newSchedules) {
+        if(this.routeSchedules == null) {
+            this.routeSchedules = new HashSet<>();
+        }
+
         this.routeSchedules.clear();
         for (LocalTime schedule : new HashSet<>(newSchedules)) {
             this.routeSchedules.add(new RouteScheduleEntity(this, schedule));

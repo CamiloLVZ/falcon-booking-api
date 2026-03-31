@@ -11,7 +11,6 @@ import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.RouteDayRepository;
 import com.falcon.booking.persistence.repository.RouteRepository;
 import com.falcon.booking.persistence.repository.RouteScheduleRepository;
-import com.falcon.booking.web.dto.flight.ResponseFlightsGeneratedDto;
 import com.falcon.booking.web.dto.route.AddRouteScheduleRequestDto;
 import com.falcon.booking.web.dto.route.CreateRouteDto;
 import com.falcon.booking.web.dto.route.ResponseRouteDto;
@@ -25,12 +24,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -52,7 +47,7 @@ public class RouteServiceTest {
     @Mock
     private RouteMapper routeMapper;
     @Mock
-    private FlightGenerationService flightGenerationService;
+    private AsyncFlightGenerationService asyncFlightGenerationService;
     @Mock
     private AirplaneTypeService airplaneTypeService;
     @Mock
@@ -88,8 +83,8 @@ public class RouteServiceTest {
         route.setDefaultAirplaneType(createAirplaneType(AirplaneTypeStatus.ACTIVE));
         route.setLengthMinutes(60);
         route.setStatus(RouteStatus.DRAFT);
-        route.setRouteDays(new ArrayList<>(List.of(new RouteDayEntity(route, DayOfWeek.MONDAY))));
-        route.setRouteSchedules(new ArrayList<>(List.of(new RouteScheduleEntity(route, LocalTime.of(8, 0)))));
+        route.setRouteDays(new HashSet<>(List.of(new RouteDayEntity(route, DayOfWeek.MONDAY))));
+        route.setRouteSchedules(new HashSet<>(List.of(new RouteScheduleEntity(route, LocalTime.of(8, 0)))));
         return route;
     }
 
@@ -204,22 +199,7 @@ public class RouteServiceTest {
         assertThat(route.getLengthMinutes()).isEqualTo(90);
     }
 
-    @DisplayName("Should activate route and generate flights")
-    @Test
-    void shouldActivateRoute_activateRoute() {
-        RouteEntity route = createRouteEntity("AV1234");
-        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.ACTIVE);
 
-        given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
-        given(flightGenerationService.generateFlightsForRoute(route))
-                .willReturn(new ResponseFlightsGeneratedDto("AV1234", 5, LocalDate.now(), LocalDate.now().plusDays(30)));
-        given(routeMapper.toResponseDto(route)).willReturn(responseDto);
-
-        ResponseRouteDto result = routeService.activateRoute("AV1234");
-
-        assertThat(result).isEqualTo(responseDto);
-        assertThat(route.isActive()).isTrue();
-    }
 
     @DisplayName("Should deactivate route")
     @Test

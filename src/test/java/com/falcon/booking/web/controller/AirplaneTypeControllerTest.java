@@ -56,7 +56,7 @@ class AirplaneTypeControllerTest {
                 .willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                get("/airplane-types/{id}", 1L)
+                get("/v1/airplane-types/{id}", 1L)
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
@@ -75,7 +75,7 @@ class AirplaneTypeControllerTest {
                 .willThrow(new AirplaneNotFoundException(1L));
 
         ResultActions response = mockMvc.perform(
-                get("/airplane-types/{id}", 1L)
+                get("/v1/airplane-types/1")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isNotFound())
@@ -95,7 +95,7 @@ class AirplaneTypeControllerTest {
                 .willReturn(airplaneTypes);
 
         ResultActions response = mockMvc.perform(
-                get("/airplane-types")
+                get("/v1/airplane-types")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
@@ -120,7 +120,7 @@ class AirplaneTypeControllerTest {
         given(airplaneTypeService.addAirplaneType(createDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                post("/airplane-types")
+                post("/v1/airplane-types")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -140,7 +140,7 @@ class AirplaneTypeControllerTest {
                 new CreateAirplaneTypeDto("", "", null, null);
 
         ResultActions response = mockMvc.perform(
-                post("/airplane-types")
+                post("/v1/airplane-types")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -162,7 +162,7 @@ class AirplaneTypeControllerTest {
         given(airplaneTypeService.updateAirplaneType(1L, updateDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                put("/airplane-types/{id}", 1L)
+                put("/v1/airplane-types/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -190,7 +190,7 @@ class AirplaneTypeControllerTest {
                 .willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                put("/airplane-types/{id}/correct-identity", 1L)
+                put("/v1/airplane-types/1/correct-identity")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(correctDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -214,7 +214,7 @@ class AirplaneTypeControllerTest {
         given(airplaneTypeService.deactivateAirplaneType(1L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                put("/airplane-types/{id}/deactivate", 1L)
+                put("/v1/airplane-types/1/deactivate")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
@@ -235,7 +235,7 @@ class AirplaneTypeControllerTest {
         given(airplaneTypeService.activateAirplaneType(1L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                put("/airplane-types/{id}/activate", 1L)
+                put("/v1/airplane-types/1/activate")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
@@ -256,7 +256,7 @@ class AirplaneTypeControllerTest {
         given(airplaneTypeService.retireAirplaneType(1L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
-                put("/airplane-types/{id}/retire", 1L)
+                put("/v1/airplane-types/{id}/retire", 1L)
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
