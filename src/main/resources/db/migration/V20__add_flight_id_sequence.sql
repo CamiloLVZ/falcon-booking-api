@@ -1,0 +1,10 @@
+CREATE SEQUENCE flight_seq
+    START WITH 1
+    INCREMENT BY 50
+    CACHE 50;
+
+ALTER TABLE flight ALTER COLUMN id DROP IDENTITY IF EXISTS;
+
+ALTER TABLE flight ALTER COLUMN id SET DEFAULT nextval('flight_seq');
+
+ALTER SEQUENCE flight_seq OWNED BY flight.id;
