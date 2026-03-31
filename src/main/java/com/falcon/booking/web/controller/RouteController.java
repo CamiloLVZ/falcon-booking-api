@@ -205,42 +205,6 @@ public class RouteController {
         return ResponseEntity.ok(routeService.getRouteWithSchedules(flightNumber));
     }
 
-
-    @Operation(summary = "Generate flights for a route",
-            description = "Generates scheduled flights for one route according to configured route schedules." +
-                    "This method works asynchronously, there is not posible to execute multiple generation for same route at same time")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "202", description = "Flight generation for route process started successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightsGenerationDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid route state for generation",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Route not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PostMapping("/{flightNumber}/generateFlights")
-    public ResponseEntity<ResponseFlightsGenerationDto> generateFlightsForRoute(@PathVariable
-                                                                               @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
-                                                                               @Parameter(description = "Route unique flight number", example = "AV1234")
-                                                                               String flightNumber) {
-
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startRouteFlightGeneration(flightNumber));
-    }
-
-
-
-    @Operation(summary = "Generate flights for all routes",
-            description = "Generates scheduled flights for all active routes."+
-                    "This method works asynchronously, there is not posible to execute multiple generation at same time")
-
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "202", description = "Global flight generation process started successfully",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseFlightsGenerationDto.class))))
-    })
-    @PostMapping("/generateFlights")
-    public ResponseEntity<ResponseFlightsGenerationDto> generateFlightForAllRoutes() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startGlobalFlightGeneration());
-    }
-
     @Operation(summary = "Get route flights in date range",
             description = "Returns generated flights for a route between dateFrom and dateTo inclusive.")
     @ApiResponses(value = {
@@ -264,6 +228,41 @@ public class RouteController {
                                                                                 LocalDate dateTo
     ) {
         return ResponseEntity.ok(flightService.getAllFlightsByRouteAndDates(flightNumber, dateFrom, dateTo));
+    }
+
+
+    @Operation(summary = "Generate flights for a route",
+            description = "Generates scheduled flights for one route according to configured route schedules." +
+                    "This method works asynchronously, there is not posible to execute multiple generation for same route at same time")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Flight generation for route process started successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightsGenerationDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid route state for generation",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "404", description = "Route not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @PostMapping("/{flightNumber}/generateFlights")
+    public ResponseEntity<ResponseFlightsGenerationDto> generateFlightsForRoute(@PathVariable
+                                                                               @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
+                                                                               @Parameter(description = "Route unique flight number", example = "AV1234")
+                                                                               String flightNumber) {
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startRouteFlightGeneration(flightNumber));
+    }
+
+
+    @Operation(summary = "Generate flights for all routes",
+            description = "Generates scheduled flights for all active routes."+
+                    "This method works asynchronously, there is not posible to execute multiple generation at same time")
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Global flight generation process started successfully",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseFlightsGenerationDto.class))))
+    })
+    @PostMapping("/generateFlights")
+    public ResponseEntity<ResponseFlightsGenerationDto> generateFlightForAllRoutes() {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startGlobalFlightGeneration());
     }
 
 }

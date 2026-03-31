@@ -1,16 +1,21 @@
 package com.falcon.booking.web.controller;
 
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.domain.exception.Route.RouteNotFoundException;
 import com.falcon.booking.domain.service.FlightService;
 import com.falcon.booking.domain.service.RouteActivationOrchestrator;
 import com.falcon.booking.domain.service.RouteService;
+import com.falcon.booking.domain.valueobject.FlightGenerationStatus;
+import com.falcon.booking.domain.valueobject.FlightGenerationType;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.web.dto.AirportDto;
 import com.falcon.booking.web.dto.CountryDto;
 import com.falcon.booking.web.dto.airplaneType.AirplaneTypeInFlightDto;
 import com.falcon.booking.web.dto.airplaneType.ResponseAirplaneTypeDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
+import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import com.falcon.booking.web.dto.route.AddRouteScheduleRequestDto;
 import com.falcon.booking.web.dto.route.CreateRouteDto;
 import com.falcon.booking.web.dto.route.ResponseRouteDto;
@@ -26,11 +31,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.List;
 import java.util.Set;
 
@@ -259,4 +260,66 @@ public class RouteControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.size()").value(1));
     }
+
+    @DisplayName("Should return 202 when route flight generation starts")
+    @Test
+    void shouldReturn202_generateFlightsForRoute() throws Exception {
+        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(
+                1L, FlightGenerationStatus.RUNNING, FlightGenerationType.ROUTE,
+                1L, null, Instant.now(), null, null, "/flight-generations/1");
+        given(flightService.startRouteFlightGeneration("AV1234")).willReturn(dto);
+
+
+        ResultActions response = mockMvc.perform(
+                post("/v1/routes/AV1234/generateFlights").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.generationId").value(1L))
+                .andExpect(jsonPath("$.status").value("RUNNING"))
+                .andExpect(jsonPath("$.type").value("ROUTE"));
+    }
+
+    @DisplayName("Should return 400 when a flight generation is already running")
+    @Test
+    void shouldReturn400GenerationAlwaysRunning_generateFlightsForRoute() throws Exception {
+        given(flightService.startRouteFlightGeneration("AV1234"))
+                .willThrow(new FlightGenerationAlreadyRunningException());
+
+        ResultActions response = mockMvc.perform(
+                post("/v1/routes/AV1234/generateFlights").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("flight-generation-already-running"));
+    }
+
+    @DisplayName("Should return 202 when global flight generation starts")
+    @Test
+    void shouldReturn202_generateFlightsGlobal() throws Exception {
+        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(
+                1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL,
+                null, null, Instant.now(), null, null, "/flight-generations/1");
+        given(flightService.startGlobalFlightGeneration()).willReturn(dto);
+
+        ResultActions response = mockMvc.perform(
+                post("/v1/routes/generateFlights").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.generationId").value(1L))
+                .andExpect(jsonPath("$.status").value("RUNNING"))
+                .andExpect(jsonPath("$.type").value("GLOBAL"));
+    }
+
+    @DisplayName("Should return 400 when a flight generation is already running")
+    @Test
+    void shouldReturn400GenerationAlwaysRunning_generateFlightsGlobal() throws Exception {
+        given(flightService.startGlobalFlightGeneration())
+                .willThrow(new FlightGenerationAlreadyRunningException());
+
+        ResultActions response = mockMvc.perform(
+                post("/v1/routes/generateFlights").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("flight-generation-already-running"));
+    }
+
 }
