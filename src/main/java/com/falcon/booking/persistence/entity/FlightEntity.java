@@ -102,7 +102,7 @@ public class FlightEntity {
     public void startBoarding(){
         if (this.isInBoarding() ) return;
 
-        if(!this.isCheckInAvailable())
+        if(this.isCanceled() || this.isCompleted())
             throw new FlightInvalidStatusChangeException(this.status, FlightStatus.BOARDING);
 
         this.status = FlightStatus.BOARDING;
