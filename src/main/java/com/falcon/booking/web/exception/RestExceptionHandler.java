@@ -413,14 +413,14 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(JWTVerificationException.class)
     public ResponseEntity<Error> handleException(JWTVerificationException exception) {
-        Error error = new Error("jwt-verification-exception", exception.getMessage());
+        Error error = new Error("jwt-verification-failed", exception.getMessage());
         logger.debug(error.message());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Error> handleException(AccessDeniedException exception) {
-        Error error = new Error("jwt-verification-exception", exception.getMessage());
+        Error error = new Error("access-denied", exception.getMessage());
         logger.debug(error.message());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
