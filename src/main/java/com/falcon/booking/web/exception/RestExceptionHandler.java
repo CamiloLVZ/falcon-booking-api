@@ -1,5 +1,6 @@
 package com.falcon.booking.web.exception;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.falcon.booking.domain.exception.*;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneTypeAlreadyExistsException;
 import com.falcon.booking.domain.exception.AirplaneType.AirplaneNotFoundException;
@@ -13,12 +14,18 @@ import com.falcon.booking.domain.exception.Passenger.PassengerNotFoundException;
 import com.falcon.booking.domain.exception.Passenger.PassengerHasDifferentPassportNumberException;
 import com.falcon.booking.domain.exception.Reservation.*;
 import com.falcon.booking.domain.exception.Route.*;
+import com.falcon.booking.domain.exception.User.RoleAlreadyExistsException;
+import com.falcon.booking.domain.exception.User.RoleNotFoundException;
+import com.falcon.booking.domain.exception.User.UserAlreadyExistException;
+import com.falcon.booking.domain.exception.User.UserNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -366,5 +373,55 @@ public class RestExceptionHandler {
         Error error = new Error("invalid-status-for-boarding", exception.getMessage());
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    //SECURITY
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Error> handleException(UserNotFoundException exception) {
+        Error error = new Error("user-not-found", exception.getMessage());
+        logger.debug(error.message());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(UserAlreadyExistException.class)
+    public ResponseEntity<Error> handleException(UserAlreadyExistException exception) {
+        Error error = new Error("user-already-exists", exception.getMessage());
+        logger.debug(error.message());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<Error> handleException(RoleNotFoundException exception) {
+        Error error = new Error("role-not-found", exception.getMessage());
+        logger.debug(error.message());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(RoleAlreadyExistsException.class)
+    public ResponseEntity<Error> handleException(RoleAlreadyExistsException exception) {
+        Error error = new Error("role-already-exists", exception.getMessage());
+        logger.debug(error.message());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Error> handleException(BadCredentialsException exception) {
+        Error error = new Error("invalid-credentials", exception.getMessage());
+        logger.debug(error.message());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(JWTVerificationException.class)
+    public ResponseEntity<Error> handleException(JWTVerificationException exception) {
+        Error error = new Error("jwt-verification-exception", exception.getMessage());
+        logger.debug(error.message());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Error> handleException(AccessDeniedException exception) {
+        Error error = new Error("jwt-verification-exception", exception.getMessage());
+        logger.debug(error.message());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 }
