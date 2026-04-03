@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -67,10 +68,13 @@ public class AuthController {
     }
 
     @Operation(summary = "Register a new admin user",
-            description = "Creates a new admin user account with the provided registration data. Requires ADMIN role.")
+            description = "Creates a new admin user account with the provided registration data. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Admin user registered successfully"),
             @ApiResponse(responseCode = "400", description = "Error by invalid request body or user already exists",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "403", description = "Insufficient permissions to register admin user",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
