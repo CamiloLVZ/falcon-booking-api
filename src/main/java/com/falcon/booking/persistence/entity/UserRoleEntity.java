@@ -29,6 +29,7 @@ public class UserRoleEntity {
         this.id = new UserRoleId(user.getId(), role.getId());
         this.user = user;
         this.role = role;
+        user.userRoles.add(this);
     }
 
     @Override

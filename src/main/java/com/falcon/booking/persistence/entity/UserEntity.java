@@ -32,7 +32,7 @@ public class UserEntity {
     private Boolean disabled;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    private Set<UserRoleEntity> userRoles = new HashSet<>();
+    protected Set<UserRoleEntity> userRoles = new HashSet<>();
 
     public Set<RoleEntity> getRoles(){
 
