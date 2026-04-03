@@ -27,37 +27,39 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-                http
+        http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
-                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                                //AUTH & DOCS
-                .requestMatchers("/v1/auth/register-admin").hasRole("ADMIN")
-                .requestMatchers("/v1/auth/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        //AUTH & DOCS
+                        .requestMatchers("/v1/auth/register-admin").hasRole("ADMIN")
+                        .requestMatchers("/v1/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                // FLIGHTS
-                .requestMatchers(HttpMethod.POST, "/v1/flights/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/v1/flights/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/v1/flights/**").permitAll()
+                        // FLIGHTS
+                        .requestMatchers(HttpMethod.POST, "/v1/flights/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/flights/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/v1/flights/**").permitAll()
 
-                //RESERVATIONS
-                .requestMatchers( "/v1/reservations/**").permitAll()
+                        //RESERVATIONS
+                        .requestMatchers("/v1/reservations/**").permitAll()
 
-                //ADMIN ONLY
-                .requestMatchers(
-                        "/v1/countries/**",
-                        "/v1/airplane-types/**",
-                        "/v1/passengers/**",
-                        "/v1/airports/**",
-                        "/v1/routes/**"
-                ).hasRole("ADMIN")
+                        //COUNTRIES
+                        .requestMatchers(HttpMethod.GET, "/v1/countries/**").permitAll()
 
-                //ROUTES
-                .requestMatchers(HttpMethod.GET, "/v1/routes/**").permitAll()
+                        //ADMIN ONLY
+                        .requestMatchers(
+                                "/v1/airplane-types/**",
+                                "/v1/passengers/**",
+                                "/v1/airports/**",
+                                "/v1/routes/**"
+                        ).hasRole("ADMIN")
 
-                .anyRequest().hasRole("ADMIN")
+                        //ROUTES
+                        .requestMatchers(HttpMethod.GET, "/v1/routes/**").permitAll()
+
+                        .anyRequest().hasRole("ADMIN")
 
                 ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
