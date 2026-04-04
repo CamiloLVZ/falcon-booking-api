@@ -219,7 +219,7 @@ On Windows:
 Interactive API documentation is available through Swagger UI.
 
 ### Live Swagger
-[Open Swagger UI](https://falcon-booking-api.onrender.com/swagger-ui/index.html)
+[Open Swagger UI](https://falcon-booking-api.onrender.com/api/swagger-ui/index.html)
 
 Note: the application is deployed on a free-tier service, so the first request may take a couple of minutes while the instance wakes up.
 
