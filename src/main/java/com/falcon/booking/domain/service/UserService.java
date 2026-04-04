@@ -75,7 +75,7 @@ public class UserService {
                     logger.info("Initializing admin user");
                     return createAdminUser(dto);
             });
-        } catch (DataIntegrityViolationException e) {
+        } catch (UserAlreadyExistException | DataIntegrityViolationException e) {
             return getUserByEmail(dto.email());
         }
     }
