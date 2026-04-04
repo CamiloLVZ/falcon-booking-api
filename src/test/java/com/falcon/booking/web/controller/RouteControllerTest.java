@@ -9,7 +9,6 @@ import com.falcon.booking.domain.valueobject.FlightGenerationStatus;
 import com.falcon.booking.domain.valueobject.FlightGenerationType;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.web.dto.AirportDto;
 import com.falcon.booking.web.dto.CountryDto;
 import com.falcon.booking.web.dto.airplaneType.AirplaneTypeInFlightDto;
@@ -22,11 +21,13 @@ import com.falcon.booking.web.dto.route.ResponseRouteDto;
 import com.falcon.booking.web.dto.route.RouteWithSchedulesDto;
 import com.falcon.booking.web.dto.route.UpdateRouteDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -42,12 +43,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
+@WithMockUser(roles = "ADMIN")
 @WebMvcTest(RouteController.class)
 public class RouteControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @MockitoBean
     private RouteService routeService;
@@ -127,6 +133,7 @@ public class RouteControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/routes")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRouteDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -143,6 +150,7 @@ public class RouteControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/routes")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRouteDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -160,6 +168,7 @@ public class RouteControllerTest {
 
         ResultActions response = mockMvc.perform(
                 put("/v1/routes/AV1234")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRouteDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -175,7 +184,10 @@ public class RouteControllerTest {
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
         given(routeActivationOrchestrator.activateRoute("AV1234")).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(patch("/v1/routes/AV1234/activate").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(
+                patch("/v1/routes/AV1234/activate")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
@@ -187,7 +199,10 @@ public class RouteControllerTest {
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
         given(routeService.deactivateRoute("AV1234")).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(patch("/v1/routes/AV1234/deactivate").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(
+                patch("/v1/routes/AV1234/deactivate")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
@@ -207,6 +222,7 @@ public class RouteControllerTest {
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/routes/AV1234/schedules")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -271,7 +287,9 @@ public class RouteControllerTest {
 
 
         ResultActions response = mockMvc.perform(
-                post("/v1/routes/AV1234/generateFlights").accept(MediaType.APPLICATION_JSON));
+                post("/v1/routes/AV1234/generateFlights")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.generationId").value(1L))
@@ -286,7 +304,9 @@ public class RouteControllerTest {
                 .willThrow(new FlightGenerationAlreadyRunningException());
 
         ResultActions response = mockMvc.perform(
-                post("/v1/routes/AV1234/generateFlights").accept(MediaType.APPLICATION_JSON));
+                post("/v1/routes/AV1234/generateFlights")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("flight-generation-already-running"));
@@ -301,7 +321,9 @@ public class RouteControllerTest {
         given(flightService.startGlobalFlightGeneration()).willReturn(dto);
 
         ResultActions response = mockMvc.perform(
-                post("/v1/routes/generateFlights").accept(MediaType.APPLICATION_JSON));
+                post("/v1/routes/generateFlights")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.generationId").value(1L))
@@ -316,10 +338,19 @@ public class RouteControllerTest {
                 .willThrow(new FlightGenerationAlreadyRunningException());
 
         ResultActions response = mockMvc.perform(
-                post("/v1/routes/generateFlights").accept(MediaType.APPLICATION_JSON));
+                post("/v1/routes/generateFlights")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("flight-generation-already-running"));
     }
 
 }
+
+
+
+
+
+
+

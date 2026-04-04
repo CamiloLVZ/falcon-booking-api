@@ -11,11 +11,13 @@ import com.falcon.booking.web.dto.flight.CreateFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -32,12 +34,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
+@WithMockUser(roles = "ADMIN")
 @WebMvcTest(FlightController.class)
 class FlightControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @MockitoBean
     private FlightService flightService;
@@ -136,6 +143,7 @@ class FlightControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/flights")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -152,6 +160,7 @@ class FlightControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/flights")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto))
                         .accept(MediaType.APPLICATION_JSON)
@@ -169,6 +178,7 @@ class FlightControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/flights/10/reschedule")
+                       .with(csrf())
                         .param("newDepartureLocalDateTime", newDeparture.toString())
                         .accept(MediaType.APPLICATION_JSON)
         );
@@ -185,6 +195,7 @@ class FlightControllerTest {
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/flights/1/cancel")
+                       .with(csrf())
                         .accept(MediaType.APPLICATION_JSON)
         );
 
@@ -200,6 +211,7 @@ class FlightControllerTest {
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/flights/1/change-airplane-type")
+                       .with(csrf())
                         .param("idAirplaneType", "5")
                         .accept(MediaType.APPLICATION_JSON)
         );
@@ -213,6 +225,7 @@ class FlightControllerTest {
     void shouldReturn400_changeAirplaneType() throws Exception {
         ResultActions response = mockMvc.perform(
                 patch("/v1/flights/1/change-airplane-type")
+                       .with(csrf())
                         .accept(MediaType.APPLICATION_JSON)
         );
 
@@ -227,6 +240,7 @@ class FlightControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/flights/1/reschedule")
+                       .with(csrf())
                         .param("newDepartureLocalDateTime", pastDate.toString())
                         .accept(MediaType.APPLICATION_JSON)
         );
@@ -260,3 +274,10 @@ class FlightControllerTest {
     }
 
 }
+
+
+
+
+
+
+
