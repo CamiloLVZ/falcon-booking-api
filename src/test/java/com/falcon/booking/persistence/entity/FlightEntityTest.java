@@ -60,12 +60,14 @@ class FlightEntityTest {
         assertThat(flight.isInBoarding()).isTrue();
     }
 
-    @DisplayName("Should throw exception when boarding starts from scheduled status")
+    @DisplayName("Should change status from scheduled to boarding.")
     @Test
-    void shouldThrowException_startBoarding() {
+    void shouldStartBoardingFromScheduled() {
         FlightEntity flight = createFlight(FlightStatus.SCHEDULED, OffsetDateTime.now().plusHours(2));
 
-        assertThrows(FlightInvalidStatusChangeException.class, flight::startBoarding);
+        flight.startBoarding();
+
+        assertThat(flight.isInBoarding()).isTrue();
     }
 
     @DisplayName("Should mark flight as completed from boarding status")
