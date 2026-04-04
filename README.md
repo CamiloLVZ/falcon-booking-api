@@ -102,7 +102,7 @@ DB_PASSWORD=your_db_password
 ### Domain Configuration
 
 Part of the business behavior is intentionally configured through
-[`application.properties`](/C:/Users/camil/Documents/Projects/Airline%20Booking%20Mangement%20System/falcon-booking-api/src/main/resources/application.properties)
+[`application.properties`](/src/main/resources/application.properties)
 instead of being hardcoded. This makes the system easier to adapt to different operational rules without changing source code.
 
 #### Authentication and Admin Bootstrap
@@ -191,7 +191,7 @@ On Windows:
 Interactive API documentation is available through Swagger UI.
 
 ### Live Swagger
-[Open Swagger UI](https://tu-url/swagger-ui/index.html)
+[Open Swagger UI](https://falcon-booking-api.onrender.com/swagger-ui/index.html)
 
 Note: the application is deployed on a free-tier service, so the first request may take a couple of minutes while the instance wakes up.
 
