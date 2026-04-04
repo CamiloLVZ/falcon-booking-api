@@ -46,10 +46,10 @@ public class RouteEntity {
     RouteStatus status;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route",cascade=CascadeType.ALL ,orphanRemoval = true)
-    private Set<RouteDayEntity> routeDays;
+    private Set<RouteDayEntity> routeDays = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<RouteScheduleEntity> routeSchedules;
+    private Set<RouteScheduleEntity> routeSchedules = new HashSet<>();
 
     public void activate(){
         if(this.isActive())return;
@@ -67,11 +67,11 @@ public class RouteEntity {
             errors.add("Route must have origin and destination defined");
         }
 
-        if (routeDays == null || routeDays.isEmpty()) {
+        if (routeDays.isEmpty()) {
             errors.add("Route must have at least one operating weekday");
         }
 
-        if (routeSchedules == null || routeSchedules.isEmpty()) {
+        if (routeSchedules.isEmpty()) {
             errors.add("Route must have at least one operating schedule");
         }
 
@@ -122,21 +122,13 @@ public class RouteEntity {
     }
 
     public void updateWeekDays(Collection<DayOfWeek> newWeekDays) {
-        if(this.routeDays == null) {
-            this.routeDays = new HashSet<>();
-        }
-
-        this.routeDays.clear();
+           this.routeDays.clear();
         for (DayOfWeek weekDay : new HashSet<>(newWeekDays)) {
             this.routeDays.add(new RouteDayEntity(this, weekDay));
         }
     }
 
     public void updateSchedules(Collection<LocalTime> newSchedules) {
-        if(this.routeSchedules == null) {
-            this.routeSchedules = new HashSet<>();
-        }
-
         this.routeSchedules.clear();
         for (LocalTime schedule : new HashSet<>(newSchedules)) {
             this.routeSchedules.add(new RouteScheduleEntity(this, schedule));

@@ -8,11 +8,13 @@ import com.falcon.booking.web.dto.passenger.AddPassengerDto;
 import com.falcon.booking.web.dto.passenger.ResponsePassengerDto;
 import com.falcon.booking.web.dto.reservation.ResponseReservationDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -26,12 +28,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
+@WithMockUser(roles = "ADMIN")
 @WebMvcTest(PassengerController.class)
 public class PassengerControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -152,6 +159,7 @@ public class PassengerControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/passengers")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(addPassengerDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -176,6 +184,7 @@ public class PassengerControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/passengers")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto))
                         .accept(MediaType.APPLICATION_JSON));
@@ -200,6 +209,7 @@ public class PassengerControllerTest {
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/passengers/passport")
+                       .with(csrf())
                         .param("identificationNumber", "10001")
                         .param("countryIsoCode", "CO")
                         .param("newPassportNumber", "AB9999")
@@ -224,3 +234,10 @@ public class PassengerControllerTest {
                 .andExpect(jsonPath("$.message").exists());
     }
 }
+
+
+
+
+
+
+

@@ -4,11 +4,13 @@ import com.falcon.booking.domain.exception.AirportNotFoundException;
 import com.falcon.booking.domain.service.AirportService;
 import com.falcon.booking.web.dto.AirportDto;
 import com.falcon.booking.web.dto.CountryDto;
+import com.falcon.booking.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -20,11 +22,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WithMockUser(roles = "ADMIN")
 @WebMvcTest(AirportController.class)
 public class AirportControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @MockitoBean
     private AirportService airportService;
@@ -105,3 +111,7 @@ public class AirportControllerTest {
                 .andExpect(jsonPath("$.size()").value(0));
     }
 }
+
+
+
+

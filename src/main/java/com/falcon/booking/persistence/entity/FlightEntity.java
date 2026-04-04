@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,7 +49,7 @@ public class FlightEntity {
     private FlightStatus status;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "flight", orphanRemoval = true, cascade = CascadeType.ALL)
-    public List<PassengerReservationEntity> reservations;
+    public List<PassengerReservationEntity> reservations = new ArrayList<>();
 
     public boolean isScheduled() {
         if (this.status==null) return false;
@@ -101,7 +102,7 @@ public class FlightEntity {
     public void startBoarding(){
         if (this.isInBoarding() ) return;
 
-        if(!this.isCheckInAvailable())
+        if(this.isCanceled() || this.isCompleted())
             throw new FlightInvalidStatusChangeException(this.status, FlightStatus.BOARDING);
 
         this.status = FlightStatus.BOARDING;

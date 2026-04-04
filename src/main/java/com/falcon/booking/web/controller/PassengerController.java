@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -41,28 +42,37 @@ public class PassengerController {
     }
 
     @Operation(summary = "Get a passenger by id",
-            description = "Returns a passenger record using its numeric unique identifier.")
+            description = "Returns a passenger record using its numeric unique identifier. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Passenger retrieved successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerDto.class))),
             @ApiResponse(responseCode = "400", description = "Error by invalid id argument",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve passengers",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Passenger not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ResponsePassengerDto> getPassengerById(@PathVariable("id")
-                                                                 @Parameter(description = "Passenger numeric unique identifier", example = "25")
+    public ResponseEntity<ResponsePassengerDto> getPassengerById(@PathVariable @Parameter(description = "Passenger numeric unique identifier", example = "25")
                                                                  Long id) {
         return ResponseEntity.ok(passengerService.getPassengerById(id));
     }
 
     @Operation(summary = "Get a passenger by identification number",
-            description = "Returns a passenger record by identification number and issuing country ISO code.")
+            description = "Returns a passenger record by identification number and issuing country ISO code. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Passenger retrieved successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerDto.class))),
             @ApiResponse(responseCode = "400", description = "Error by invalid query parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve passengers",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Passenger not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
@@ -78,11 +88,16 @@ public class PassengerController {
     }
 
     @Operation(summary = "Get a passenger by passport number",
-            description = "Returns a passenger record by passport number.")
+            description = "Returns a passenger record by passport number. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Passenger retrieved successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerDto.class))),
             @ApiResponse(responseCode = "400", description = "Error by invalid passport number format",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve passengers",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Passenger not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
@@ -95,11 +110,16 @@ public class PassengerController {
     }
 
     @Operation(summary = "Get all reservations by passenger",
-            description = "Returns all reservations linked to a passenger by identification number and country ISO code.")
+            description = "Returns all reservations linked to a passenger by identification number and country ISO code. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reservation list retrieved successfully, even if list is empty",
                     content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseReservationDto.class)))),
             @ApiResponse(responseCode = "400", description = "Error by invalid query parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve passenger reservations",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Passenger not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
@@ -115,11 +135,16 @@ public class PassengerController {
     }
 
     @Operation(summary = "Create a passenger",
-            description = "Creates a passenger record and returns the created data.")
+            description = "Creates a passenger record and returns the created data. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Passenger created successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerDto.class))),
             @ApiResponse(responseCode = "400", description = "Error by invalid request body",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to create passengers",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PostMapping
@@ -132,11 +157,16 @@ public class PassengerController {
     }
 
     @Operation(summary = "Update passenger passport number",
-            description = "Updates passenger passport number using identification number and country ISO code.")
+            description = "Updates passenger passport number using identification number and country ISO code. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Passenger passport updated successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerDto.class))),
             @ApiResponse(responseCode = "400", description = "Error by invalid query parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to update passengers",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Passenger not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))

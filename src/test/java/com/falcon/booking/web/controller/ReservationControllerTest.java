@@ -15,11 +15,13 @@ import com.falcon.booking.web.dto.reservation.AddReservationDto;
 import com.falcon.booking.web.dto.reservation.ResponsePassengerReservationDto;
 import com.falcon.booking.web.dto.reservation.ResponseReservationDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -36,12 +38,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
+@WithMockUser(roles = "ADMIN")
 @WebMvcTest(ReservationController.class)
 class ReservationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @MockitoBean
     private ReservationService reservationService;
@@ -118,6 +125,7 @@ class ReservationControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/reservations")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON)
@@ -135,6 +143,7 @@ class ReservationControllerTest {
 
         ResultActions response = mockMvc.perform(
                 post("/v1/reservations")
+                       .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalid))
                         .accept(MediaType.APPLICATION_JSON)
@@ -152,6 +161,7 @@ class ReservationControllerTest {
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/reservations/ABC123/cancel/passenger")
+                       .with(csrf())
                         .param("identificationNumber", "110011")
                         .param("countryIsoCode", "CO")
                         .accept(MediaType.APPLICATION_JSON)
@@ -166,6 +176,7 @@ class ReservationControllerTest {
     void shouldReturn400_cancelPassengerByIdentification() throws Exception {
         ResultActions response = mockMvc.perform(
                 patch("/v1/reservations/ABC123/cancel/passenger")
+                       .with(csrf())
                         .param("identificationNumber", "110011")
                         .param("countryIsoCode", "COL")
                         .accept(MediaType.APPLICATION_JSON)
@@ -175,3 +186,10 @@ class ReservationControllerTest {
                 .andExpect(jsonPath("$.type").value("invalid-arguments"));
     }
 }
+
+
+
+
+
+
+

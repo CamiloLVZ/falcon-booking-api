@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -47,7 +48,7 @@ public class ReservationEntity {
     private ReservationStatus status;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PassengerReservationEntity> passengerReservations;
+    private List<PassengerReservationEntity> passengerReservations = new ArrayList<>();
 
     public void setContactEmail(String contactEmail) {
         this.contactEmail = contactEmail.trim().toLowerCase();
