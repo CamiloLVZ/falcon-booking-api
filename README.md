@@ -28,6 +28,7 @@ This project is built as a modular monolith with a layered architecture and a cl
 - Reservation flow with passenger management and seat assignment rules
 - Layered backend architecture separating web, domain, persistence, config, and security concerns
 - Flyway-driven database versioning for reproducible schema evolution
+- Dockerized packaging with a multi-stage build for reproducible deployment
 - REST API documented with OpenAPI / Swagger UI
 - Automated tests covering domain logic, controller behavior, and application context bootstrapping
 
@@ -62,6 +63,7 @@ Key domain concepts:
 - Spring Security + JWT
 - PostgreSQL
 - Flyway
+- Docker
 - OpenAPI / Swagger UI
 - JUnit 5 + Mockito
 
@@ -85,13 +87,12 @@ The following diagram represents the core data model of the Falcon Booking Syste
 
 ### Prerequisites
 
-- Java 21
-- Maven Wrapper (`mvnw` / `mvnw.cmd`)
+- Docker
 - PostgreSQL running locally or remotely
 
 ### Environment Variables
 
-Set the following variables before starting the application:
+Set the following variables before starting the application or container:
 
 ```bash
 DB_URL=jdbc:postgresql://localhost:5432/falcon_booking
@@ -142,7 +143,34 @@ instead of being hardcoded. This makes the system easier to adapt to different o
 
 These properties are useful to show recruiters that core domain rules were designed to be configurable and environment-driven, rather than hidden inside service implementations.
 
-### Run the Application
+### Run with Docker
+
+Build the image:
+
+```bash
+docker build -t falcon-booking-api .
+```
+
+Run the container:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e DB_URL=jdbc:postgresql://host.docker.internal:5432/falcon_booking \
+  -e DB_USER=your_db_user \
+  -e DB_PASSWORD=your_db_password \
+  falcon-booking-api
+```
+
+The project uses a multi-stage Docker build:
+
+- the build stage packages the application with Maven
+- the runtime stage runs the generated JAR on a Java 21 JRE image
+
+This is the most convenient way to demo the project because it avoids requiring a local Java or Maven installation beyond Docker itself.
+
+### Run Locally Without Docker
+
+If you want to run it directly on your machine instead:
 
 Windows:
 
@@ -158,18 +186,18 @@ Linux / macOS:
 
 By default, the application runs with the `dev` profile.
 
-### API Documentation
+### Local API Documentation
 
 Once the application is running, Swagger UI should be available at:
 
 ```text
-http://localhost:8081/api/swagger-ui/index.html
+http://localhost:8080/api/swagger-ui/index.html
 ```
 
 OpenAPI JSON should be available at:
 
 ```text
-http://localhost:8081/api/v3/api-docs
+http://localhost:8080/api/v3/api-docs
 ```
 
 ### Run Tests
@@ -186,7 +214,7 @@ On Windows:
 
 ---
 
-### API Documentation
+## API Documentation
 
 Interactive API documentation is available through Swagger UI.
 
@@ -197,6 +225,17 @@ Note: the application is deployed on a free-tier service, so the first request m
 
 ### Preview
 ![Swagger UI Preview](docs/swagger-preview.png)
+
+### Documentation Links
+
+- Swagger UI: `https://tu-url/swagger-ui/index.html`
+- OpenAPI JSON: `https://tu-url/v3/api-docs`
+
+For recruiter-facing presentation, the best combination is:
+
+- a live Swagger link so the project can be verified
+- a screenshot so the API is understandable immediately
+- a short note about free-tier cold start behavior
 
 ---
 
