@@ -110,12 +110,12 @@ public class CountryServiceTest {
         CountryDto expectedDto2 = new CountryDto("Canada", "CA");
         CountryDto expectedDto3 = new CountryDto("MX", "Mexico");
         List<CountryDto> expectedDtoList = List.of(expectedDto1, expectedDto2, expectedDto3);
-        given(countryRepository.findAll()).willReturn(countryList);
+        given(countryRepository.findAllByOrderByNameAsc()).willReturn(countryList);
         given(countryMapper.toDto(countryList)).willReturn(expectedDtoList);
 
         List<CountryDto> listFound = countryService.getAllCountries();
 
-        verify(countryRepository).findAll();
+        verify(countryRepository).findAllByOrderByNameAsc();
         verify(countryMapper).toDto(countryList);
         assertThat(listFound).isEqualTo(expectedDtoList);
     }
@@ -123,12 +123,12 @@ public class CountryServiceTest {
     @DisplayName("Should return empty CountryDto list when there is no countries")
     @Test
     void shouldReturnEmptyDtoList_getAllCountries(){
-        given(countryRepository.findAll()).willReturn(List.of());
+        given(countryRepository.findAllByOrderByNameAsc()).willReturn(List.of());
         given(countryMapper.toDto(List.of())).willReturn(List.of());
 
         List<CountryDto> listFound = countryService.getAllCountries();
 
-        verify(countryRepository).findAll();
+        verify(countryRepository).findAllByOrderByNameAsc();
         verify(countryMapper).toDto(List.of());
         assertThat(listFound).isNotNull();
         assertThat(listFound).isEmpty();

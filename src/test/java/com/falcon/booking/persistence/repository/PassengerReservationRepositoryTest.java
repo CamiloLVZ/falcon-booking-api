@@ -116,7 +116,7 @@ class PassengerReservationRepositoryTest {
     @Test
     void shouldReturnReservations_findAllBySeatNumberAndFlight() {
         FlightEntity flight = createFlight("AV1234");
-        CountryEntity country = countryRepository.findAll().get(0);
+        CountryEntity country = countryRepository.findAllByOrderByNameAsc().get(0);
 
         ReservationEntity reservation = reservationRepository.save(
                 new ReservationEntity("ABC123", flight, "test@mail.com", Instant.now()));
@@ -135,7 +135,7 @@ class PassengerReservationRepositoryTest {
     @Test
     void shouldReturnReservations_findAllByPassenger() {
         FlightEntity flight = createFlight("AV2222");
-        CountryEntity country = countryRepository.findAll().get(0);
+        CountryEntity country = countryRepository.findAllByOrderByNameAsc().get(0);
 
         ReservationEntity reservationOne = reservationRepository.save(
                 new ReservationEntity("ONE111", flight, "one@mail.com", Instant.now()));

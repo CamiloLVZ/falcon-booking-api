@@ -36,7 +36,7 @@ public class CountryService {
     }
 
     public List<CountryDto> getAllCountries() {
-        List<CountryEntity> listCountryEntity = countryRepository.findAll();
+        List<CountryEntity> listCountryEntity = countryRepository.findAllByOrderByNameAsc();
         return countryMapper.toDto(listCountryEntity);
     }
 

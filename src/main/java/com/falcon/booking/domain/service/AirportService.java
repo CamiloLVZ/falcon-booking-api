@@ -42,13 +42,13 @@ public class AirportService {
 
     @Transactional(readOnly = true)
     public List<AirportDto> getAllAirports() {
-        List<AirportEntity> airportEntities = airportRepository.findAll();
+        List<AirportEntity> airportEntities = airportRepository.findAllByOrderByCityAsc();
         return airportMapper.toDto(airportEntities);
     }
     @Transactional(readOnly = true)
     public List<AirportDto> getAirportsByCountryIsoCode(String isoCode) {
         CountryEntity country = countryService.getCountryEntityByIsoCode(isoCode);
-        List<AirportEntity> airportEntities = airportRepository.findAllByCountry(country);
+        List<AirportEntity> airportEntities = airportRepository.findAllByCountryOrderByCityAsc(country);
 
         return airportMapper.toDto(airportEntities);
     }

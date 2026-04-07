@@ -69,27 +69,27 @@ public class AirportRepositoryTest {
 
     @DisplayName("Should return airport list by country")
     @Test
-    void shouldReturnAirportList_findAllByCountry() {
+    void shouldReturnAirportList_findAllOrderByCityByCountryByOrderByIataCode() {
         CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
         AirportEntity airport1 = createAirport("BOG", "El Dorado", "Bogota", country);
         AirportEntity airport2 = createAirport("MDE", "Jose Maria Cordoba", "Medellin", country);
         airportRepository.save(airport1);
         airportRepository.save(airport2);
 
-        List<AirportEntity> airportsFound = airportRepository.findAllByCountry(country);
+        List<AirportEntity> airportsFound = airportRepository.findAllByCountryOrderByCityAsc(country);
 
         assertThat(airportsFound).hasSize(2);
     }
 
     @DisplayName("Should return empty list when country has no airports")
     @Test
-    void shouldReturnEmptyList_findAllByCountry() {
+    void shouldReturnEmptyList_findAllOrderByCityByCountryByOrderByIataCode() {
         CountryEntity countryWithAirports = countryRepository.save(createCountry("CO", "Colombia"));
         CountryEntity countryWithoutAirports = countryRepository.save(createCountry("US", "United States"));
         AirportEntity airport = createAirport("BOG", "El Dorado", "Bogota", countryWithAirports);
         airportRepository.save(airport);
 
-        List<AirportEntity> airportsFound = airportRepository.findAllByCountry(countryWithoutAirports);
+        List<AirportEntity> airportsFound = airportRepository.findAllByCountryOrderByCityAsc(countryWithoutAirports);
 
         assertThat(airportsFound).isEmpty();
     }

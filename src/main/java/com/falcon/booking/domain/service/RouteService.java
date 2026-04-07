@@ -11,6 +11,7 @@ import com.falcon.booking.web.dto.route.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,7 +73,9 @@ public class RouteService {
         specification = specification.and(RouteSpecifications.hasDestinationIataCode(normalizedAirportDestinationIataCode));
         specification = specification.and(RouteSpecifications.hasStatus(status));
 
-        List<RouteEntity> entities = routeRepository.findAll(specification);
+
+        Sort sort = Sort.by("flightNumber").ascending();
+        List<RouteEntity> entities = routeRepository.findAll(specification, sort);
         return routeMapper.toResponseDto(entities);
     }
 

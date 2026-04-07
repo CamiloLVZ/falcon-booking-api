@@ -122,12 +122,12 @@ public class AirportServiceTest {
         AirportDto dto1 = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
         AirportDto dto2 = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", countryDto, "America/Bogota");
         List<AirportDto> expectedDtoList = List.of(dto1, dto2);
-        given(airportRepository.findAll()).willReturn(airportList);
+        given(airportRepository.findAllByOrderByCityAsc()).willReturn(airportList);
         given(airportMapper.toDto(airportList)).willReturn(expectedDtoList);
 
         List<AirportDto> listFound = airportService.getAllAirports();
 
-        verify(airportRepository).findAll();
+        verify(airportRepository).findAllByOrderByCityAsc();
         verify(airportMapper).toDto(airportList);
         assertThat(listFound).isEqualTo(expectedDtoList);
     }
@@ -135,12 +135,12 @@ public class AirportServiceTest {
     @DisplayName("Should return empty AirportDto list when there is no airports")
     @Test
     void shouldReturnEmptyDtoList_getAllAirports() {
-        given(airportRepository.findAll()).willReturn(List.of());
+        given(airportRepository.findAllByOrderByCityAsc()).willReturn(List.of());
         given(airportMapper.toDto(List.of())).willReturn(List.of());
 
         List<AirportDto> listFound = airportService.getAllAirports();
 
-        verify(airportRepository).findAll();
+        verify(airportRepository).findAllByOrderByCityAsc();
         verify(airportMapper).toDto(List.of());
         assertThat(listFound).isNotNull();
         assertThat(listFound).isEmpty();
@@ -158,13 +158,13 @@ public class AirportServiceTest {
         AirportDto dto2 = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", countryDto, "America/Bogota");
         List<AirportDto> expectedDtos = List.of(dto1, dto2);
         given(countryService.getCountryEntityByIsoCode(" CO ")).willReturn(country);
-        given(airportRepository.findAllByCountry(country)).willReturn(airportEntities);
+        given(airportRepository.findAllByCountryOrderByCityAsc(country)).willReturn(airportEntities);
         given(airportMapper.toDto(airportEntities)).willReturn(expectedDtos);
 
         List<AirportDto> result = airportService.getAirportsByCountryIsoCode(" CO ");
 
         verify(countryService).getCountryEntityByIsoCode(" CO ");
-        verify(airportRepository).findAllByCountry(country);
+        verify(airportRepository).findAllByCountryOrderByCityAsc(country);
         verify(airportMapper).toDto(airportEntities);
         assertThat(result).isEqualTo(expectedDtos);
     }
@@ -174,13 +174,13 @@ public class AirportServiceTest {
     void shouldReturnEmptyDtoList_getAirportsByCountryIsoCode() {
         CountryEntity country = createCountry("CO", "Colombia");
         given(countryService.getCountryEntityByIsoCode("CO")).willReturn(country);
-        given(airportRepository.findAllByCountry(country)).willReturn(List.of());
+        given(airportRepository.findAllByCountryOrderByCityAsc(country)).willReturn(List.of());
         given(airportMapper.toDto(List.of())).willReturn(List.of());
 
         List<AirportDto> result = airportService.getAirportsByCountryIsoCode("CO");
 
         verify(countryService).getCountryEntityByIsoCode("CO");
-        verify(airportRepository).findAllByCountry(country);
+        verify(airportRepository).findAllByCountryOrderByCityAsc(country);
         verify(airportMapper).toDto(List.of());
         assertThat(result).isEmpty();
     }

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface AirportRepository extends JpaRepository<AirportEntity, Long> {
-
+    List<AirportEntity> findAllByOrderByCityAsc();
     Optional<AirportEntity> findByIataCode(String iataCode);
-    List<AirportEntity> findAllByCountry(CountryEntity country);
+    List<AirportEntity> findAllByCountryOrderByCityAsc(CountryEntity country);
 }

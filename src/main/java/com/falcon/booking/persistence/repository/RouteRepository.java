@@ -2,6 +2,9 @@ package com.falcon.booking.persistence.repository;
 
 import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.RouteEntity;
+import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -23,4 +26,6 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Long>, JpaSp
 
     @EntityGraph(attributePaths = {"airportOrigin", "routeDays", "routeSchedules"})
     Optional<RouteEntity> findById(Long id);
+
+    List<RouteEntity> findAll(Specification<RouteEntity> spec, @NonNull Sort sort);
 }
