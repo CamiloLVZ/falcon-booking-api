@@ -174,19 +174,18 @@ public class FlightService {
     }
 
     @Transactional(readOnly = true)
-    public List<ResponseFlightDto> getAllFlightsByRouteAndDates(String flightNumber, LocalDate dateFrom, LocalDate dateTo) {
+    public List<ResponseFlightDto> getAllFlightsByRouteAndDate(String flightNumber, LocalDate date) {
 
-        if(dateTo.isBefore(dateFrom)) throw new DateToBeforeDateFromException();
         RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
         if (!routeEntity.isActive())
             throw new RouteNotActiveException(routeEntity.getFlightNumber());
 
         ZoneId timezone = ZoneId.of(routeEntity.getAirportOrigin().getTimezone());
 
-        OffsetDateTime offsetDateTimeFrom = toOffsetDateTime(dateFrom, timezone);
-        OffsetDateTime offsetDateTimeTo = toOffsetDateTime(dateTo, timezone);
+        OffsetDateTime startDateTime = date.atStartOfDay(timezone).toOffsetDateTime();
+        OffsetDateTime endDateTime = date.atTime(LocalTime.MAX).atZone(timezone).toOffsetDateTime();
 
-        return flightMapper.toDto(flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, offsetDateTimeFrom, offsetDateTimeTo));
+        return flightMapper.toDto(flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, startDateTime, endDateTime));
     }
 
     public boolean updateFlightStatus(FlightEntity flight, OffsetDateTime now){

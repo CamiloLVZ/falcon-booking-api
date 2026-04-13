@@ -330,16 +330,6 @@ class FlightServiceTest {
         verify(airplaneTypeService, never()).getAirplaneTypeEntity(any());
     }
 
-    @DisplayName("Should throw DateToBeforeDateFromException when date range invalid")
-    @Test
-    void shouldThrowWhenGetAllFlightsByRouteAndDates_dateToBeforeDateFrom() {
-        assertThrows(DateToBeforeDateFromException.class,
-                () -> flightService.getAllFlightsByRouteAndDates(
-                        "AV1234",
-                        LocalDate.of(2026, 8, 31),
-                        LocalDate.of(2026, 8, 1)));
-    }
-
     @DisplayName("Should throw RouteNotActiveException when route is inactive")
     @Test
     void shouldThrowWhenGetAllFlightsByRouteAndDates_routeInactive() {
@@ -347,10 +337,9 @@ class FlightServiceTest {
         given(routeService.getRouteEntity("AV1234")).willReturn(route);
 
         assertThrows(RouteNotActiveException.class,
-                () -> flightService.getAllFlightsByRouteAndDates(
+                () -> flightService.getAllFlightsByRouteAndDate(
                         "AV1234",
-                        LocalDate.of(2026, 8, 1),
-                        LocalDate.of(2026, 8, 31)));
+                        LocalDate.of(2026, 8, 1)));
     }
 
     @DisplayName("Should return all flights by route and date range")
@@ -364,7 +353,7 @@ class FlightServiceTest {
         given(flightRepository.findAllByRouteAndDepartureDateTimeBetween(eq(route), any(OffsetDateTime.class), any(OffsetDateTime.class))).willReturn(List.of(flight));
         given(flightMapper.toDto(List.of(flight))).willReturn(List.of(dto));
 
-        List<ResponseFlightDto> result = flightService.getAllFlightsByRouteAndDates("AV1234", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31));
+        List<ResponseFlightDto> result = flightService.getAllFlightsByRouteAndDate("AV1234", LocalDate.of(2026, 8, 1));
         assertThat(result).containsExactly(dto);
     }
 

@@ -262,13 +262,12 @@ public class RouteControllerTest {
                         FlightStatus.SCHEDULED
                 )
         );
-        given(flightService.getAllFlightsByRouteAndDates("AV1234", LocalDate.parse("2026-01-01"), LocalDate.parse("2026-01-02")))
+        given(flightService.getAllFlightsByRouteAndDate("AV1234", LocalDate.parse("2026-01-01")))
                 .willReturn(flights);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/routes/AV1234/flights")
-                        .param("dateFrom", "2026-01-01")
-                        .param("dateTo", "2026-01-02")
+                        .param("date", "2026-01-01")
                         .accept(MediaType.APPLICATION_JSON)
         );
 

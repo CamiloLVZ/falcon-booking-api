@@ -231,12 +231,12 @@ public class RouteController {
         return ResponseEntity.ok(routeService.getRouteWithSchedules(flightNumber));
     }
 
-    @Operation(summary = "Get route flights in date range",
-            description = "Returns generated flights for a route between dateFrom and dateTo inclusive.")
+    @Operation(summary = "Get route flights in a specific date",
+            description = "Returns generated flights for a route scheduled in a specific date (origin airport local date).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Route flights retrieved successfully",
                     content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseFlightDto.class)))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid date range or flight number format",
+            @ApiResponse(responseCode = "400", description = "Error by invalid date or flight number format",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Route not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
@@ -246,14 +246,11 @@ public class RouteController {
                                                                                 @NotNull @PathVariable
                                                                                 @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                                 String flightNumber,
-                                                                                @RequestParam @NotNull(message = "dateFrom is required")
-                                                                                @Parameter(description = "Initial date for search", example = "2026-02-01")
-                                                                                LocalDate dateFrom,
-                                                                                @RequestParam @NotNull(message = "dateTo is required")
-                                                                                @Parameter(description = "Final date for search", example = "2026-02-28")
-                                                                                LocalDate dateTo
+                                                                                @RequestParam @NotNull(message = "date is required")
+                                                                                @Parameter(description = "Date for search", example = "2026-02-01")
+                                                                                LocalDate date
     ) {
-        return ResponseEntity.ok(flightService.getAllFlightsByRouteAndDates(flightNumber, dateFrom, dateTo));
+        return ResponseEntity.ok(flightService.getAllFlightsByRouteAndDate(flightNumber, date));
     }
 
 
