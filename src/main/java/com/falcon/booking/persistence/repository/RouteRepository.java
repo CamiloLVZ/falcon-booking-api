@@ -24,7 +24,7 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Long>, JpaSp
     @Query("SELECT r.id FROM RouteEntity r WHERE r.status = :status")
     List<Long> findIdsByStatus(@Param("status") RouteStatus status);
 
-    @EntityGraph(attributePaths = {"airportOrigin", "routeDays", "routeSchedules"})
+    @EntityGraph(attributePaths = {"airportOrigin", "defaultAirplaneType", "routeDays", "routeSchedules"})
     Optional<RouteEntity> findById(Long id);
 
     List<RouteEntity> findAll(Specification<RouteEntity> spec, @NonNull Sort sort);

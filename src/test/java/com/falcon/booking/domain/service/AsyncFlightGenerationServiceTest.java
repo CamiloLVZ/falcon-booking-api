@@ -1,6 +1,7 @@
 package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationNotFoundException;
+import com.falcon.booking.domain.valueobject.FlightGenerationStatus;
 import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -65,6 +67,21 @@ public class AsyncFlightGenerationServiceTest {
 
         asyncFlightGenerationService.executeGeneration(1L);
 
+        verify(flightGenerationRepository).save(generation);
+    }
+
+    @DisplayName("Should mark generation as failed when global generation throws")
+    @Test
+    void shouldMarkGenerationAsFailedWhenGlobalGenerationThrows(){
+        FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
+        generation.setId(1L);
+        given(flightGenerationRepository.findById(1L)).willReturn(Optional.of(generation));
+        given(transactionalFlightGenerationService.generateAllFlightsForAllRoutes())
+                .willThrow(new RuntimeException("duplicate key"));
+
+        asyncFlightGenerationService.executeGeneration(1L);
+
+        assertEquals(FlightGenerationStatus.FAILED, generation.getStatus());
         verify(flightGenerationRepository).save(generation);
     }
 

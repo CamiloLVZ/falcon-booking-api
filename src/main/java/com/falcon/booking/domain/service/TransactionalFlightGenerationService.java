@@ -1,5 +1,6 @@
 package com.falcon.booking.domain.service;
 
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationPartialFailureException;
 import com.falcon.booking.domain.exception.Route.RouteNotFoundException;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
@@ -19,7 +20,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionalFlightGenerationService {
@@ -67,16 +70,34 @@ public class TransactionalFlightGenerationService {
                             try {
                                 return generateAllFlightsForRoute(routeId);
                             } catch (Exception e) {
-                                logger.error("Error generating flights for route {}, {}", routeId, e.getMessage());
-                                return 0;
+                                throw new CompletionException(new RouteGenerationException(routeId, e));
                             }
                         }, flightGenerationExecutor)
                 )
                 .toList();
 
-        int totalGenerated = futuresFlightsGenerated.stream()
-                .mapToInt(CompletableFuture::join)
-                .sum();
+        int totalGenerated = 0;
+        List<Long> failedRouteIds = new ArrayList<>();
+
+        for (CompletableFuture<Integer> future : futuresFlightsGenerated) {
+            try {
+                totalGenerated += future.join();
+            } catch (CompletionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof RouteGenerationException routeGenerationException) {
+                    failedRouteIds.add(routeGenerationException.routeId());
+                    logger.error("Error generating flights for route {}. {}", routeGenerationException.routeId(), routeGenerationException.getCause().getMessage());
+                } else {
+                    logger.error("Unexpected error waiting for route generation result. {}", e.getMessage());
+                }
+            }
+        }
+
+        if (!failedRouteIds.isEmpty()) {
+            logger.error("Flights generation finished with errors: {} flights generated, {} failed routes",
+                    totalGenerated, failedRouteIds.size());
+            throw new FlightGenerationPartialFailureException(failedRouteIds);
+        }
 
         logger.info("Flights generation completed: {} flights in {} routes",
                 totalGenerated, routeIds.size());
@@ -94,10 +115,10 @@ public class TransactionalFlightGenerationService {
         OffsetDateTime minDeparture = OffsetDateTime.now(timeZoneId).plusHours(minimumHoursBeforeDeparture);
 
         OffsetDateTime startDateTime = startDate.atStartOfDay().atZone(timeZoneId).toOffsetDateTime();
-        OffsetDateTime endDateTime = endDate.atStartOfDay().atZone(timeZoneId).toOffsetDateTime();
+        OffsetDateTime endDateTime = endDate.plusDays(1).atStartOfDay().atZone(timeZoneId).toOffsetDateTime();
 
         List<OffsetDateTime> existingDeparturesList = flightRepository.findExistingDepartureTimesInRange(route.getId(), startDateTime, endDateTime);
-        Set<OffsetDateTime> existingDepartures = new HashSet<>(existingDeparturesList);
+        Set<Instant> existingDepartures = toInstantSet(existingDeparturesList);
 
         List<FlightEntity> batch = new ArrayList<>(batchSize);
 
@@ -109,14 +130,16 @@ public class TransactionalFlightGenerationService {
 
                 for (LocalTime time : routeSchedules) {
                     OffsetDateTime departure = dateIterator.atTime(time).atZone(timeZoneId).toOffsetDateTime();
+                    Instant departureInstant = departure.toInstant();
 
                     if (departure.isBefore(minDeparture))
                         continue;
 
-                    if (existingDepartures.contains(departure))
+                    if (existingDepartures.contains(departureInstant))
                         continue;
 
                     batch.add(new FlightEntity(route, route.getDefaultAirplaneType(), departure, FlightStatus.SCHEDULED));
+                    existingDepartures.add(departureInstant);
 
                     if (batch.size() >= batchSize) {
                         flightBatchPersistenceService.saveBatch(batch);
@@ -150,17 +173,15 @@ public class TransactionalFlightGenerationService {
         }
 
         List<OffsetDateTime> existingDeparturesList = flightRepository.findExistingDepartureTimes(route, departureTimes);
-        Set<OffsetDateTime> existingDepartures = new HashSet<>();
-        for(OffsetDateTime departureDateTime : existingDeparturesList) {
-            existingDepartures.add(departureDateTime.atZoneSameInstant(timeZoneId).toOffsetDateTime());
-        }
+        Set<Instant> existingDepartures = toInstantSet(existingDeparturesList);
 
         List<FlightEntity> flightEntities = new ArrayList<>();
         for (OffsetDateTime departureDateTime : departureTimes) {
-
-            if (!existingDepartures.contains(departureDateTime)) {
+            Instant departureInstant = departureDateTime.toInstant();
+            if (!existingDepartures.contains(departureInstant)) {
                 flightEntities.add(new FlightEntity(route, route.getDefaultAirplaneType(),
                         departureDateTime, FlightStatus.SCHEDULED));
+                existingDepartures.add(departureInstant);
             }
         }
         return flightEntities;
@@ -225,6 +246,25 @@ public class TransactionalFlightGenerationService {
             flightBatchPersistenceService.saveBatch(flights);
 
         return flights.size();
+    }
+
+    private Set<Instant> toInstantSet(List<OffsetDateTime> departures) {
+        return departures.stream()
+                .map(OffsetDateTime::toInstant)
+                .collect(Collectors.toSet());
+    }
+
+    private static class RouteGenerationException extends RuntimeException {
+        private final Long routeId;
+
+        private RouteGenerationException(Long routeId, Throwable cause) {
+            super(cause);
+            this.routeId = routeId;
+        }
+
+        public Long routeId() {
+            return routeId;
+        }
     }
 
 }

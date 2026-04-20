@@ -1,5 +1,6 @@
 package com.falcon.booking.domain.service;
 
+import com.falcon.booking.domain.exception.FlightGeneration.FlightGenerationPartialFailureException;
 import com.falcon.booking.domain.exception.Route.RouteNotFoundException;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -187,6 +189,55 @@ class TransactionalFlightGenerationServiceTest {
         }
 
         @Test
+        void shouldSkipExistingFlightsWithDifferentOffsetForSameInstant() {
+            ZoneId timezone = ZoneId.of("America/Bogota");
+            LocalDate tomorrow = LocalDate.now(timezone).plusDays(1);
+            OffsetDateTime generatedDeparture = tomorrow.atTime(8, 0).atZone(timezone).toOffsetDateTime();
+            OffsetDateTime existingDeparture = generatedDeparture.withOffsetSameInstant(ZoneOffset.UTC);
+
+            given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
+            given(flightRepository.findExistingDepartureTimesInRange(anyLong(), any(), any()))
+                    .willReturn(List.of(existingDeparture));
+            willDoNothing().given(flightBatchPersistenceService).saveBatch(anyList());
+
+            service.generateAllFlightsForRoute(routeId);
+
+            ArgumentCaptor<List<FlightEntity>> batchCaptor = ArgumentCaptor.forClass(List.class);
+            then(flightBatchPersistenceService).should(atLeastOnce()).saveBatch(batchCaptor.capture());
+
+            List<FlightEntity> generatedFlights = new ArrayList<>();
+            batchCaptor.getAllValues().forEach(generatedFlights::addAll);
+            boolean containsExistingInstant = generatedFlights.stream()
+                    .anyMatch(flight -> flight.getDepartureDateTime().toInstant().equals(existingDeparture.toInstant()));
+
+            assertThat(containsExistingInstant).isFalse();
+        }
+
+        @Test
+        void shouldSkipExistingFlightsOnInclusiveEndDate() {
+            ZoneId timezone = ZoneId.of("America/Bogota");
+            LocalDate horizonDate = LocalDate.now(timezone).plusDays(180);
+            OffsetDateTime existingDeparture = horizonDate.atTime(8, 0).atZone(timezone).toOffsetDateTime();
+
+            given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
+            given(flightRepository.findExistingDepartureTimesInRange(anyLong(), any(), any()))
+                    .willReturn(List.of(existingDeparture));
+            willDoNothing().given(flightBatchPersistenceService).saveBatch(anyList());
+
+            service.generateAllFlightsForRoute(routeId);
+
+            ArgumentCaptor<List<FlightEntity>> batchCaptor = ArgumentCaptor.forClass(List.class);
+            then(flightBatchPersistenceService).should(atLeastOnce()).saveBatch(batchCaptor.capture());
+
+            List<FlightEntity> generatedFlights = new ArrayList<>();
+            batchCaptor.getAllValues().forEach(generatedFlights::addAll);
+            boolean containsEndDateDeparture = generatedFlights.stream()
+                    .anyMatch(flight -> flight.getDepartureDateTime().toInstant().equals(existingDeparture.toInstant()));
+
+            assertThat(containsEndDateDeparture).isFalse();
+        }
+
+        @Test
         void shouldRespectMinimumHoursBeforeDeparture() {
             given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
             given(flightRepository.findExistingDepartureTimesInRange(anyLong(), any(), any()))
@@ -290,9 +341,9 @@ class TransactionalFlightGenerationServiceTest {
                 return null;
             }).given(flightGenerationExecutor).execute(any());
 
-            int totalGenerated = service.generateAllFlightsForAllRoutes();
-
-            assertThat(totalGenerated).isGreaterThanOrEqualTo(0);
+            assertThatThrownBy(() -> service.generateAllFlightsForAllRoutes())
+                    .isInstanceOf(FlightGenerationPartialFailureException.class)
+                    .hasMessageContaining("2");
         }
 
         @Test
@@ -334,6 +385,23 @@ class TransactionalFlightGenerationServiceTest {
 
             assertThat(generated).isGreaterThan(0);
             then(flightBatchPersistenceService).should(atLeastOnce()).saveBatch(anyList());
+        }
+
+        @Test
+        void shouldSkipHorizonFlightsWhenExistingDepartureHasDifferentOffset() {
+            RouteEntity route = createRoute(Set.of(horizonDay), Set.of(LocalTime.of(8, 0)));
+            ZoneId timezone = ZoneId.of("America/Bogota");
+            LocalDate horizonDate = LocalDate.now(timezone).plusDays(180);
+            OffsetDateTime generatedDeparture = horizonDate.atTime(8, 0).atZone(timezone).toOffsetDateTime();
+            OffsetDateTime existingDeparture = generatedDeparture.withOffsetSameInstant(ZoneOffset.UTC);
+
+            given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
+            given(flightRepository.findExistingDepartureTimes(any(), anyList())).willReturn(List.of(existingDeparture));
+
+            int generated = service.generateFlightsForRouteAtHorizon(routeId);
+
+            assertThat(generated).isZero();
+            then(flightBatchPersistenceService).shouldHaveNoInteractions();
         }
 
         @Test
