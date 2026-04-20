@@ -16,6 +16,7 @@ import com.falcon.booking.persistence.repository.FlightGenerationRepository;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import com.falcon.booking.persistence.specification.FlightSpecifications;
 import com.falcon.booking.web.dto.flight.CreateFlightDto;
+import com.falcon.booking.web.dto.flight.FlightSearchResponse;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import org.slf4j.Logger;
@@ -49,12 +50,13 @@ public class FlightService {
     private final FlightRepository flightRepository;
     private final RouteService routeService;
     private final AirplaneTypeService airplaneTypeService;
+    private final AirportService airportService;
     private final FlightMapper flightMapper;
     private final AsyncFlightGenerationService asyncFlightGenerationService;
     private final FlightGenerationRepository flightGenerationRepository;
 
     @Autowired
-    public FlightService(FlightRepository flightRepository, RouteService routeService, FlightMapper flightMapper, AirplaneTypeService airplaneTypeService, AsyncFlightGenerationService asyncFlightGenerationService, FlightGenerationRepository flightGenerationRepository, FlightGenerationMapper flightGenerationMapper) {
+    public FlightService(FlightRepository flightRepository, RouteService routeService, FlightMapper flightMapper, AirplaneTypeService airplaneTypeService, AsyncFlightGenerationService asyncFlightGenerationService, FlightGenerationRepository flightGenerationRepository, FlightGenerationMapper flightGenerationMapper, AirportService airportService) {
         this.flightRepository = flightRepository;
         this.routeService = routeService;
         this.flightMapper = flightMapper;
@@ -62,6 +64,7 @@ public class FlightService {
         this.asyncFlightGenerationService = asyncFlightGenerationService;
         this.flightGenerationRepository = flightGenerationRepository;
         this.flightGenerationMapper = flightGenerationMapper;
+        this.airportService = airportService;
     }
 
     private OffsetDateTime toOffsetDateTime(LocalDate date, ZoneId zoneId) {
@@ -173,6 +176,31 @@ public class FlightService {
         return flightMapper.toDto(flightRepository.save(flightToUpdate));
     }
 
+    private Map<String, OffsetDateTime> getDayRange(LocalDate date, ZoneId timezone) {
+        OffsetDateTime start = date.atStartOfDay(timezone).toOffsetDateTime();
+        OffsetDateTime end = date.plusDays(1).atStartOfDay(timezone).toOffsetDateTime();
+        Map<String, OffsetDateTime> dayRange = new HashMap<>();
+        dayRange.put("start", start);
+        dayRange.put("end", end);
+
+        return dayRange;
+    }
+
+    public FlightSearchResponse getAllFlightsByOriginDestinationAndDate(String originIataCode, String destinationIataCode, LocalDate date, FlightStatus status) {
+        AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(originIataCode);
+        AirportEntity airportDestination = airportService.getAirportEntityByIataCode(destinationIataCode);
+        if (status == null)
+                status = FlightStatus.SCHEDULED;
+
+        Map<String, OffsetDateTime> dayRange = getDayRange(date, ZoneId.of(airportOrigin.getTimezone()));
+        OffsetDateTime startDateTime = dayRange.get("start");
+        OffsetDateTime endDateTime = dayRange.get("end");
+
+        List<FlightEntity> flights = flightRepository.findFlightsByAirportsAndDate(originIataCode, destinationIataCode, startDateTime, endDateTime, status);
+        List<ResponseFlightDto> flightsDtos = flightMapper.toDto(flights);
+        return new FlightSearchResponse(flightsDtos, flightsDtos.size(), date);
+    }
+
     @Transactional(readOnly = true)
     public List<ResponseFlightDto> getAllFlightsByRouteAndDate(String flightNumber, LocalDate date) {
 
@@ -180,10 +208,9 @@ public class FlightService {
         if (!routeEntity.isActive())
             throw new RouteNotActiveException(routeEntity.getFlightNumber());
 
-        ZoneId timezone = ZoneId.of(routeEntity.getAirportOrigin().getTimezone());
-
-        OffsetDateTime startDateTime = date.atStartOfDay(timezone).toOffsetDateTime();
-        OffsetDateTime endDateTime = date.atTime(LocalTime.MAX).atZone(timezone).toOffsetDateTime();
+        Map<String, OffsetDateTime> dayRange = getDayRange(date, ZoneId.of(routeEntity.getAirportOrigin().getTimezone()));
+        OffsetDateTime startDateTime = dayRange.get("start");
+        OffsetDateTime endDateTime = dayRange.get("end");
 
         return flightMapper.toDto(flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, startDateTime, endDateTime));
     }

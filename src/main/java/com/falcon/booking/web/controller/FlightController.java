@@ -3,6 +3,7 @@ package com.falcon.booking.web.controller;
 import com.falcon.booking.domain.service.FlightService;
 import com.falcon.booking.domain.valueobject.FlightStatus;
 import com.falcon.booking.web.dto.flight.CreateFlightDto;
+import com.falcon.booking.web.dto.flight.FlightSearchResponse;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import com.falcon.booking.web.exception.Error;
@@ -176,6 +177,29 @@ public class FlightController {
         return ResponseEntity.ok(flightService.changeAirplaneType(id, idAirplaneType));
     }
 
+    @Operation(summary = "Search flights by route and date",
+            description = "Returns the flights available for a given origin airport, destination airport, and departure date.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Flights retrieved successfully, even if result is empty",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FlightSearchResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid query parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/search")
+    public ResponseEntity<FlightSearchResponse> getFlightsByAirportsAndDate(@RequestParam @Size(min = 3, max = 3, message = "origin must be an airports Iata Code (3 letter String)")
+                                                                            @Parameter(description = "Origin airport IATA code", example = "BOG")
+                                                                            String origin,
+                                                                            @RequestParam @Size(min = 3, max = 3, message = "destination must be an airports Iata Code (3 letter String)")
+                                                                            @Parameter(description = "Destination airport IATA code", example = "MIA")
+                                                                            String destination,
+                                                                            @RequestParam
+                                                                            @Parameter(description = "Flight departure date", example = "2026-02-20")
+                                                                            LocalDate date,
+                                                                            @RequestParam(required = false)
+                                                                            @Parameter(description = "Status of flights to search", example = "SCHEDULED")
+                                                                            FlightStatus status) {
+        return ResponseEntity.ok(flightService.getAllFlightsByOriginDestinationAndDate(origin, destination, date, status));
+    }
 
     @Operation(summary = "Get all flight generations",
             description = "Returns a list of all the historic flight generations. Requires authentication with JWT token and ADMIN role",
