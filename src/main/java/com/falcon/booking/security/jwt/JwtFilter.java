@@ -39,7 +39,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
-            logger.warn("Authorization header is missing or does not start with Bearer");
+            logger.debug("Authorization header is missing or does not start with Bearer");
             filterChain.doFilter(request, response);
             return;
         }
