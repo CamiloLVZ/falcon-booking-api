@@ -1,6 +1,5 @@
 package com.falcon.booking.domain.service;
 
-import com.falcon.booking.domain.exception.DateToBeforeDateFromException;
 import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotBeRescheduledException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
@@ -439,10 +438,14 @@ class FlightServiceTest {
     @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
     @Test
     void shouldThrowExceptionWhenGenerationAlreadyRunning_GlobalGeneration() {
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class)))
-                .willThrow(new DataIntegrityViolationException("duplicate"));
+        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
+        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
 
-        assertThrows(FlightGenerationAlreadyRunningException.class, flightService::startGlobalFlightGeneration);
+        assertThrows(
+                FlightGenerationAlreadyRunningException.class,
+                flightService::startGlobalFlightGeneration
+        );
     }
 
     @DisplayName("Should start route flight generation")
@@ -475,12 +478,17 @@ class FlightServiceTest {
     @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
     @Test
     void shouldThrowExceptionWhenGenerationAlreadyRunning_RouteGeneration() {
+
         RouteEntity route = createRoute("AV1234", "UTC", true);
         given(routeService.getRouteEntity("AV1234")).willReturn(route);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class)))
-                .willThrow(new DataIntegrityViolationException("duplicate"));
+        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
+        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
 
-        assertThrows(FlightGenerationAlreadyRunningException.class, () -> flightService.startRouteFlightGeneration("AV1234"));
+        assertThrows(
+                FlightGenerationAlreadyRunningException.class,
+                () -> flightService.startRouteFlightGeneration("AV1234")
+        );
     }
 
 
@@ -500,10 +508,28 @@ class FlightServiceTest {
     @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
     @Test
     void shouldThrowExceptionWhenGenerationAlreadyRunning_DailyGeneration() {
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class)))
-                .willThrow(new DataIntegrityViolationException("duplicate"));
+        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
+        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
 
-        assertThrows(FlightGenerationAlreadyRunningException.class, () -> flightService.startDailyFlightGeneration(LocalDate.now()));
+        assertThrows(
+                FlightGenerationAlreadyRunningException.class,
+                () -> flightService.startDailyFlightGeneration(LocalDate.now())
+        );
+    }
+
+    @DisplayName("Should throw DataIntegrityViolationException when the error is not generation already running")
+    @Test
+    void shouldNotTranslateOtherConstraintsException() {
+
+        var constraintException = new org.hibernate.exception.ConstraintViolationException("check violation", null, "chk_route_required_for_route_flight_generation");
+        var dataException = new DataIntegrityViolationException("error", constraintException);
+        given(flightGenerationRepository.save(any())).willThrow(dataException);
+
+        assertThrows(
+                DataIntegrityViolationException.class,
+                () -> flightService.startDailyFlightGeneration(LocalDate.now())
+        );
     }
 }
 

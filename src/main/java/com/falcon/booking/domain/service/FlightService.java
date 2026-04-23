@@ -264,7 +264,10 @@ public class FlightService {
             return flightGenerationMapper.toDto(generationSaved);
 
         } catch (DataIntegrityViolationException e) {
-            throw new FlightGenerationAlreadyRunningException();
+            String constraint = extractConstraintName(e).orElse("");
+            if ("idx_flight_generation_only_one_running".equals(constraint))
+                throw new FlightGenerationAlreadyRunningException();
+            else throw e;
         }
     }
 
@@ -280,7 +283,10 @@ public class FlightService {
             return flightGenerationMapper.toDto(generationSaved);
 
         } catch (DataIntegrityViolationException e) {
-            throw new FlightGenerationAlreadyRunningException();
+            String constraint = extractConstraintName(e).orElse("");
+            if ("idx_flight_generation_only_one_running".equals(constraint))
+                throw new FlightGenerationAlreadyRunningException();
+            else throw e;
         }
     }
 
@@ -292,8 +298,23 @@ public class FlightService {
             asyncFlightGenerationService.executeGeneration(generationSaved.getId());
 
         } catch (DataIntegrityViolationException e) {
-            throw new FlightGenerationAlreadyRunningException();
+                String constraint = extractConstraintName(e).orElse("");
+                if ("idx_flight_generation_only_one_running".equals(constraint))
+                    throw new FlightGenerationAlreadyRunningException();
+                else throw e;
         }
+    }
+
+    private Optional<String> extractConstraintName(Throwable e) {
+        Throwable cause = e;
+
+        while (cause != null) {
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException ex) {
+                return Optional.ofNullable(ex.getConstraintName());
+            }
+            cause = cause.getCause();
+        }
+        return Optional.empty();
     }
 
 }
