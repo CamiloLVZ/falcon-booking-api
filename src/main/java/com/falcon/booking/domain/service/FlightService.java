@@ -1,6 +1,5 @@
 package com.falcon.booking.domain.service;
 
-import com.falcon.booking.domain.exception.DateToBeforeDateFromException;
 import com.falcon.booking.domain.exception.Flight.FlightAlreadyExistsException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotBeRescheduledException;
 import com.falcon.booking.domain.exception.Flight.FlightCanNotChangeAirplaneTypeException;
