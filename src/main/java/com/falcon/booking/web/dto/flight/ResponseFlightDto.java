@@ -20,6 +20,8 @@ public record ResponseFlightDto(
         OffsetDateTime departureDateTime,
         @Schema(description = "Flight local departure date time", example = "2026-02-20T14:30:00")
         LocalDateTime localDepartureDateTime,
+        @Schema(description = "Flight duration in minutes")
+        int durationMinutes,
         @Schema(description = "Assigned airplane type information")
         AirplaneTypeInFlightDto airplaneType,
         @Schema(description = "Current flight status", example = "SCHEDULED")

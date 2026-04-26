@@ -64,6 +64,7 @@ class ReservationControllerTest {
                 "MDE",
                 OffsetDateTime.parse("2026-01-01T13:00:00Z"),
                 LocalDateTime.parse("2026-01-01T08:00:00"),
+                40,
                 new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
                 FlightStatus.SCHEDULED
         );

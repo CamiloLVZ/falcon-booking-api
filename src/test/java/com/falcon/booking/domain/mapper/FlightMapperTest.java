@@ -47,6 +47,7 @@ class FlightMapperTest {
         route.setFlightNumber("FL123");
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
+        route.setLengthMinutes(40);
 
         OffsetDateTime departureDateTime = OffsetDateTime.of(2025, 1, 10, 15, 0, 0, 0, ZoneOffset.UTC);
 
@@ -69,6 +70,7 @@ class FlightMapperTest {
         assertThat(result.localDepartureDateTime()).isEqualTo(LocalDateTime.of(2025, 1, 10, 10, 0));
         assertThat(result.airplaneType()).isEqualTo(airplaneTypeDto);
         assertThat(result.status()).isEqualTo(FlightStatus.SCHEDULED);
+        assertThat(result.durationMinutes()).isEqualTo(40);
     }
 
     @DisplayName("Should map a list of flights to dto list")
@@ -88,6 +90,7 @@ class FlightMapperTest {
         route.setFlightNumber("IB100");
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
+        route.setLengthMinutes(40);
 
         FlightEntity first = new FlightEntity();
         first.setRoute(route);

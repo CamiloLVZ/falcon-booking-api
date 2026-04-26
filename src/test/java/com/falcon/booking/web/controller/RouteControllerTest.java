@@ -258,6 +258,7 @@ public class RouteControllerTest {
                         "MDE",
                         OffsetDateTime.now(),
                         LocalDateTime.now(),
+                        40,
                         new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
                         FlightStatus.SCHEDULED
                 )

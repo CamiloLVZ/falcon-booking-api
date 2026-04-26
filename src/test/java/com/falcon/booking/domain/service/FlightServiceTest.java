@@ -146,7 +146,7 @@ class FlightServiceTest {
     @Test
     void shouldReturnDto_getFlightById() {
         FlightEntity entity = createFlight(1L, createRoute("AV1234", "UTC", true), OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", entity.getDepartureDateTime(), entity.getDepartureDateTime().toLocalDateTime(), null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", entity.getDepartureDateTime(), entity.getDepartureDateTime().toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(flightRepository.findById(1L)).willReturn(Optional.of(entity));
         given(flightMapper.toDto(entity)).willReturn(dto);
@@ -199,7 +199,7 @@ class FlightServiceTest {
         CreateFlightDto request = new CreateFlightDto("AV1234", LocalDateTime.of(2026, 8, 1, 14, 0));
         OffsetDateTime expectedDeparture = request.departureDateTime().atZone(ZoneId.of("UTC")).toOffsetDateTime();
         FlightEntity savedEntity = createFlight(1L, route, expectedDeparture, FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedDeparture, expectedDeparture.toLocalDateTime(), null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedDeparture, expectedDeparture.toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(routeService.getRouteEntity("AV1234")).willReturn(route);
         given(flightRepository.existsByRouteAndDepartureDateTime(route, expectedDeparture)).willReturn(false);
@@ -228,7 +228,7 @@ class FlightServiceTest {
     void shouldReturnFlights_whenGetAllFlights() {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity expectedFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(routeService.getRouteEntity("AV1234")).willReturn(route);
         given(flightRepository.findAll(any(Specification.class))).willReturn(List.of(expectedFlight));
@@ -242,7 +242,7 @@ class FlightServiceTest {
     @Test
     void shouldCancelFlight() {
         FlightEntity flight = createFlight(1L, createRoute("AV1234", "UTC", true), OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), null, FlightStatus.CANCELED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40,null, FlightStatus.CANCELED);
 
         given(flightRepository.findById(1L)).willReturn(Optional.of(flight));
         given(flightMapper.toDto(flight)).willReturn(dto);
@@ -261,7 +261,7 @@ class FlightServiceTest {
         LocalDateTime nextDeparture = LocalDateTime.of(2026, 8, 5, 16, 0);
         OffsetDateTime newDeparture = nextDeparture.atZone(ZoneId.of("UTC")).toOffsetDateTime();
         FlightEntity savedFlight = createFlight(2L, route, newDeparture, FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(2L, "AV1234", "BOG", "BOG", newDeparture, newDeparture.toLocalDateTime(), null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(2L, "AV1234", "BOG", "BOG", newDeparture, newDeparture.toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(flightRepository.findById(1L)).willReturn(Optional.of(oldFlight));
         given(flightRepository.existsByRouteAndDepartureDateTime(route, newDeparture)).willReturn(false);
@@ -305,7 +305,7 @@ class FlightServiceTest {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity flight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
         AirplaneTypeEntity newType = createAirplaneType(2L);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(flightRepository.findById(1L)).willReturn(Optional.of(flight));
         given(airplaneTypeService.getAirplaneTypeEntity(2L)).willReturn(newType);
@@ -346,7 +346,7 @@ class FlightServiceTest {
     void shouldReturnFlightsByRouteAndDates() {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity flight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(routeService.getRouteEntity("AV1234")).willReturn(route);
         given(flightRepository.findAllByRouteAndDepartureDateTimeBetween(eq(route), any(OffsetDateTime.class), any(OffsetDateTime.class))).willReturn(List.of(flight));
