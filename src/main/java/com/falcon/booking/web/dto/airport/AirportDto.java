@@ -1,5 +1,6 @@
-package com.falcon.booking.web.dto;
+package com.falcon.booking.web.dto.airport;
 
+import com.falcon.booking.web.dto.country.CountryDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record AirportDto(

@@ -1,7 +1,8 @@
 package com.falcon.booking.domain.mapper;
 
 import com.falcon.booking.persistence.entity.AirportEntity;
-import com.falcon.booking.web.dto.AirportDto;
+import com.falcon.booking.web.dto.airport.AirportDto;
+import com.falcon.booking.web.dto.airport.AirportSearchOptionDto;
 import org.mapstruct.Mapper;
 
 import java.util.List;
@@ -10,4 +11,6 @@ import java.util.List;
 public interface AirportMapper {
     AirportDto toDto(AirportEntity airportEntity);
     List<AirportDto> toDto(List<AirportEntity> airportEntities);
+    AirportSearchOptionDto toSearchOptionDto(AirportEntity airportEntity);
+    List<AirportSearchOptionDto> toSearchOptionDto(List<AirportEntity> airportEntities);
 }

@@ -4,7 +4,7 @@ import com.falcon.booking.domain.exception.CountryNotFoundException;
 import com.falcon.booking.domain.mapper.CountryMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.CountryRepository;
-import com.falcon.booking.web.dto.CountryDto;
+import com.falcon.booking.web.dto.country.CountryDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

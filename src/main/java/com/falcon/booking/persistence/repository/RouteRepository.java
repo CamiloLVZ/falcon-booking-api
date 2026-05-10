@@ -1,6 +1,7 @@
 package com.falcon.booking.persistence.repository;
 
 import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Sort;
@@ -28,4 +29,10 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Long>, JpaSp
     Optional<RouteEntity> findById(Long id);
 
     List<RouteEntity> findAll(Specification<RouteEntity> spec, @NonNull Sort sort);
+
+    @Query("SELECT DISTINCT r.airportOrigin FROM RouteEntity r WHERE r.status=ACTIVE")
+    List<AirportEntity> findDistinctOrigins();
+
+    @Query("SELECT DISTINCT r.airportDestination FROM RouteEntity r WHERE r.airportOrigin.iataCode = :originIataCode AND r.status=ACTIVE")
+    List<AirportEntity> findDestinationsByOrigin(String originIataCode);
 }

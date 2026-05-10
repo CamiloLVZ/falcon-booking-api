@@ -4,6 +4,7 @@ import com.falcon.booking.domain.service.FlightService;
 import com.falcon.booking.domain.service.RouteActivationOrchestrator;
 import com.falcon.booking.domain.service.RouteService;
 import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.web.dto.airport.AirportSearchOptionDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightDto;
 import com.falcon.booking.web.dto.flight.ResponseFlightsGenerationDto;
 import com.falcon.booking.web.dto.route.*;
@@ -85,6 +86,34 @@ public class RouteController {
                                                                    @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                    String flightNumber) {
         return ResponseEntity.ok(routeService.getRouteByFlightNumber(flightNumber));
+    }
+
+    @Operation(summary = "Get origin airports for search",
+            description = "Returns a list of airports with active routes as origin options for route search filters.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Origin airport options retrieved successfully, even if list is empty",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AirportSearchOptionDto.class))))
+    })
+    @GetMapping("/search/origins")
+    public ResponseEntity<List<AirportSearchOptionDto>> getOriginAirports() {
+        return ResponseEntity.ok(routeService.getOriginAirports());
+    }
+
+    @Operation(summary = "Get destination airports for search",
+            description = "Returns a list of destination airports with active routes from the selected origin airport.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Destination airport options retrieved successfully, even if list is empty",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AirportSearchOptionDto.class)))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid origin IATA code",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/search/destinations")
+    public ResponseEntity<List<AirportSearchOptionDto>> getDestinationAirports(@RequestParam
+                                                                               @NotNull(message = "originIataCode is required")
+                                                                               @Size(min = 3, max = 3, message = "Iata Code must be a 3 letter String")
+                                                                               @Parameter(description = "Origin airport IATA code used to find available destinations", example = "BOG")
+                                                                               String originIataCode) {
+        return ResponseEntity.ok(routeService.getDestinationAirports(originIataCode));
     }
 
      @Operation(summary = "Create a route",

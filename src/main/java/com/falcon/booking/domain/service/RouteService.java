@@ -2,11 +2,13 @@ package com.falcon.booking.domain.service;
 
 import com.falcon.booking.domain.common.utils.StringNormalizer;
 import com.falcon.booking.domain.exception.Route.*;
+import com.falcon.booking.domain.mapper.AirportMapper;
 import com.falcon.booking.domain.mapper.RouteMapper;
 import com.falcon.booking.domain.valueobject.RouteStatus;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.*;
 import com.falcon.booking.persistence.specification.RouteSpecifications;
+import com.falcon.booking.web.dto.airport.AirportSearchOptionDto;
 import com.falcon.booking.web.dto.route.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +36,17 @@ public class RouteService {
     private final RouteMapper routeMapper;
     private final AirplaneTypeService airplaneTypeService;
     private final AirportService airportService;
+    private final AirportMapper airportMapper;
 
     @Autowired
-    public RouteService(RouteRepository routeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper, AirplaneTypeService airplaneTypeService, AirportService airportService, AsyncFlightGenerationService asyncFlightGenerationService) {
+    public RouteService(RouteRepository routeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper, AirplaneTypeService airplaneTypeService, AirportService airportService, AsyncFlightGenerationService asyncFlightGenerationService, AirportMapper airportMapper) {
         this.routeRepository = routeRepository;
         this.routeDayRepository = routeDayRepository;
         this.routeScheduleRepository = routeScheduleRepository;
         this.routeMapper = routeMapper;
         this.airplaneTypeService = airplaneTypeService;
         this.airportService = airportService;
+        this.airportMapper = airportMapper;
     }
 
     public RouteEntity getRouteEntity(String flightNumber){
@@ -60,6 +64,14 @@ public class RouteService {
     public ResponseRouteDto getRouteByFlightNumber(String flightNumber) {
 
         return routeMapper.toResponseDto(getRouteEntity(flightNumber));
+    }
+
+    public List<AirportSearchOptionDto> getOriginAirports() {
+        return airportMapper.toSearchOptionDto(routeRepository.findDistinctOrigins());
+    }
+
+    public List<AirportSearchOptionDto> getDestinationAirports(String originIataCode) {
+        return airportMapper.toSearchOptionDto(routeRepository.findDestinationsByOrigin(StringNormalizer.normalize(originIataCode)));
     }
 
     @Transactional(readOnly = true)

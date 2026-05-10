@@ -1,6 +1,6 @@
 package com.falcon.booking.domain.mapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
-import com.falcon.booking.web.dto.CountryDto;
+import com.falcon.booking.web.dto.country.CountryDto;
 import org.mapstruct.Mapper;
 
 import java.util.List;

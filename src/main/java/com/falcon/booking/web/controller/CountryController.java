@@ -2,8 +2,8 @@ package com.falcon.booking.web.controller;
 
 import com.falcon.booking.domain.service.AirportService;
 import com.falcon.booking.domain.service.CountryService;
-import com.falcon.booking.web.dto.AirportDto;
-import com.falcon.booking.web.dto.CountryDto;
+import com.falcon.booking.web.dto.airport.AirportDto;
+import com.falcon.booking.web.dto.country.CountryDto;
 import com.falcon.booking.web.exception.Error;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

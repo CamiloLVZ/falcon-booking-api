@@ -6,7 +6,7 @@ import com.falcon.booking.domain.mapper.AirportMapper;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.AirportRepository;
-import com.falcon.booking.web.dto.AirportDto;
+import com.falcon.booking.web.dto.airport.AirportDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

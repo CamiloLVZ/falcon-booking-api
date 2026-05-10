@@ -51,6 +51,9 @@ public class SecurityConfig {
                         //COUNTRIES
                         .requestMatchers(HttpMethod.GET, "/v1/countries/**").permitAll()
 
+                        //ROUTES
+                        .requestMatchers(HttpMethod.GET, "/v1/routes/**").permitAll()
+
                         //ADMIN ONLY
                         .requestMatchers(
                                 "/v1/airplane-types/**",
@@ -58,9 +61,6 @@ public class SecurityConfig {
                                 "/v1/airports/**",
                                 "/v1/routes/**"
                         ).hasRole("ADMIN")
-
-                        //ROUTES
-                        .requestMatchers(HttpMethod.GET, "/v1/routes/**").permitAll()
 
                         .anyRequest().hasRole("ADMIN")
 
