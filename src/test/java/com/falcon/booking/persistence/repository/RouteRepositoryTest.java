@@ -73,6 +73,17 @@ public class RouteRepositoryTest {
         return route;
     }
 
+    private RouteEntity createRoute(String flightNumber, RouteStatus status, AirportEntity origin, AirportEntity destination, AirplaneTypeEntity airplaneType) {
+        RouteEntity route = new RouteEntity();
+        route.setFlightNumber(flightNumber);
+        route.setAirportOrigin(origin);
+        route.setAirportDestination(destination);
+        route.setDefaultAirplaneType(airplaneType);
+        route.setLengthMinutes(60);
+        route.setStatus(status);
+        return route;
+    }
+
     @DisplayName("Should return route when flight number exists")
     @Test
     void shouldReturnRoute_findByFlightNumber() {
@@ -136,6 +147,76 @@ public class RouteRepositoryTest {
         List<RouteEntity> routes = routeRepository.findAllByStatus(RouteStatus.INACTIVE);
 
         assertThat(routes).isEmpty();
+    }
+
+    @DisplayName("Should return distinct origin airports for active routes")
+    @Test
+    void shouldReturnDistinctOrigins_findDistinctOrigins() {
+        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
+        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
+        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
+        AirportEntity cali = airportRepository.save(createAirport("CLO", "Alfonso Bonilla Aragon", "Cali", country));
+        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
+
+        routeRepository.save(createRoute("AV1234", RouteStatus.ACTIVE, bogota, medellin, airplaneType));
+        routeRepository.save(createRoute("AV5678", RouteStatus.ACTIVE, bogota, cali, airplaneType));
+        routeRepository.save(createRoute("AV9876", RouteStatus.INACTIVE, medellin, cali, airplaneType));
+
+        List<AirportEntity> origins = routeRepository.findDistinctOrigins();
+
+        assertThat(origins).hasSize(1);
+        assertThat(origins.get(0).getIataCode()).isEqualTo("BOG");
+    }
+
+    @DisplayName("Should return empty origin airport list when there are no active routes")
+    @Test
+    void shouldReturnEmptyList_findDistinctOrigins() {
+        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
+        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
+        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
+        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
+
+        routeRepository.save(createRoute("AV1234", RouteStatus.INACTIVE, bogota, medellin, airplaneType));
+
+        List<AirportEntity> origins = routeRepository.findDistinctOrigins();
+
+        assertThat(origins).isEmpty();
+    }
+
+    @DisplayName("Should return destinations by origin for active routes")
+    @Test
+    void shouldReturnDestinationsByOrigin_findDestinationsByOrigin() {
+        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
+        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
+        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
+        AirportEntity cali = airportRepository.save(createAirport("CLO", "Alfonso Bonilla Aragon", "Cali", country));
+        AirportEntity cartagena = airportRepository.save(createAirport("CTG", "Rafael Nunez", "Cartagena", country));
+        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
+
+        routeRepository.save(createRoute("AV1234", RouteStatus.ACTIVE, bogota, medellin, airplaneType));
+        routeRepository.save(createRoute("AV5678", RouteStatus.ACTIVE, bogota, cali, airplaneType));
+        routeRepository.save(createRoute("AV9876", RouteStatus.INACTIVE, bogota, cartagena, airplaneType));
+        routeRepository.save(createRoute("AV5555", RouteStatus.ACTIVE, medellin, cartagena, airplaneType));
+
+        List<AirportEntity> destinations = routeRepository.findDestinationsByOrigin("BOG");
+
+        assertThat(destinations).hasSize(2);
+        assertThat(destinations).extracting(AirportEntity::getIataCode).containsExactlyInAnyOrder("MDE", "CLO");
+    }
+
+    @DisplayName("Should return empty destination list when origin has no active routes")
+    @Test
+    void shouldReturnEmptyList_findDestinationsByOrigin() {
+        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
+        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
+        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
+        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
+
+        routeRepository.save(createRoute("AV1234", RouteStatus.INACTIVE, bogota, medellin, airplaneType));
+
+        List<AirportEntity> destinations = routeRepository.findDestinationsByOrigin("BOG");
+
+        assertThat(destinations).isEmpty();
     }
 
 }

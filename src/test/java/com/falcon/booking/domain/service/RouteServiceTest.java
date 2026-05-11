@@ -4,6 +4,7 @@ import com.falcon.booking.domain.exception.Route.RouteAirplaneTypeIsNotActiveExc
 import com.falcon.booking.domain.exception.Route.RouteAlreadyExistsException;
 import com.falcon.booking.domain.exception.Route.RouteNotFoundException;
 import com.falcon.booking.domain.exception.Route.RouteSameOriginAndDestinationException;
+import com.falcon.booking.domain.mapper.AirportMapper;
 import com.falcon.booking.domain.mapper.RouteMapper;
 import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
 import com.falcon.booking.domain.valueobject.RouteStatus;
@@ -11,6 +12,7 @@ import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.RouteDayRepository;
 import com.falcon.booking.persistence.repository.RouteRepository;
 import com.falcon.booking.persistence.repository.RouteScheduleRepository;
+import com.falcon.booking.web.dto.airport.AirportSearchOptionDto;
 import com.falcon.booking.web.dto.route.AddRouteScheduleRequestDto;
 import com.falcon.booking.web.dto.route.CreateRouteDto;
 import com.falcon.booking.web.dto.route.ResponseRouteDto;
@@ -46,6 +48,8 @@ public class RouteServiceTest {
     private RouteScheduleRepository routeScheduleRepository;
     @Mock
     private RouteMapper routeMapper;
+    @Mock
+    private AirportMapper airportMapper;
     @Mock
     private AsyncFlightGenerationService asyncFlightGenerationService;
     @Mock
@@ -123,6 +127,42 @@ public class RouteServiceTest {
 
         assertThat(result).isEqualTo(dto);
         verify(routeMapper).toResponseDto(route);
+    }
+
+    @DisplayName("Should return origin airport options")
+    @Test
+    void shouldReturnOriginAirportOptions_getOriginAirports() {
+        List<AirportEntity> airports = List.of(createAirport(1L, "BOG"), createAirport(2L, "MDE"));
+        List<AirportSearchOptionDto> airportDtos = List.of(
+                new AirportSearchOptionDto("BOG", "Bogota", "El Dorado"),
+                new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba")
+        );
+        given(routeRepository.findDistinctOrigins()).willReturn(airports);
+        given(airportMapper.toSearchOptionDto(airports)).willReturn(airportDtos);
+
+        List<AirportSearchOptionDto> result = routeService.getOriginAirports();
+
+        assertThat(result).isEqualTo(airportDtos);
+        verify(routeRepository).findDistinctOrigins();
+        verify(airportMapper).toSearchOptionDto(airports);
+    }
+
+    @DisplayName("Should return destination airport options by normalized origin")
+    @Test
+    void shouldReturnDestinationAirportOptions_getDestinationAirports() {
+        List<AirportEntity> airports = List.of(createAirport(2L, "MDE"), createAirport(3L, "CLO"));
+        List<AirportSearchOptionDto> airportDtos = List.of(
+                new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba"),
+                new AirportSearchOptionDto("CLO", "Cali", "Alfonso Bonilla Aragon")
+        );
+        given(routeRepository.findDestinationsByOrigin("BOG")).willReturn(airports);
+        given(airportMapper.toSearchOptionDto(airports)).willReturn(airportDtos);
+
+        List<AirportSearchOptionDto> result = routeService.getDestinationAirports(" bog ");
+
+        assertThat(result).isEqualTo(airportDtos);
+        verify(routeRepository).findDestinationsByOrigin("BOG");
+        verify(airportMapper).toSearchOptionDto(airports);
     }
 
     @DisplayName("Should add route when data is valid")
