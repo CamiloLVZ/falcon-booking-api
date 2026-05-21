@@ -123,7 +123,7 @@ public class AirplaneTypeController {
             @ApiResponse(responseCode = "404", description = "Airplane type not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<ResponseAirplaneTypeDto> updateAirplaneType(@PathVariable
                                                                       @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
                                                                       Long id,
@@ -153,7 +153,7 @@ public class AirplaneTypeController {
             @ApiResponse(responseCode = "404", description = "Airplane type not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
-    @PutMapping("/{id}/correct-identity")
+    @PatchMapping("/{id}/correct-identity")
     public ResponseEntity<ResponseAirplaneTypeDto> correctAirplaneType(@PathVariable
                                                                        @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
                                                                        Long id,
@@ -183,7 +183,7 @@ public class AirplaneTypeController {
             @ApiResponse(responseCode = "404", description = "Airplane type not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
-    @PutMapping("/{id}/deactivate")
+    @PatchMapping("/{id}/deactivate")
     public ResponseEntity<ResponseAirplaneTypeDto> deactivateAirplaneType(@PathVariable
                                                                           @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
                                                                           Long id) {
@@ -205,7 +205,7 @@ public class AirplaneTypeController {
             @ApiResponse(responseCode = "404", description = "Airplane type not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
-    @PutMapping("/{id}/activate")
+    @PatchMapping("/{id}/activate")
     public ResponseEntity<ResponseAirplaneTypeDto> activateAirplaneType(@PathVariable
                                                                         @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
                                                                         Long id) {
@@ -227,7 +227,7 @@ public class AirplaneTypeController {
             @ApiResponse(responseCode = "404", description = "Airplane type not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
-    @PutMapping("/{id}/retire")
+    @PatchMapping("/{id}/retire")
     public ResponseEntity<ResponseAirplaneTypeDto> retireAirplaneType(@PathVariable
                                                                       @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
                                                                       Long id) {
