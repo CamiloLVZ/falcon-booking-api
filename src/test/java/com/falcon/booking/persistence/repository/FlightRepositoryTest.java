@@ -1,8 +1,8 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
-import com.falcon.booking.domain.valueobject.FlightStatus;
-import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.FlightStatus;
+import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.CountryEntity;

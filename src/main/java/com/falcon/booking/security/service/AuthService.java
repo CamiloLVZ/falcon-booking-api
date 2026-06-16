@@ -1,12 +1,12 @@
 package com.falcon.booking.security.service;
 
-import com.falcon.booking.domain.service.UserService;
+import com.falcon.booking.feature.auth.service.UserService;
 import com.falcon.booking.security.jwt.JwtPayload;
 import com.falcon.booking.security.jwt.JwtUtil;
 import com.falcon.booking.security.model.CustomUserDetails;
-import com.falcon.booking.web.dto.auth.LoginRequestDto;
-import com.falcon.booking.web.dto.auth.LoginResponseDto;
-import com.falcon.booking.web.dto.user.CreateUserDto;
+import com.falcon.booking.feature.auth.dto.LoginRequestDto;
+import com.falcon.booking.feature.auth.dto.LoginResponseDto;
+import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;

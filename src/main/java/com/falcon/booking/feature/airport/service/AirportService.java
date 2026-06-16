@@ -1,0 +1,57 @@
+package com.falcon.booking.feature.airport.service;
+
+import com.falcon.booking.common.utils.StringNormalizer;
+import com.falcon.booking.feature.airport.exception.AirportNotFoundException;
+import com.falcon.booking.feature.airport.mapper.AirportMapper;
+import com.falcon.booking.feature.country.service.CountryService;
+import com.falcon.booking.persistence.entity.AirportEntity;
+import com.falcon.booking.persistence.entity.CountryEntity;
+import com.falcon.booking.persistence.repository.AirportRepository;
+import com.falcon.booking.feature.airport.dto.AirportDto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class AirportService {
+
+    private final AirportRepository airportRepository;
+    private final AirportMapper airportMapper;
+    private final CountryService countryService;
+
+    @Autowired
+    public AirportService(AirportRepository airportRepository, AirportMapper airportMapper, CountryService countryService) {
+        this.airportRepository = airportRepository;
+        this.airportMapper = airportMapper;
+        this.countryService = countryService;
+    }
+
+    public AirportEntity getAirportEntityByIataCode(String iataCode) {
+        String normalizedIataCode = StringNormalizer.normalize(iataCode);
+
+        return airportRepository.findByIataCode(normalizedIataCode).orElseThrow(
+                () -> new AirportNotFoundException(iataCode)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public AirportDto getAirportByIataCode(String iataCode) {
+        return airportMapper.toDto(getAirportEntityByIataCode(iataCode));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AirportDto> getAllAirports() {
+        List<AirportEntity> airportEntities = airportRepository.findAllByOrderByCityAsc();
+        return airportMapper.toDto(airportEntities);
+    }
+    @Transactional(readOnly = true)
+    public List<AirportDto> getAirportsByCountryIsoCode(String isoCode) {
+        CountryEntity country = countryService.getCountryEntityByIsoCode(isoCode);
+        List<AirportEntity> airportEntities = airportRepository.findAllByCountryOrderByCityAsc(country);
+
+        return airportMapper.toDto(airportEntities);
+    }
+
+}

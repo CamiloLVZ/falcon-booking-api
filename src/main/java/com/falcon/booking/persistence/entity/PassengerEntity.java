@@ -1,7 +1,7 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.domain.common.utils.StringNormalizer;
-import com.falcon.booking.domain.valueobject.PassengerGender;
+import com.falcon.booking.common.utils.StringNormalizer;
+import com.falcon.booking.common.enums.PassengerGender;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

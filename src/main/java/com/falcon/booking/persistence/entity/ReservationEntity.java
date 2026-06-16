@@ -1,8 +1,8 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.domain.exception.Reservation.PassengerNotFoundInReservationException;
-import com.falcon.booking.domain.valueobject.PassengerReservationStatus;
-import com.falcon.booking.domain.valueobject.ReservationStatus;
+import com.falcon.booking.feature.reservation.exception.PassengerNotFoundInReservationException;
+import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

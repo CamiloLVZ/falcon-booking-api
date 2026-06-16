@@ -1,15 +1,14 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.domain.exception.Route.RouteInvalidStatusChangeException;
-import com.falcon.booking.domain.exception.Route.RouteNotActivableException;
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
-import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.feature.route.exception.RouteInvalidStatusChangeException;
+import com.falcon.booking.feature.route.exception.RouteNotActivableException;
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.RouteStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

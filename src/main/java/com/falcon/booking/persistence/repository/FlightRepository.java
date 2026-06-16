@@ -1,7 +1,6 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.domain.valueobject.FlightStatus;
-import com.falcon.booking.persistence.entity.AirportEntity;
+import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
