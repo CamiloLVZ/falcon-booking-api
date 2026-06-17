@@ -15,7 +15,7 @@ public record ResponseRouteDto(
         @Schema(description = "Default airplane type for route")
         ResponseAirplaneTypeDto defaultAirplaneType,
         @Schema(description = "Route duration in minutes", example = "180")
-        int lengthMinutes,
+        int durationMinutes,
         @Schema(description = "Current route status", example = "ACTIVE")
         RouteStatus status
 ) {

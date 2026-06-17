@@ -129,7 +129,7 @@ public class ReservationService {
 
         logger.info("Created reservation number {} for flight {}. Passengers: {}", reservation.getNumber(), flightEntity.getId(), passengerReservations.size());
        return new ResponseReservationDto(reservation.getNumber(), reservation.getContactEmail(),
-               reservation.getDatetimeReservation(), reservation.getStatus(), flightMapper.toDto(flightEntity), responsePassengerReservationDtos);
+               reservation.getReservationDatetime(), reservation.getStatus(), flightMapper.toDto(flightEntity), responsePassengerReservationDtos);
     }
 
     private List<PassengerReservationEntity> createPassengerReservationEntities(List<AddPassengerReservationDto> addPassengersReservationsDto, ReservationEntity reservation) {

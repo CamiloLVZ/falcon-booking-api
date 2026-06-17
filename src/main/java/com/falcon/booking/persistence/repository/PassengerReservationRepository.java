@@ -18,6 +18,6 @@ public interface PassengerReservationRepository extends JpaRepository<PassengerR
     @Query("SELECT pr FROM PassengerReservationEntity pr " +
             "JOIN FETCH pr.reservation r " +
             "WHERE pr.passenger = :passenger " +
-            "ORDER BY r.datetimeReservation ASC")
+            "ORDER BY r.reservationDatetime ASC")
     List<PassengerReservationEntity> findAllByPassenger(@Param("passenger") PassengerEntity passenger);
 }

@@ -63,7 +63,7 @@ public class RouteScheduleRepositoryTest {
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
         route.setDefaultAirplaneType(airplaneType);
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setStatus(RouteStatus.DRAFT);
         return routeRepository.save(route);
     }

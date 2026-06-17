@@ -25,7 +25,7 @@ public class ReservationMapper {
         return new ResponseReservationDto(
                 entity.getNumber(),
                 entity.getContactEmail(),
-                entity.getDatetimeReservation(),
+                entity.getReservationDatetime(),
                 entity.getStatus(),
                 flightMapper.toDto(entity.getFlight()),
                 passengerReservationMapper.toResponseDto(entity.getPassengerReservations())

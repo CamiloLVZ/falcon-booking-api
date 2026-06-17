@@ -13,4 +13,4 @@ public record AddRouteScheduleRequestDto(
         Set<LocalTime> schedules,
         @ArraySchema(schema = @Schema(type = "String", example = "MONDAY"),
                 arraySchema = @Schema(description = "Operation week days for the route"))
-        Set<DayOfWeek> weekDays) {}
+        Set<DayOfWeek> daysOfWeek) {}

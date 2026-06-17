@@ -88,7 +88,7 @@ public class RouteServiceTest {
         route.setAirportOrigin(createAirport(1L, "BOG"));
         route.setAirportDestination(createAirport(2L, "MDE"));
         route.setDefaultAirplaneType(createAirplaneType(AirplaneTypeStatus.ACTIVE));
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setStatus(RouteStatus.DRAFT);
         route.setRouteDays(new HashSet<>(List.of(new RouteDayEntity(route, DayOfWeek.MONDAY))));
         route.setRouteSchedules(new HashSet<>(List.of(new RouteScheduleEntity(route, LocalTime.of(8, 0)))));
@@ -239,7 +239,7 @@ public class RouteServiceTest {
         ResponseRouteDto result = routeService.updateRoute("AV1234", updateDto);
 
         assertThat(result).isEqualTo(responseDto);
-        assertThat(route.getLengthMinutes()).isEqualTo(90);
+        assertThat(route.getDurationMinutes()).isEqualTo(90);
     }
 
 
@@ -276,7 +276,7 @@ public class RouteServiceTest {
         verify(routeDayRepository).deleteAllByRoute(route);
         verify(routeScheduleRepository).deleteAllByRoute(route);
         assertThat(result.flightNumber()).isEqualTo("AV1234");
-        assertThat(result.weekDays()).hasSize(2);
+        assertThat(result.daysOfWeek()).hasSize(2);
         assertThat(result.schedules()).hasSize(2);
     }
 
@@ -289,7 +289,7 @@ public class RouteServiceTest {
         RouteWithSchedulesDto result = routeService.getRouteWithSchedules("AV1234");
 
         assertThat(result.flightNumber()).isEqualTo("AV1234");
-        assertThat(result.weekDays()).contains(DayOfWeek.MONDAY);
+        assertThat(result.daysOfWeek()).contains(DayOfWeek.MONDAY);
         assertThat(result.schedules()).contains(LocalTime.of(8, 0));
     }
 }

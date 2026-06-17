@@ -189,8 +189,8 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(RouteWeekDayInvalidException.class)
-    public ResponseEntity<Error> handleException(RouteWeekDayInvalidException exception){
+    @ExceptionHandler(RouteDayOfWeekInvalidException.class)
+    public ResponseEntity<Error> handleException(RouteDayOfWeekInvalidException exception){
         Error error = new Error("route-week-day-invalid", exception.getMessage());
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

@@ -20,8 +20,8 @@ public record UpdateRouteDto(
         Long idDefaultAirplaneType,
 
         @Schema(description = "Route duration in minutes", example = "180")
-        @Positive(message = "length minutesmust be a integer greater than zero")
-        Integer lengthMinutes
+        @Positive(message = "duration minutes must be a integer greater than zero")
+        Integer durationMinutes
 ) {
         public UpdateRouteDto{
                 airportOriginIataCode= StringNormalizer.normalize(airportOriginIataCode);

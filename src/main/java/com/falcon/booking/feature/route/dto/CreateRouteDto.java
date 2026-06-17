@@ -29,9 +29,9 @@ public record CreateRouteDto(
         Long idDefaultAirplaneType,
 
         @Schema(description = "Route duration in minutes", example = "180")
-        @NotNull(message = "length minutes can not be null")
-        @Positive(message = "length minutes must be a integer greater than zero")
-        Integer lengthMinutes
+        @NotNull(message = "duration minutes can not be null")
+        @Positive(message = "duration minutes must be a integer greater than zero")
+        Integer durationMinutes
 ) {
 
         public CreateRouteDto{

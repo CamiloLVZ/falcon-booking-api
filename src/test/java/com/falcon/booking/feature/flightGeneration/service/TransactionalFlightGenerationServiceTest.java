@@ -105,7 +105,7 @@ class TransactionalFlightGenerationServiceTest {
         route.setAirportDestination(destinationAirport);
         route.setDefaultAirplaneType(airplaneType);
         route.setStatus(RouteStatus.ACTIVE);
-        route.setLengthMinutes(180);
+        route.setDurationMinutes(180);
         route.setRouteDays(createRouteDays(route, operatingDays));
         route.setRouteSchedules(createRouteSchedules(route, schedules));
         return route;

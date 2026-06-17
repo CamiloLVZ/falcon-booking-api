@@ -146,8 +146,8 @@ public class RouteService {
             throw new RouteSameOriginAndDestinationException();
         }
 
-        if(updateRouteDto.lengthMinutes()!=null)
-            entityToUpdate.setLengthMinutes(updateRouteDto.lengthMinutes());
+        if(updateRouteDto.durationMinutes()!=null)
+            entityToUpdate.setDurationMinutes(updateRouteDto.durationMinutes());
 
         if (updateRouteDto.idDefaultAirplaneType() != null){
             AirplaneTypeEntity airplaneType = airplaneTypeService.getAirplaneTypeEntity(updateRouteDto.idDefaultAirplaneType());
@@ -179,8 +179,8 @@ public class RouteService {
     @Transactional
     public RouteWithSchedulesDto setRouteOperatingSchedules(String flightNumber, AddRouteScheduleRequestDto requestDto) {
         RouteEntity routeEntity = getRouteEntity(flightNumber);
-        if (requestDto.weekDays() != null) {
-            setRouteDays(routeEntity, requestDto.weekDays());
+        if (requestDto.daysOfWeek() != null) {
+            setRouteDays(routeEntity, requestDto.daysOfWeek());
         }
         if(requestDto.schedules() != null) {
             setRouteSchedules(routeEntity, requestDto.schedules());

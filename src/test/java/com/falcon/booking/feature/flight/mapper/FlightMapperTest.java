@@ -48,7 +48,7 @@ class FlightMapperTest {
         route.setFlightNumber("FL123");
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
-        route.setLengthMinutes(40);
+        route.setDurationMinutes(40);
 
         OffsetDateTime departureDateTime = OffsetDateTime.of(2025, 1, 10, 15, 0, 0, 0, ZoneOffset.UTC);
 
@@ -91,7 +91,7 @@ class FlightMapperTest {
         route.setFlightNumber("IB100");
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
-        route.setLengthMinutes(40);
+        route.setDurationMinutes(40);
 
         FlightEntity first = new FlightEntity();
         first.setRoute(route);

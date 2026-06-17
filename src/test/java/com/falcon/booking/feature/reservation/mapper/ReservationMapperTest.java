@@ -47,7 +47,7 @@ class ReservationMapperTest {
 
         given(entity.getNumber()).willReturn("RES123");
         given(entity.getContactEmail()).willReturn("test@mail.com");
-        given(entity.getDatetimeReservation()).willReturn(reservationDateTime);
+        given(entity.getReservationDatetime()).willReturn(reservationDateTime);
         given(entity.getStatus()).willReturn(ReservationStatus.RESERVED);
         given(entity.getFlight()).willReturn(flightEntity);
         given(entity.getPassengerReservations()).willReturn(List.of(passengerReservationEntity));
@@ -58,7 +58,7 @@ class ReservationMapperTest {
 
         assertThat(result.number()).isEqualTo("RES123");
         assertThat(result.contactEmail()).isEqualTo("test@mail.com");
-        assertThat(result.datetimeReservation()).isEqualTo(reservationDateTime);
+        assertThat(result.reservationDatetime()).isEqualTo(reservationDateTime);
         assertThat(result.status()).isEqualTo(ReservationStatus.RESERVED);
         assertThat(result.flight()).isEqualTo(flightDto);
         assertThat(result.passengers()).containsExactly(passengerDto);
@@ -79,8 +79,8 @@ class ReservationMapperTest {
         given(first.getContactEmail()).willReturn("a@mail.com");
         given(second.getContactEmail()).willReturn("b@mail.com");
 
-        given(first.getDatetimeReservation()).willReturn(Instant.parse("2025-01-01T00:00:00Z"));
-        given(second.getDatetimeReservation()).willReturn(Instant.parse("2025-01-02T00:00:00Z"));
+        given(first.getReservationDatetime()).willReturn(Instant.parse("2025-01-01T00:00:00Z"));
+        given(second.getReservationDatetime()).willReturn(Instant.parse("2025-01-02T00:00:00Z"));
 
         given(first.getStatus()).willReturn(ReservationStatus.RESERVED);
         given(second.getStatus()).willReturn(ReservationStatus.CANCELED);

@@ -42,7 +42,7 @@ public class RouteEntityTest {
         route.setFlightNumber("AV1234");
         route.setAirportOrigin(createAirport(1L, "BOG"));
         route.setAirportDestination(createAirport(2L, "MDE"));
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setDefaultAirplaneType(createActiveAirplaneType());
 
         Set<RouteDayEntity> routeDays = new HashSet<>();

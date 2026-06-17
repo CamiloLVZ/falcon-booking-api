@@ -18,11 +18,11 @@ import java.util.Objects;
 @Getter
 public class ReservationEntity {
 
-    public ReservationEntity(String number, FlightEntity flight, String contactEmail, Instant datetimeReservation) {
+    public ReservationEntity(String number, FlightEntity flight, String contactEmail, Instant reservationDatetime) {
         setNumber(number);
         this.flight = flight;
         setContactEmail(contactEmail);
-        this.datetimeReservation = datetimeReservation;
+        this.reservationDatetime = reservationDatetime;
         this.status = ReservationStatus.RESERVED;
     }
 
@@ -40,8 +40,8 @@ public class ReservationEntity {
     @Column(name = "contact_email", nullable = false, length = 128)
     private String contactEmail;
 
-    @Column(name = "datetime_reservation", nullable = false)
-    private Instant datetimeReservation;
+    @Column(name = "reservation_datetime", nullable = false)
+    private Instant reservationDatetime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

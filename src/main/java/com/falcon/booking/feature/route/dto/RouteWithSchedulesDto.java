@@ -12,7 +12,7 @@ public record RouteWithSchedulesDto(
         String flightNumber,
         @ArraySchema(schema = @Schema(type = "string", example = "MONDAY"),
                 arraySchema = @Schema(description = "Configured operation week days"))
-        Collection<DayOfWeek> weekDays,
+        Collection<DayOfWeek> daysOfWeek,
         @ArraySchema(schema = @Schema(type = "string", example = "06:30:00"),
                 arraySchema = @Schema(description = "Configured local departure times"))
         Collection<LocalTime> schedules){ }

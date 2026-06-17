@@ -115,7 +115,7 @@ class FlightServiceTest {
         route.setAirportOrigin(createAirport(timezone));
         route.setAirportDestination(createAirport(timezone));
         route.setDefaultAirplaneType(createAirplaneType(1L));
-        route.setLengthMinutes(120);
+        route.setDurationMinutes(120);
         route.setStatus(active ? RouteStatus.ACTIVE : RouteStatus.INACTIVE);
         return route;
     }

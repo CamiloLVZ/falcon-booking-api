@@ -19,9 +19,9 @@ import java.time.DayOfWeek;
 @Setter
 public class RouteDayEntity {
 
-    public RouteDayEntity(RouteEntity route, DayOfWeek weekDay) {
+    public RouteDayEntity(RouteEntity route, DayOfWeek dayOfWeek) {
         this.route = route;
-        this.weekDay = weekDay;
+        this.dayOfWeek = dayOfWeek;
     }
 
     @Id
@@ -33,7 +33,7 @@ public class RouteDayEntity {
     private RouteEntity route;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="week_day",nullable = false, length = 10)
-    private DayOfWeek weekDay;
+    @Column(name="day_of_week",nullable = false, length = 10)
+    private DayOfWeek dayOfWeek;
 
 }

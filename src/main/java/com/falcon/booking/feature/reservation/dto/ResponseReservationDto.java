@@ -14,7 +14,7 @@ public record ResponseReservationDto(
         @Schema(description = "Contact email for the reservation", example = "contact@example.com")
         String contactEmail,
         @Schema(description = "Reservation creation date and time UTC", example = "2026-02-10T15:20:30Z")
-        Instant datetimeReservation,
+        Instant reservationDatetime,
         @Schema(description = "Current reservation status", example = "CONFIRMED")
         ReservationStatus status,
         @Schema(description = "Flight associated with reservation")

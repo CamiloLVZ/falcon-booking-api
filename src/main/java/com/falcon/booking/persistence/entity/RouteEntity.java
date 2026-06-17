@@ -38,8 +38,8 @@ public class RouteEntity {
     @JoinColumn(name = "id_default_airplane_type", nullable = false)
     AirplaneTypeEntity defaultAirplaneType;
 
-    @Column(name = "length_minutes", nullable = false)
-    Integer lengthMinutes;
+    @Column(name = "duration_minutes", nullable = false)
+    Integer durationMinutes;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,length = 20)
@@ -75,7 +75,7 @@ public class RouteEntity {
             errors.add("Route must have at least one operating schedule");
         }
 
-        if (lengthMinutes == null || lengthMinutes <= 0) {
+        if (durationMinutes == null || durationMinutes <= 0) {
             errors.add("Route duration must be greater than 0");
         }
 
@@ -138,7 +138,7 @@ public class RouteEntity {
     public Set<DayOfWeek> getOperatingDays(){
         Set<DayOfWeek> weekDays = new HashSet<>();
         for(RouteDayEntity routeDay : routeDays){
-            weekDays.add(routeDay.getWeekDay());
+            weekDays.add(routeDay.getDayOfWeek());
         }
         return weekDays;
     }
