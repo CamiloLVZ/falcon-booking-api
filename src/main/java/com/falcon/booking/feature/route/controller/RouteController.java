@@ -9,6 +9,7 @@ import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import com.falcon.booking.common.web.Error;
+import com.falcon.booking.common.web.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -19,9 +20,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -50,13 +53,13 @@ public class RouteController {
     @Operation(summary = "Get all routes",
             description = "Returns all routes with optional filters by origin IATA, destination IATA and status.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Routes retrieved successfully, even if list is empty",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseRouteDto.class)))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid query parameters",
+            @ApiResponse(responseCode = "200", description = "Paginated routes retrieved successfully, even if content is empty",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid query or pagination parameters",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @GetMapping
-    public ResponseEntity<List<ResponseRouteDto>> getAllRoutes(@RequestParam(required = false) @Size(min = 3, max = 3, message = "Iata Code must be a 3 letter String")
+    public ResponseEntity<PagedResponse<ResponseRouteDto>> getAllRoutes(@RequestParam(required = false) @Size(min = 3, max = 3, message = "Iata Code must be a 3 letter String")
                                                                @Parameter(description = "Origin airport IATA code", example = "BOG")
                                                                String originAirportIataCode,
                                                                @RequestParam(required = false) @Size(min = 3, max = 3, message = "Iata Code must be a 3 letter String")
@@ -64,9 +67,16 @@ public class RouteController {
                                                                String destinationAirportIataCode,
                                                                @RequestParam(required = false)
                                                                @Parameter(description = "Route status", example = "ACTIVE")
-                                                               RouteStatus status) {
+                                                               RouteStatus status,
+                                                               @RequestParam @Min(1) @NotNull
+                                                               @Parameter(description = "Number of route records to be returned per page", example = "10", required = true)
+                                                               int size,
+                                                               @RequestParam @Min(0) @NotNull
+                                                               @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+                                                               int page) {
 
-        return ResponseEntity.ok(routeService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status));
+        Page<ResponseRouteDto> routes = routeService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status, page, size);
+        return ResponseEntity.ok(PagedResponse.from(routes));
 
     }
 
@@ -263,23 +273,30 @@ public class RouteController {
     @Operation(summary = "Get route flights in a specific date",
             description = "Returns generated flights for a route scheduled in a specific date (origin airport local date).")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Route flights retrieved successfully",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseFlightDto.class)))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid date or flight number format",
+            @ApiResponse(responseCode = "200", description = "Paginated route flights retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid date, flight number format or pagination parameters",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Route not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @GetMapping("/{flightNumber}/flights")
-    public ResponseEntity<List<ResponseFlightDto>> getAllFlightsByRouteAndDates(@Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
+    public ResponseEntity<PagedResponse<ResponseFlightDto>> getAllFlightsByRouteAndDates(@Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                                                 @NotNull @PathVariable
                                                                                 @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                                 String flightNumber,
                                                                                 @RequestParam @NotNull(message = "date is required")
                                                                                 @Parameter(description = "Date for search", example = "2026-02-01")
-                                                                                LocalDate date
+                                                                                LocalDate date,
+                                                                                @RequestParam @Min(1) @NotNull
+                                                                                @Parameter(description = "Number of flight records to be returned per page", example = "10", required = true)
+                                                                                int size,
+                                                                                @RequestParam @Min(0) @NotNull
+                                                                                @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+                                                                                int page
     ) {
-        return ResponseEntity.ok(flightService.getAllFlightsByRouteAndDate(flightNumber, date));
+        Page<ResponseFlightDto> flights = flightService.getAllFlightsByRouteAndDate(flightNumber, date, page, size);
+        return ResponseEntity.ok(PagedResponse.from(flights));
     }
 
 

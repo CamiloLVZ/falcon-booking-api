@@ -16,6 +16,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
@@ -147,8 +149,9 @@ class PassengerReservationRepositoryTest {
         passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationOne, 5));
         passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationTwo, 6));
 
-        List<PassengerReservationEntity> result = passengerReservationRepository.findAllByPassenger(passenger);
+        Page<PassengerReservationEntity> result = passengerReservationRepository.findAllByPassenger(passenger, PageRequest.of(0, 10));
 
-        assertThat(result).hasSize(2);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
     }
 }

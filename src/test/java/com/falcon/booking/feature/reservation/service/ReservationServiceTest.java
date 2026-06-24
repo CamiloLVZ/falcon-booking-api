@@ -38,6 +38,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -277,12 +282,14 @@ class ReservationServiceTest {
     void shouldReturnEntities_getAllReservationEntitiesActiveByFlight() {
         FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 100, 10);
         ReservationEntity reservation = new ReservationEntity("ABC123", flight, "contact@test.com", Instant.now());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("reservationDatetime").ascending());
 
-        given(reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED))
-                .willReturn(List.of(reservation));
+        given(reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED, pageable))
+                .willReturn(new PageImpl<>(List.of(reservation), pageable, 1));
 
-        List<ReservationEntity> result = reservationService.getAllReservationEntitiesActiveByFlight(flight);
+        Page<ReservationEntity> result = reservationService.getAllReservationEntitiesActiveByFlight(flight, pageable);
 
-        assertThat(result).hasSize(1);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 }

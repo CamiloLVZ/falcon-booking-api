@@ -14,6 +14,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -125,9 +128,14 @@ class ReservationRepositoryTest {
         ReflectionTestUtils.setField(canceled, "status", ReservationStatus.CANCELED);
         reservationRepository.save(canceled);
 
-        List<ReservationEntity> reservations = reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED);
+        Page<ReservationEntity> reservations = reservationRepository.findAllByFlightAndStatus(
+                flight,
+                ReservationStatus.RESERVED,
+                PageRequest.of(0, 10, Sort.by("reservationDatetime").ascending())
+        );
 
-        assertThat(reservations).hasSize(1);
-        assertThat(reservations.get(0).getNumber()).isEqualTo(reserved.getNumber());
+        assertThat(reservations.getContent()).hasSize(1);
+        assertThat(reservations.getContent().get(0).getNumber()).isEqualTo(reserved.getNumber());
+        assertThat(reservations.getTotalElements()).isEqualTo(1);
     }
 }

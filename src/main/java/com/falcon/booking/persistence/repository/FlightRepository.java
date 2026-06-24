@@ -3,6 +3,8 @@ package com.falcon.booking.persistence.repository;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -16,7 +18,7 @@ import java.util.List;
 @Repository
 public interface FlightRepository extends JpaRepository<FlightEntity, Long>, JpaSpecificationExecutor<FlightEntity> {
     Boolean existsByRouteAndDepartureDateTime(RouteEntity route, OffsetDateTime departureDateTime);
-    List<FlightEntity> findAllByRouteAndDepartureDateTimeBetween(RouteEntity route, OffsetDateTime departureDateTime, OffsetDateTime departureDateTime2);
+    Page<FlightEntity> findAllByRouteAndDepartureDateTimeBetween(RouteEntity route, OffsetDateTime departureDateTime, OffsetDateTime departureDateTime2, Pageable pageable);
     List<FlightEntity> findAllByStatusNotAndStatusNot(FlightStatus status, FlightStatus status2);
 
     @Query("SELECT f.departureDateTime FROM FlightEntity f " +
@@ -42,7 +44,7 @@ public interface FlightRepository extends JpaRepository<FlightEntity, Long>, Jpa
     ORDER BY f.departureDateTime ASC
 """)
     @EntityGraph(attributePaths = {"airplaneType", "route", "route.airportOrigin", "route.airportDestination"})
-    List<FlightEntity> findFlightsByAirportsAndDate(String origin, String destination, OffsetDateTime start, OffsetDateTime end, FlightStatus status);
+    Page<FlightEntity> findFlightsByAirportsAndDate(String origin, String destination, OffsetDateTime start, OffsetDateTime end, FlightStatus status, Pageable pageable);
 
 
 }

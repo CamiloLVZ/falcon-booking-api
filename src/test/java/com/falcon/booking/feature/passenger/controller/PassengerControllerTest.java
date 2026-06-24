@@ -13,6 +13,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -127,19 +130,24 @@ public class PassengerControllerTest {
     @DisplayName("Should return 200 OK and reservations when searching by passenger")
     @Test
     void shouldReturn200AndReservationList_getAllReservationsByPassenger() throws Exception {
-        List<ResponseReservationDto> reservations = List.of();
-        given(reservationService.getAllReservationsByPassengerIdentificationNumber("10001", "CO"))
+        Page<ResponseReservationDto> reservations = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+        given(reservationService.getAllReservationsByPassengerIdentificationNumber("10001", "CO", 0, 10))
                 .willReturn(reservations);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/passengers/reservations")
                         .param("identificationNumber", "10001")
                         .param("countryIsoCode", "CO")
+                        .param("page", "0")
+                        .param("size", "10")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.size()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(0))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @DisplayName("Should return 201 Created when passenger is created")

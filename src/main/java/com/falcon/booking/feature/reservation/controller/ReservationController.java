@@ -5,24 +5,25 @@ import com.falcon.booking.feature.reservation.dto.AddReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.common.web.Error;
+import com.falcon.booking.common.web.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Reservations", description = "Operations related to reservations and passenger reservation lifecycle")
 @RestController
@@ -54,20 +55,27 @@ public class ReservationController {
     }
 
     @Operation(summary = "Get reservations by flight",
-            description = "Returns all reservations associated with a flight id.")
+            description = "Returns a paginated list of reservations associated with a flight id.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Reservations retrieved successfully, even if list is empty",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponseReservationDto.class)))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid flight id",
+            @ApiResponse(responseCode = "200", description = "Paginated reservations retrieved successfully, even if content is empty",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid flight id or pagination parameters",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Flight not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @GetMapping("/flight/{flightId}")
-    public ResponseEntity<List<ResponseReservationDto>> getAllReservationsByFlight(@PathVariable
+    public ResponseEntity<PagedResponse<ResponseReservationDto>> getAllReservationsByFlight(@PathVariable
                                                                                    @Parameter(description = "Flight numeric unique identifier", example = "100")
-                                                                                   Long flightId) {
-        return ResponseEntity.ok(reservationService.getAllReservationsByFlight(flightId));
+                                                                                   Long flightId,
+                                                                                   @RequestParam @Min(1) @NotNull
+                                                                                   @Parameter(description = "Number of reservation records to be returned per page", example = "10", required = true)
+                                                                                   int size,
+                                                                                   @RequestParam @Min(0) @NotNull
+                                                                                   @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+                                                                                   int page) {
+        Page<ResponseReservationDto> reservations = reservationService.getAllReservationsByFlight(flightId, page, size);
+        return ResponseEntity.ok(PagedResponse.from(reservations));
     }
 
     @Operation(summary = "Cancel reservation",

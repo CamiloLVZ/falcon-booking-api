@@ -34,6 +34,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -188,11 +193,14 @@ class FlightServiceTest {
         generation.setId(1L);
         ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, generation.getStartedAt(), null, null, "/flight-generations/1");
 
-        given(flightGenerationRepository.findAll()).willReturn(List.of(generation));
-        given(flightGenerationMapper.toDto(List.of(generation))).willReturn(List.of(dto));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startedAt").descending());
+        Page<FlightGenerationEntity> generationPage = new PageImpl<>(List.of(generation), pageable, 1);
+        given(flightGenerationRepository.findAll(pageable)).willReturn(generationPage);
+        given(flightGenerationMapper.toDto(generation)).willReturn(dto);
 
-        List<ResponseFlightsGenerationDto> result = flightService.getAllFlightGenerations();
-        assertThat(result).containsExactly(dto);
+        Page<ResponseFlightsGenerationDto> result = flightService.getAllFlightGenerations(0, 10);
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
     @DisplayName("Should add flight successfully")
@@ -234,11 +242,14 @@ class FlightServiceTest {
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(routeService.getRouteEntity("AV1234")).willReturn(route);
-        given(flightRepository.findAll(any(Specification.class))).willReturn(List.of(expectedFlight));
-        given(flightMapper.toDto(List.of(expectedFlight))).willReturn(List.of(dto));
+        Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by("departureDateTime").ascending()), 1);
+        given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by("departureDateTime").ascending()))))
+                .willReturn(flightPage);
+        given(flightMapper.toDto(expectedFlight)).willReturn(dto);
 
-        List<ResponseFlightDto> result = flightService.getAllFlights("AV1234", FlightStatus.SCHEDULED, LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31));
-        assertThat(result).containsExactly(dto);
+        Page<ResponseFlightDto> result = flightService.getAllFlights("AV1234", FlightStatus.SCHEDULED, LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), 0, 10);
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
     @DisplayName("Should cancel an existing flight")
@@ -341,7 +352,9 @@ class FlightServiceTest {
         assertThrows(RouteNotActiveException.class,
                 () -> flightService.getAllFlightsByRouteAndDate(
                         "AV1234",
-                        LocalDate.of(2026, 8, 1)));
+                        LocalDate.of(2026, 8, 1),
+                        0,
+                        10));
     }
 
     @DisplayName("Should return all flights by route and date range")
@@ -352,11 +365,15 @@ class FlightServiceTest {
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40,null, FlightStatus.SCHEDULED);
 
         given(routeService.getRouteEntity("AV1234")).willReturn(route);
-        given(flightRepository.findAllByRouteAndDepartureDateTimeBetween(eq(route), any(OffsetDateTime.class), any(OffsetDateTime.class))).willReturn(List.of(flight));
-        given(flightMapper.toDto(List.of(flight))).willReturn(List.of(dto));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("departureDateTime").ascending());
+        Page<FlightEntity> flightPage = new PageImpl<>(List.of(flight), pageable, 1);
+        given(flightRepository.findAllByRouteAndDepartureDateTimeBetween(eq(route), any(OffsetDateTime.class), any(OffsetDateTime.class), eq(pageable)))
+                .willReturn(flightPage);
+        given(flightMapper.toDto(flight)).willReturn(dto);
 
-        List<ResponseFlightDto> result = flightService.getAllFlightsByRouteAndDate("AV1234", LocalDate.of(2026, 8, 1));
-        assertThat(result).containsExactly(dto);
+        Page<ResponseFlightDto> result = flightService.getAllFlightsByRouteAndDate("AV1234", LocalDate.of(2026, 8, 1), 0, 10);
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
     @DisplayName("Should update flight status to completed when departure is in the past")

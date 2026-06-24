@@ -16,6 +16,9 @@ import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -78,7 +81,7 @@ public class RouteService {
     }
 
     @Transactional(readOnly = true)
-    public List<ResponseRouteDto> getAllRoutes(String airportOriginIataCode, String airportDestinationIataCode, RouteStatus status) {
+    public Page<ResponseRouteDto> getAllRoutes(String airportOriginIataCode, String airportDestinationIataCode, RouteStatus status, int page, int size) {
 
         String normalizedAirportOriginIataCode = StringNormalizer.normalize(airportOriginIataCode);
         String normalizedAirportDestinationIataCode = StringNormalizer.normalize(airportDestinationIataCode);
@@ -89,9 +92,9 @@ public class RouteService {
         specification = specification.and(RouteSpecifications.hasStatus(status));
 
 
-        Sort sort = Sort.by("flightNumber").ascending();
-        List<RouteEntity> entities = routeRepository.findAll(specification, sort);
-        return routeMapper.toResponseDto(entities);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("flightNumber").ascending());
+        Page<RouteEntity> entities = routeRepository.findAll(specification, pageable);
+        return entities.map(routeMapper::toResponseDto);
     }
 
     @Transactional

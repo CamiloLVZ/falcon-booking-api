@@ -27,6 +27,10 @@ import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -83,17 +87,13 @@ public class ReservationService {
                 .orElseThrow(()->new ReservationNotFoundException(normalizedReservationNumber));
     }
 
-    public List<ReservationEntity> getReservationsByPassenger(PassengerEntity passenger) {
-        List<PassengerReservationEntity> passengerReservations = passengerReservationRepository.findAllByPassenger(passenger);
-        List<ReservationEntity> reservations = new ArrayList<>();
-        for(PassengerReservationEntity passengerReservation : passengerReservations){
-            reservations.add(passengerReservation.getReservation());
-        }
-        return reservations;
+    public Page<ReservationEntity> getReservationsByPassenger(PassengerEntity passenger, Pageable pageable) {
+        return passengerReservationRepository.findAllByPassenger(passenger, pageable)
+                .map(PassengerReservationEntity::getReservation);
     }
 
-    public List<ReservationEntity> getAllReservationEntitiesActiveByFlight(FlightEntity flight) {
-        return reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED);
+    public Page<ReservationEntity> getAllReservationEntitiesActiveByFlight(FlightEntity flight, Pageable pageable) {
+        return reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -102,15 +102,17 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ResponseReservationDto> getAllReservationsByPassengerIdentificationNumber(String identificationNumber, String countryIsoCode) {
+    public Page<ResponseReservationDto> getAllReservationsByPassengerIdentificationNumber(String identificationNumber, String countryIsoCode, int page, int size) {
         PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
-        return reservationMapper.toResponseDto(getReservationsByPassenger(passenger));
+        Pageable pageable = PageRequest.of(page, size);
+        return getReservationsByPassenger(passenger, pageable).map(reservationMapper::toResponseDto);
     }
 
     @Transactional(readOnly = true)
-    public List<ResponseReservationDto> getAllReservationsByFlight(Long flightId) {
+    public Page<ResponseReservationDto> getAllReservationsByFlight(Long flightId, int page, int size) {
         FlightEntity flight = flightService.getFlightEntity(flightId);
-        return reservationMapper.toResponseDto(getAllReservationEntitiesActiveByFlight(flight));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("reservationDatetime").ascending());
+        return getAllReservationEntitiesActiveByFlight(flight, pageable).map(reservationMapper::toResponseDto);
     }
 
     @Transactional

@@ -20,6 +20,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -112,6 +115,28 @@ class ReservationControllerTest {
 
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("reservation-does-not-exist"));
+    }
+
+    @DisplayName("Should return 200 OK and paginated reservations by flight")
+    @Test
+    void shouldReturn200_getAllReservationsByFlight() throws Exception {
+        ResponseReservationDto dto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
+        Page<ResponseReservationDto> reservations = new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1);
+        given(reservationService.getAllReservationsByFlight(10L, 0, 10)).willReturn(reservations);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/reservations/flight/10")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[0].number").value("ABC123"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @DisplayName("Should return 201 Created when reservation is added")

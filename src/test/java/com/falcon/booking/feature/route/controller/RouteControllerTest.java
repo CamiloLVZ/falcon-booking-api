@@ -28,6 +28,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -116,14 +119,23 @@ public class RouteControllerTest {
     @DisplayName("Should return 200 OK and route list")
     @Test
     void shouldReturn200AndRouteList_getAllRoutes() throws Exception {
-        List<ResponseRouteDto> routes = List.of(createResponseRouteDto("AV1234"), createResponseRouteDto("AV5678"));
-        given(routeService.getAllRoutes(null, null, null)).willReturn(routes);
+        Page<ResponseRouteDto> routes = new PageImpl<>(
+                List.of(createResponseRouteDto("AV1234"), createResponseRouteDto("AV5678")),
+                PageRequest.of(0, 10),
+                2);
+        given(routeService.getAllRoutes(null, null, null, 0, 10)).willReturn(routes);
 
-        ResultActions response = mockMvc.perform(get("/v1/routes").accept(MediaType.APPLICATION_JSON));
+        ResultActions response = mockMvc.perform(get("/v1/routes")
+                .param("page", "0")
+                .param("size", "10")
+                .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.size()").value(2));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(2))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @DisplayName("Should return 200 OK and origin airport list")
@@ -301,7 +313,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 200 OK for flights by route and dates")
     @Test
     void shouldReturn200_getAllFlightsByRouteAndDates() throws Exception {
-        List<ResponseFlightDto> flights = List.of(
+        Page<ResponseFlightDto> flights = new PageImpl<>(List.of(
                 new ResponseFlightDto(
                         1L,
                         "AV1234",
@@ -313,19 +325,24 @@ public class RouteControllerTest {
                         new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
                         FlightStatus.SCHEDULED
                 )
-        );
-        given(flightService.getAllFlightsByRouteAndDate("AV1234", LocalDate.parse("2026-01-01")))
+        ), PageRequest.of(0, 10), 1);
+        given(flightService.getAllFlightsByRouteAndDate("AV1234", LocalDate.parse("2026-01-01"), 0, 10))
                 .willReturn(flights);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/routes/AV1234/flights")
                         .param("date", "2026-01-01")
+                        .param("page", "0")
+                        .param("size", "10")
                         .accept(MediaType.APPLICATION_JSON)
         );
 
         response.andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.size()").value(1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @DisplayName("Should return 202 when route flight generation starts")

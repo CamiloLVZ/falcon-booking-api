@@ -12,6 +12,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.OffsetDateTime;
@@ -113,9 +116,15 @@ class FlightRepositoryTest {
         flightRepository.save(createFlight(route, date2, FlightStatus.CHECK_IN_AVAILABLE));
         flightRepository.save(createFlight(route, date3, FlightStatus.SCHEDULED));
 
-        List<FlightEntity> flights = flightRepository.findAllByRouteAndDepartureDateTimeBetween(route, date1.minusHours(1), date2.plusHours(1));
+        Page<FlightEntity> flights = flightRepository.findAllByRouteAndDepartureDateTimeBetween(
+                route,
+                date1.minusHours(1),
+                date2.plusHours(1),
+                PageRequest.of(0, 10, Sort.by("departureDateTime").ascending())
+        );
 
-        assertThat(flights).hasSize(2);
+        assertThat(flights.getContent()).hasSize(2);
+        assertThat(flights.getTotalElements()).isEqualTo(2);
     }
 
     @DisplayName("Should return flights excluding canceled and completed status")

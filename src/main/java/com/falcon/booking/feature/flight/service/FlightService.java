@@ -19,7 +19,6 @@ import com.falcon.booking.persistence.repository.FlightGenerationRepository;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import com.falcon.booking.persistence.specification.FlightSpecifications;
 import com.falcon.booking.feature.flight.dto.CreateFlightDto;
-import com.falcon.booking.feature.flight.dto.FlightSearchResponse;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import org.slf4j.Logger;
@@ -27,6 +26,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,8 +99,9 @@ public class FlightService {
         return flightGenerationMapper.toDto(entity);
     }
 
-    public List<ResponseFlightsGenerationDto> getAllFlightGenerations(){
-        return flightGenerationMapper.toDto(flightGenerationRepository.findAll());
+    public Page<ResponseFlightsGenerationDto> getAllFlightGenerations(int page, int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startedAt").descending());
+        return flightGenerationRepository.findAll(pageable).map(flightGenerationMapper::toDto);
     }
 
     @Transactional
@@ -120,7 +124,7 @@ public class FlightService {
 
 
     @Transactional(readOnly = true)
-    public List<ResponseFlightDto> getAllFlights(String flightNumber, FlightStatus flightStatus, LocalDate dateFrom, LocalDate dateTo) {
+    public Page<ResponseFlightDto> getAllFlights(String flightNumber, FlightStatus flightStatus, LocalDate dateFrom, LocalDate dateTo, int page, int size) {
 
         RouteEntity route = routeService.getRouteEntity(flightNumber);
 
@@ -134,7 +138,8 @@ public class FlightService {
         spec = spec.and(FlightSpecifications.hasDateStart(offsetDateTimeFrom));
         spec = spec.and(FlightSpecifications.hasDateEnd(offsetDateTimeTo));
 
-        return flightMapper.toDto(flightRepository.findAll(spec));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("departureDateTime").ascending());
+        return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);
     }
 
     @Transactional
@@ -189,7 +194,7 @@ public class FlightService {
         return dayRange;
     }
 
-    public FlightSearchResponse getAllFlightsByOriginDestinationAndDate(String originIataCode, String destinationIataCode, LocalDate date, FlightStatus status) {
+    public Page<ResponseFlightDto> getAllFlightsByOriginDestinationAndDate(String originIataCode, String destinationIataCode, LocalDate date, FlightStatus status, int page, int size) {
         AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(originIataCode);
         AirportEntity airportDestination = airportService.getAirportEntityByIataCode(destinationIataCode);
         if (status == null)
@@ -199,13 +204,13 @@ public class FlightService {
         OffsetDateTime startDateTime = dayRange.get("start");
         OffsetDateTime endDateTime = dayRange.get("end");
 
-        List<FlightEntity> flights = flightRepository.findFlightsByAirportsAndDate(originIataCode, destinationIataCode, startDateTime, endDateTime, status);
-        List<ResponseFlightDto> flightsDtos = flightMapper.toDto(flights);
-        return new FlightSearchResponse(flightsDtos, flightsDtos.size(), date);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("departureDateTime").ascending());
+        return flightRepository.findFlightsByAirportsAndDate(originIataCode, destinationIataCode, startDateTime, endDateTime, status, pageable)
+                .map(flightMapper::toDto);
     }
 
     @Transactional(readOnly = true)
-    public List<ResponseFlightDto> getAllFlightsByRouteAndDate(String flightNumber, LocalDate date) {
+    public Page<ResponseFlightDto> getAllFlightsByRouteAndDate(String flightNumber, LocalDate date, int page, int size) {
 
         RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
         if (!routeEntity.isActive())
@@ -215,7 +220,9 @@ public class FlightService {
         OffsetDateTime startDateTime = dayRange.get("start");
         OffsetDateTime endDateTime = dayRange.get("end");
 
-        return flightMapper.toDto(flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, startDateTime, endDateTime));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("departureDateTime").ascending());
+        return flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, startDateTime, endDateTime, pageable)
+                .map(flightMapper::toDto);
     }
 
     public boolean updateFlightStatus(FlightEntity flight, OffsetDateTime now){
