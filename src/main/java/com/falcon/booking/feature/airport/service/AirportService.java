@@ -9,10 +9,12 @@ import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.AirportRepository;
 import com.falcon.booking.feature.airport.dto.AirportDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class AirportService {
@@ -42,16 +44,17 @@ public class AirportService {
     }
 
     @Transactional(readOnly = true)
-    public List<AirportDto> getAllAirports() {
-        List<AirportEntity> airportEntities = airportRepository.findAllByOrderByCityAsc();
-        return airportMapper.toDto(airportEntities);
+    public Page<AirportDto> getAllAirports(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("city").ascending());
+        Page<AirportEntity> airportEntities = airportRepository.findAll(pageable);
+        return airportEntities.map(airportMapper::toDto);
     }
     @Transactional(readOnly = true)
-    public List<AirportDto> getAirportsByCountryIsoCode(String isoCode) {
+    public Page<AirportDto> getAirportsByCountryIsoCode(String isoCode, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("city").ascending());
         CountryEntity country = countryService.getCountryEntityByIsoCode(isoCode);
-        List<AirportEntity> airportEntities = airportRepository.findAllByCountryOrderByCityAsc(country);
-
-        return airportMapper.toDto(airportEntities);
+        Page<AirportEntity> airportEntities = airportRepository.findAllByCountry(country,  pageable);
+        return airportEntities.map(airportMapper::toDto);
     }
 
 }

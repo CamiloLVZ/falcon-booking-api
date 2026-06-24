@@ -1,24 +1,25 @@
 package com.falcon.booking.feature.airport.controller;
 
+import com.falcon.booking.common.web.PagedResponse;
 import com.falcon.booking.feature.airport.service.AirportService;
 import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.common.web.Error;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Airports", description = "Airport retrieval operations")
 @RestController
@@ -56,19 +57,27 @@ public class AirportController {
     }
 
 
-    @Operation(summary = "Get all airports", description = "Returns a list with all registered airports. Requires authentication with JWT token and ADMIN role",
+    @Operation(summary = "Get airports", description = "Returns a paginated list with all registered airports. Requires authentication with JWT token and ADMIN role",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Airports list retrieved successfully, even if it is empty.",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AirportDto.class)))),
+            @ApiResponse(responseCode = "200", description = "Paginated airports retrieved successfully, even if content is empty.",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve airports",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
     })
     @GetMapping
-    public ResponseEntity<List<AirportDto>> getAirports() {
-        return ResponseEntity.ok(airportService.getAllAirports());
+    public ResponseEntity<PagedResponse<AirportDto>> getAirports(@RequestParam @Min(1) @NotNull
+                                                            @Parameter(description = "Number of airport records to be returned per page", example = "10", required = true)
+                                                            int size,
+                                                                 @RequestParam @Min(0) @NotNull
+                                                            @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+                                                            int page) {
+        Page<AirportDto> airportPage = airportService.getAllAirports(page, size);
+        return ResponseEntity.ok(PagedResponse.from(airportPage));
     }
 
 

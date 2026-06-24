@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.BDDMockito.given;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -129,42 +132,62 @@ public class CountryControllerTest {
         CountryDto country1 = new CountryDto("Colombia","CO");
         AirportDto airport1 = new AirportDto("BOG", "El Dorado", "Bogota", country1,"America/Bogota");
         AirportDto airport2 = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", country1,"America/Bogota");
-        List<AirportDto> airports = List.of(airport1, airport2);
-        given(airportService.getAirportsByCountryIsoCode("CO")).willReturn(airports);
+        Page<AirportDto> airports = new PageImpl<>(List.of(airport1, airport2), PageRequest.of(0, 10), 2);
+        given(airportService.getAirportsByCountryIsoCode("CO", 0, 10)).willReturn(airports);
 
         ResultActions response = mockMvc.perform(get("/v1/countries/CO/airports")
+                .param("page", "0")
+                .param("size", "10")
                 .accept(MediaType.APPLICATION_JSON));
 
 
         response.andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.size()").value(2));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(2))
+                .andExpect(jsonPath("$.content[0].iataCode").value("BOG"))
+                .andExpect(jsonPath("$.content[1].iataCode").value("MDE"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
     }
 
     @DisplayName("Should return 200 OK and list empty of airport by country")
     @Test
     void shouldReturn200AndEmptyAirportDtoList_getAirportsByCountryIsoCode() throws Exception {
-        List<AirportDto> airports = List.of();
-        given(airportService.getAirportsByCountryIsoCode("CO"))
+        Page<AirportDto> airports = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+        given(airportService.getAirportsByCountryIsoCode("CO", 0, 10))
                 .willReturn(airports);
 
         ResultActions response = mockMvc.perform(get("/v1/countries/CO/airports")
+                .param("page", "0")
+                .param("size", "10")
                 .accept(MediaType.APPLICATION_JSON));
 
 
         response.andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.size()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(0))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
     }
 
     @DisplayName("Should return 404 country not found in getAirportsByCountryIsoCode")
     @Test
     void shouldReturn404CountryNotFound_getAirportsByCountryIsoCode() throws Exception {
-        given(airportService.getAirportsByCountryIsoCode("CO"))
+        given(airportService.getAirportsByCountryIsoCode("CO", 0, 10))
                 .willThrow( new CountryNotFoundException("CO"));
 
         ResultActions response = mockMvc.perform(get("/v1/countries/CO/airports")
+                .param("page", "0")
+                .param("size", "10")
                 .accept(MediaType.APPLICATION_JSON));
 
 
@@ -181,6 +204,8 @@ public class CountryControllerTest {
 
         ResultActions response = mockMvc.perform(
                 get("/v1/countries/{isoCode}/airports", isoCode)
+                        .param("page", "0")
+                        .param("size", "10")
                         .accept(MediaType.APPLICATION_JSON));
 
         response.andExpect(status().isBadRequest())

@@ -6,9 +6,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,28 +71,39 @@ public class AirportRepositoryTest {
 
     @DisplayName("Should return airport list by country")
     @Test
-    void shouldReturnAirportList_findAllOrderByCityByCountryByOrderByIataCode() {
+    void shouldReturnAirportList_findAllByCountry() {
         CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
         AirportEntity airport1 = createAirport("BOG", "El Dorado", "Bogota", country);
         AirportEntity airport2 = createAirport("MDE", "Jose Maria Cordoba", "Medellin", country);
         airportRepository.save(airport1);
         airportRepository.save(airport2);
 
-        List<AirportEntity> airportsFound = airportRepository.findAllByCountryOrderByCityAsc(country);
+        Page<AirportEntity> airportsFound = airportRepository.findAllByCountry(
+                country,
+                PageRequest.of(0, 10, Sort.by("city").ascending())
+        );
 
-        assertThat(airportsFound).hasSize(2);
+        assertThat(airportsFound.getContent()).hasSize(2);
+        assertThat(airportsFound.getContent())
+                .extracting(AirportEntity::getIataCode)
+                .containsExactly("BOG", "MDE");
+        assertThat(airportsFound.getTotalElements()).isEqualTo(2);
     }
 
     @DisplayName("Should return empty list when country has no airports")
     @Test
-    void shouldReturnEmptyList_findAllOrderByCityByCountryByOrderByIataCode() {
+    void shouldReturnEmptyList_findAllByCountry() {
         CountryEntity countryWithAirports = countryRepository.save(createCountry("CO", "Colombia"));
         CountryEntity countryWithoutAirports = countryRepository.save(createCountry("US", "United States"));
         AirportEntity airport = createAirport("BOG", "El Dorado", "Bogota", countryWithAirports);
         airportRepository.save(airport);
 
-        List<AirportEntity> airportsFound = airportRepository.findAllByCountryOrderByCityAsc(countryWithoutAirports);
+        Page<AirportEntity> airportsFound = airportRepository.findAllByCountry(
+                countryWithoutAirports,
+                PageRequest.of(0, 10, Sort.by("city").ascending())
+        );
 
-        assertThat(airportsFound).isEmpty();
+        assertThat(airportsFound.getContent()).isEmpty();
+        assertThat(airportsFound.getTotalElements()).isZero();
     }
 }

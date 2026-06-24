@@ -15,6 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
@@ -120,32 +125,42 @@ public class AirportServiceTest {
         CountryDto countryDto = new CountryDto("Colombia", "CO");
         AirportEntity airport1 = createAirport("BOG", "El Dorado", "Bogota", country);
         AirportEntity airport2 = createAirport("MDE", "Jose Maria Cordoba", "Medellin", country);
-        List<AirportEntity> airportList = List.of(airport1, airport2);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
+        Page<AirportEntity> airportPage = new PageImpl<>(List.of(airport1, airport2), pageable, 2);
         AirportDto dto1 = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
         AirportDto dto2 = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", countryDto, "America/Bogota");
-        List<AirportDto> expectedDtoList = List.of(dto1, dto2);
-        given(airportRepository.findAllByOrderByCityAsc()).willReturn(airportList);
-        given(airportMapper.toDto(airportList)).willReturn(expectedDtoList);
+        given(airportRepository.findAll(pageable)).willReturn(airportPage);
+        given(airportMapper.toDto(airport1)).willReturn(dto1);
+        given(airportMapper.toDto(airport2)).willReturn(dto2);
 
-        List<AirportDto> listFound = airportService.getAllAirports();
+        Page<AirportDto> pageFound = airportService.getAllAirports(0, 10);
 
-        verify(airportRepository).findAllByOrderByCityAsc();
-        verify(airportMapper).toDto(airportList);
-        assertThat(listFound).isEqualTo(expectedDtoList);
+        verify(airportRepository).findAll(pageable);
+        verify(airportMapper).toDto(airport1);
+        verify(airportMapper).toDto(airport2);
+        assertThat(pageFound.getContent()).containsExactly(dto1, dto2);
+        assertThat(pageFound.getNumber()).isZero();
+        assertThat(pageFound.getSize()).isEqualTo(10);
+        assertThat(pageFound.getTotalElements()).isEqualTo(2);
+        assertThat(pageFound.getTotalPages()).isEqualTo(1);
     }
 
     @DisplayName("Should return empty AirportDto list when there is no airports")
     @Test
     void shouldReturnEmptyDtoList_getAllAirports() {
-        given(airportRepository.findAllByOrderByCityAsc()).willReturn(List.of());
-        given(airportMapper.toDto(List.of())).willReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
+        Page<AirportEntity> airportPage = new PageImpl<>(List.of(), pageable, 0);
+        given(airportRepository.findAll(pageable)).willReturn(airportPage);
 
-        List<AirportDto> listFound = airportService.getAllAirports();
+        Page<AirportDto> pageFound = airportService.getAllAirports(0, 10);
 
-        verify(airportRepository).findAllByOrderByCityAsc();
-        verify(airportMapper).toDto(List.of());
-        assertThat(listFound).isNotNull();
-        assertThat(listFound).isEmpty();
+        verify(airportRepository).findAll(pageable);
+        assertThat(pageFound).isNotNull();
+        assertThat(pageFound.getContent()).isEmpty();
+        assertThat(pageFound.getNumber()).isZero();
+        assertThat(pageFound.getSize()).isEqualTo(10);
+        assertThat(pageFound.getTotalElements()).isZero();
+        assertThat(pageFound.getTotalPages()).isZero();
     }
 
     @DisplayName("Should return AirportDto list by country iso code")
@@ -155,35 +170,45 @@ public class AirportServiceTest {
         CountryDto countryDto = new CountryDto("Colombia", "CO");
         AirportEntity airport1 = createAirport("BOG", "El Dorado", "Bogota", country);
         AirportEntity airport2 = createAirport("MDE", "Jose Maria Cordoba", "Medellin", country);
-        List<AirportEntity> airportEntities = List.of(airport1, airport2);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
+        Page<AirportEntity> airportPage = new PageImpl<>(List.of(airport1, airport2), pageable, 2);
         AirportDto dto1 = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
         AirportDto dto2 = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", countryDto, "America/Bogota");
-        List<AirportDto> expectedDtos = List.of(dto1, dto2);
         given(countryService.getCountryEntityByIsoCode(" CO ")).willReturn(country);
-        given(airportRepository.findAllByCountryOrderByCityAsc(country)).willReturn(airportEntities);
-        given(airportMapper.toDto(airportEntities)).willReturn(expectedDtos);
+        given(airportRepository.findAllByCountry(country, pageable)).willReturn(airportPage);
+        given(airportMapper.toDto(airport1)).willReturn(dto1);
+        given(airportMapper.toDto(airport2)).willReturn(dto2);
 
-        List<AirportDto> result = airportService.getAirportsByCountryIsoCode(" CO ");
+        Page<AirportDto> result = airportService.getAirportsByCountryIsoCode(" CO ", 0, 10);
 
         verify(countryService).getCountryEntityByIsoCode(" CO ");
-        verify(airportRepository).findAllByCountryOrderByCityAsc(country);
-        verify(airportMapper).toDto(airportEntities);
-        assertThat(result).isEqualTo(expectedDtos);
+        verify(airportRepository).findAllByCountry(country, pageable);
+        verify(airportMapper).toDto(airport1);
+        verify(airportMapper).toDto(airport2);
+        assertThat(result.getContent()).containsExactly(dto1, dto2);
+        assertThat(result.getNumber()).isZero();
+        assertThat(result.getSize()).isEqualTo(10);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getTotalPages()).isEqualTo(1);
     }
 
     @DisplayName("Should return empty AirportDto list when country has no airports")
     @Test
     void shouldReturnEmptyDtoList_getAirportsByCountryIsoCode() {
         CountryEntity country = createCountry("CO", "Colombia");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
+        Page<AirportEntity> airportPage = new PageImpl<>(List.of(), pageable, 0);
         given(countryService.getCountryEntityByIsoCode("CO")).willReturn(country);
-        given(airportRepository.findAllByCountryOrderByCityAsc(country)).willReturn(List.of());
-        given(airportMapper.toDto(List.of())).willReturn(List.of());
+        given(airportRepository.findAllByCountry(country, pageable)).willReturn(airportPage);
 
-        List<AirportDto> result = airportService.getAirportsByCountryIsoCode("CO");
+        Page<AirportDto> result = airportService.getAirportsByCountryIsoCode("CO", 0, 10);
 
         verify(countryService).getCountryEntityByIsoCode("CO");
-        verify(airportRepository).findAllByCountryOrderByCityAsc(country);
-        verify(airportMapper).toDto(List.of());
-        assertThat(result).isEmpty();
+        verify(airportRepository).findAllByCountry(country, pageable);
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getNumber()).isZero();
+        assertThat(result.getSize()).isEqualTo(10);
+        assertThat(result.getTotalElements()).isZero();
+        assertThat(result.getTotalPages()).isZero();
     }
 }
