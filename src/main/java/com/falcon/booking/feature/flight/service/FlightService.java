@@ -8,6 +8,7 @@ import com.falcon.booking.feature.flight.exception.FlightCanNotChangeAirplaneTyp
 import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
+import com.falcon.booking.feature.route.exception.RouteAirplaneTypeIsNotActiveException;
 import com.falcon.booking.feature.route.exception.RouteNotActiveException;
 import com.falcon.booking.feature.flightGeneration.service.AsyncFlightGenerationService;
 import com.falcon.booking.feature.route.service.RouteService;
@@ -285,7 +286,8 @@ public class FlightService {
         RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
         if(!routeEntity.isActive())
             throw new RouteNotActiveException(routeEntity.getFlightNumber());
-
+        if(!routeEntity.getDefaultAirplaneType().isActive())
+            throw new RouteAirplaneTypeIsNotActiveException(routeEntity.getDefaultAirplaneType().getId());
         try {
             FlightGenerationEntity generation = FlightGenerationEntity.startRouteGeneration(routeEntity.getId());
             FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);

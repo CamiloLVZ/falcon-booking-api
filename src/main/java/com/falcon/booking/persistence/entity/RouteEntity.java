@@ -82,6 +82,9 @@ public class RouteEntity {
         if (defaultAirplaneType == null) {
             errors.add("Route must have default airplane type");
         }
+        else if(!defaultAirplaneType.isActive()){
+            errors.add("Route must have active default airplane type");
+        }
 
         if (!errors.isEmpty()) {
             throw new RouteNotActivableException( String.join(", ", errors));
