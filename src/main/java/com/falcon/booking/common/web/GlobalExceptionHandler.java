@@ -16,6 +16,8 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,14 +28,12 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<List<Error>> handleValidationExceptions(MethodArgumentNotValidException exception) {
-        List<Error> errors = new ArrayList<>();
+    public ResponseEntity<Error> handleValidationExceptions(MethodArgumentNotValidException exception) {
         StringBuilder detailsBuilder = new StringBuilder();
 
         List<FieldError> fieldErrors = exception.getBindingResult().getFieldErrors();
         for (int i = 0; i < fieldErrors.size(); i++) {
             FieldError fieldError = fieldErrors.get(i);
-            errors.add(new Error(fieldError.getField(), fieldError.getDefaultMessage()));
             detailsBuilder.append(fieldError.getField())
                     .append(": ")
                     .append(fieldError.getDefaultMessage());
@@ -45,7 +45,8 @@ public class GlobalExceptionHandler {
 
         logger.warn("Validation failed for request: [{}]", detailsBuilder.toString());
 
-        return ResponseEntity.badRequest().body(errors);
+        Error error = new Error("invalid-arguments", detailsBuilder.toString());
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -103,5 +104,19 @@ public class GlobalExceptionHandler {
         Error error = new Error("date-to-before-date-from", exception.getMessage());
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Error> handleException(NoHandlerFoundException exception) {
+        Error error = new Error("endpoint-not-found", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Error> handleException(HttpRequestMethodNotSupportedException exception) {
+        Error error = new Error("method-not-supported", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 }

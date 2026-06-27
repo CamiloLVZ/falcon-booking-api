@@ -96,8 +96,8 @@ public class AuthControllerTest {
                         """));
 
         response.andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0].type").exists())
-                .andExpect(jsonPath("$[0].message").exists());
+                .andExpect(jsonPath("$.type").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @DisplayName("Should return 201 created when register client is successful")
