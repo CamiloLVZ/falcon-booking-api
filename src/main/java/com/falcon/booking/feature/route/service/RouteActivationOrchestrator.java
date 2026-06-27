@@ -1,6 +1,6 @@
 package com.falcon.booking.feature.route.service;
 
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.dto.ResponseRouteDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,18 +10,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class RouteActivationOrchestrator {
 
     private final RouteService routeService;
-    private final FlightService flightService;
+    private final FlightGenerationService  flightGenerationService;
 
     @Autowired
-    public RouteActivationOrchestrator(RouteService routeService, FlightService flightService) {
+    public RouteActivationOrchestrator(RouteService routeService, FlightGenerationService flightGenerationService) {
         this.routeService = routeService;
-        this.flightService = flightService;
+        this.flightGenerationService = flightGenerationService;
     }
 
     @Transactional
     public ResponseRouteDto activateRoute(String flightNumber) {
         ResponseRouteDto responseRouteDto = routeService.activateRoute(flightNumber);
-        flightService.startRouteFlightGeneration(flightNumber);
+        flightGenerationService.startRouteFlightGeneration(flightNumber);
 
         return responseRouteDto;
     }

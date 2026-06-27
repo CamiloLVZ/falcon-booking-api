@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.route.controller;
 
 import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.dto.*;
 import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
 import com.falcon.booking.feature.route.service.RouteService;
@@ -41,12 +42,14 @@ public class RouteController {
 
     private final RouteService routeService;
     private final FlightService flightService;
+    private final FlightGenerationService flightGenerationService;
     private final RouteActivationOrchestrator routeActivationOrchestrator;
 
     @Autowired
-    public RouteController(RouteService routeService, FlightService flightService, RouteActivationOrchestrator routeActivationOrchestrator) {
+    public RouteController(RouteService routeService, FlightService flightService, FlightGenerationService flightGenerationService, RouteActivationOrchestrator routeActivationOrchestrator) {
         this.routeService = routeService;
         this.flightService = flightService;
+        this.flightGenerationService = flightGenerationService;
         this.routeActivationOrchestrator = routeActivationOrchestrator;
     }
 
@@ -224,51 +227,7 @@ public class RouteController {
     }
 
 
-     @Operation(summary = "Set route operating schedules",
-             description = "Defines the set of route departure local times and week days used for flight generation. Requires authentication with JWT token and ADMIN role",
-             security = @SecurityRequirement(name = "bearerAuth"))
-     @ApiResponses(value = {
-             @ApiResponse(responseCode = "200", description = "Route schedules configured successfully",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = RouteWithSchedulesDto.class))),
-             @ApiResponse(responseCode = "400", description = "Error by invalid schedule payload",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-             @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-             @ApiResponse(responseCode = "403", description = "Insufficient permissions to configure route schedules",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-             @ApiResponse(responseCode = "404", description = "Route not found",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-     })
-    @PatchMapping("/{flightNumber}/schedules")
-    public ResponseEntity<RouteWithSchedulesDto> setRouteOperatingSchedules(@PathVariable
-                                                                            @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
-                                                                            @Parameter(description = "Route unique flight number", example = "AV1234")
-                                                                            String flightNumber,
-                                                                            @RequestBody
-                                                                            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                                                                    description = "Data for setting route schedules and week days",
-                                                                                    required = true)
-                                                                            AddRouteScheduleRequestDto schedules) {
-        return ResponseEntity.ok(routeService.setRouteOperatingSchedules(flightNumber, schedules));
-    }
 
-    @Operation(summary = "Get route schedules",
-            description = "Returns configured week days and local schedules for a route.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Route schedules retrieved successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = RouteWithSchedulesDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid flight number format",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Route not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @GetMapping("/{flightNumber}/schedules")
-    public ResponseEntity<RouteWithSchedulesDto> getRouteSchedules(@PathVariable
-                                                                   @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
-                                                                   @Parameter(description = "Route unique flight number", example = "AV1234")
-                                                                   String flightNumber) {
-        return ResponseEntity.ok(routeService.getRouteWithSchedules(flightNumber));
-    }
 
     @Operation(summary = "Get route flights in a specific date",
             description = "Returns generated flights for a route scheduled in a specific date (origin airport local date).")
@@ -321,7 +280,7 @@ public class RouteController {
                                                                                @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                                String flightNumber) {
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startRouteFlightGeneration(flightNumber));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightGenerationService.startRouteFlightGeneration(flightNumber));
     }
 
 
@@ -338,7 +297,7 @@ public class RouteController {
      })
     @PostMapping("/generateFlights")
     public ResponseEntity<ResponseFlightsGenerationDto> generateFlightForAllRoutes() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startGlobalFlightGeneration());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightGenerationService.startGlobalFlightGeneration());
     }
 
 }

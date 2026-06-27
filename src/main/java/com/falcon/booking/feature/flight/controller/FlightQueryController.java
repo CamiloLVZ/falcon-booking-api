@@ -2,11 +2,11 @@ package com.falcon.booking.feature.flight.controller;
 
 import com.falcon.booking.feature.flight.service.FlightService;
 import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.feature.flight.dto.CreateFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,17 +27,19 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Tag(name = "Flights", description = "Operations related to flight management")
+@Tag(name = "Flight Queries", description = "Operations related to flight querying")
 @RestController
 @RequestMapping("/v1/flights")
 @Validated
-public class FlightController {
+public class FlightQueryController {
 
     private final FlightService flightService;
+    private final FlightGenerationService  flightGenerationService;
 
     @Autowired
-    public FlightController(FlightService flightService) {
+    public FlightQueryController(FlightService flightService, FlightGenerationService flightGenerationService) {
         this.flightService = flightService;
+        this.flightGenerationService = flightGenerationService;
     }
 
     @Operation(summary = "Get a flight by id",
@@ -90,98 +92,6 @@ public class FlightController {
         return ResponseEntity.ok(PagedResponse.from(flights));
     }
 
-    @Operation(summary = "Reschedule a flight",
-            description = "Updates departure date and time for a flight that can still be rescheduled. Requires authentication with JWT token and ADMIN role",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Flight rescheduled successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid arguments or invalid reschedule state",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "403", description = "Insufficient permissions to reschedule flights",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Flight not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PostMapping("/{id}/reschedule")
-    public ResponseEntity<ResponseFlightDto> rescheduleFlight(@PathVariable
-                                                              @Parameter(description = "Flight numeric unique identifier", example = "100")
-                                                              Long id,
-                                                              @RequestParam @Future
-                                                              @Parameter(description = "New local departure date time", example = "2026-02-20T14:30:00")
-                                                              LocalDateTime newDepartureLocalDateTime) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.rescheduleFLight(id, newDepartureLocalDateTime));
-    }
-
-    @Operation(summary = "Create a new flight",
-            description = "Creates a new flight for an existing route and departure date time. Requires authentication with JWT token and ADMIN role",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Flight created successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid request body",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "403", description = "Insufficient permissions to create flights",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Route not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PostMapping
-    public ResponseEntity<ResponseFlightDto> addFlight(@RequestBody @Valid
-                                                       @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                                               description = "Data for creating a new flight",
-                                                               required = true)
-                                                       CreateFlightDto createFlightDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.addFlight(createFlightDto));
-    }
-
-    @Operation(summary = "Cancel a flight",
-            description = "Changes flight status to CANCELED when cancellation is allowed. Requires authentication with JWT token and ADMIN role",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Flight canceled successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid flight state",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "403", description = "Insufficient permissions to cancel flights",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Flight not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PatchMapping("/{id}/cancel")
-    public ResponseEntity<ResponseFlightDto> cancelFlight(@PathVariable
-                                                          @Parameter(description = "Flight numeric unique identifier", example = "100")
-                                                          Long id) {
-        return ResponseEntity.ok(flightService.cancelFlight(id));
-    }
-
-    @Operation(summary = "Change flight airplane type",
-            description = "Replaces airplane type assigned to a flight using the airplane type identifier. Requires authentication with JWT token and ADMIN role",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Flight airplane type changed successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseFlightDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid arguments or invalid flight state",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "403", description = "Insufficient permissions to change flight airplane type",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Flight or airplane type not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PatchMapping("/{id}/change-airplane-type")
-    public ResponseEntity<ResponseFlightDto> changeAirplaneType(@PathVariable Long id,
-                                                                @Parameter(description = "Airplane type numeric unique identifier", example = "10")
-                                                                @RequestParam Long idAirplaneType) {
-        return ResponseEntity.ok(flightService.changeAirplaneType(id, idAirplaneType));
-    }
 
     @Operation(summary = "Search flights by route and date",
             description = "Returns a paginated list of flights available for a given origin airport, destination airport, and departure date.")
@@ -234,7 +144,7 @@ public class FlightController {
                                                                                                @RequestParam @Min(0) @NotNull
                                                                                                @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                                                int page) {
-        Page<ResponseFlightsGenerationDto> generations = flightService.getAllFlightGenerations(page, size);
+        Page<ResponseFlightsGenerationDto> generations = flightGenerationService.getAllFlightGenerations(page, size);
         return ResponseEntity.ok(PagedResponse.from(generations));
     }
 
@@ -257,7 +167,7 @@ public class FlightController {
     public ResponseEntity<ResponseFlightsGenerationDto> getFlightsGeneration(@PathVariable
                                                                              @Parameter(description = "Flights generation unique identifier.", example = "10")
                                                                              Long id) {
-        return ResponseEntity.ok(flightService.getFlightGeneration(id));
+        return ResponseEntity.ok(flightGenerationService.getFlightGeneration(id));
     }
 
 }

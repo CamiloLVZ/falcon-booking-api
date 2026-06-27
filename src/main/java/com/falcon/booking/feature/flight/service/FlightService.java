@@ -93,6 +93,7 @@ public class FlightService {
         return flightMapper.toDto(flightEntity);
     }
 
+    /*
     public ResponseFlightsGenerationDto getFlightGeneration(Long id){
         FlightGenerationEntity entity = flightGenerationRepository.findById(id)
                 .orElseThrow(()-> new FlightGenerationNotFoundException(id));
@@ -104,7 +105,7 @@ public class FlightService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("startedAt").descending());
         return flightGenerationRepository.findAll(pageable).map(flightGenerationMapper::toDto);
     }
-
+*/
     @Transactional
     public ResponseFlightDto addFlight(CreateFlightDto createFlightDto) {
 
@@ -266,7 +267,7 @@ public class FlightService {
         }
         return updatesCounter;
     }
-
+/*
     public ResponseFlightsGenerationDto startGlobalFlightGeneration() {
         try {
             FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
@@ -328,6 +329,6 @@ public class FlightService {
         }
         return Optional.empty();
     }
-
+*/
 }
 

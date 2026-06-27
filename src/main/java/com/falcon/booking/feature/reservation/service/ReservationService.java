@@ -199,7 +199,7 @@ public class ReservationService {
         logger.info("Reservation number {} has been canceled", reservationEntity.getNumber());
         return reservationMapper.toResponseDto(reservationEntity);
     }
-
+/*
     @Transactional
     public ResponsePassengerReservationDto checkInByIdentificationNumber(String reservationNumber, String identificationNumber, String countryIsoCode) {
         PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
@@ -223,6 +223,6 @@ public class ReservationService {
         logger.info("Passenger with id: {} has boarded for reservation {}", passenger.getId(), reservationEntity.getNumber());
         return reservationEntity.board(passenger);
     }
-
+*/
 }
 

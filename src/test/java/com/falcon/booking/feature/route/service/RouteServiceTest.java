@@ -46,15 +46,9 @@ public class RouteServiceTest {
     @Mock
     private RouteRepository routeRepository;
     @Mock
-    private RouteDayRepository routeDayRepository;
-    @Mock
-    private RouteScheduleRepository routeScheduleRepository;
-    @Mock
     private RouteMapper routeMapper;
     @Mock
     private AirportMapper airportMapper;
-    @Mock
-    private AsyncFlightGenerationService asyncFlightGenerationService;
     @Mock
     private AirplaneTypeService airplaneTypeService;
     @Mock
@@ -260,36 +254,5 @@ public class RouteServiceTest {
         assertThat(route.isInactive()).isTrue();
     }
 
-    @DisplayName("Should set route operating schedules")
-    @Test
-    void shouldSetRouteOperatingSchedules_setRouteOperatingSchedules() {
-        RouteEntity route = createRouteEntity("AV1234");
-        AddRouteScheduleRequestDto requestDto = new AddRouteScheduleRequestDto(
-                Set.of(LocalTime.of(10, 0), LocalTime.of(15, 0)),
-                Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)
-        );
 
-        given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
-
-        RouteWithSchedulesDto result = routeService.setRouteOperatingSchedules("AV1234", requestDto);
-
-        verify(routeDayRepository).deleteAllByRoute(route);
-        verify(routeScheduleRepository).deleteAllByRoute(route);
-        assertThat(result.flightNumber()).isEqualTo("AV1234");
-        assertThat(result.daysOfWeek()).hasSize(2);
-        assertThat(result.schedules()).hasSize(2);
-    }
-
-    @DisplayName("Should return route with schedules")
-    @Test
-    void shouldReturnRouteWithSchedules_getRouteWithSchedules() {
-        RouteEntity route = createRouteEntity("AV1234");
-        given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
-
-        RouteWithSchedulesDto result = routeService.getRouteWithSchedules("AV1234");
-
-        assertThat(result.flightNumber()).isEqualTo("AV1234");
-        assertThat(result.daysOfWeek()).contains(DayOfWeek.MONDAY);
-        assertThat(result.schedules()).contains(LocalTime.of(8, 0));
-    }
 }

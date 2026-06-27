@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.flight.scheduler;
 
 import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +16,12 @@ public class FlightScheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(FlightScheduler.class);
     private final FlightService flightService;
+    private final FlightGenerationService flightGenerationService;
 
     @Autowired
-    public FlightScheduler(FlightService flightService) {
+    public FlightScheduler(FlightService flightService, FlightGenerationService flightGenerationService) {
         this.flightService = flightService;
+        this.flightGenerationService = flightGenerationService;
     }
 
     @Scheduled(fixedRateString = "${app.flight.status.update-rate-ms:60000}")
@@ -36,7 +39,7 @@ public class FlightScheduler {
     @Scheduled(cron = "0 1 0 * * *")
     public void generateFlightsForHorizonDay(){
         logger.info("Starting daily flights generation");
-        flightService.startDailyFlightGeneration(LocalDate.now());
+        flightGenerationService.startDailyFlightGeneration(LocalDate.now());
     }
 
 }

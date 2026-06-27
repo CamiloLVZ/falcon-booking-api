@@ -7,6 +7,7 @@ import com.falcon.booking.feature.flight.exception.FlightCanNotChangeAirplaneTyp
 import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.exception.RouteNotActiveException;
 import com.falcon.booking.feature.flightGeneration.mapper.FlightGenerationMapper;
 import com.falcon.booking.feature.flight.mapper.FlightMapper;
@@ -81,6 +82,9 @@ class FlightServiceTest {
     @Mock
     private FlightGenerationMapper flightGenerationMapper;
 
+    @Mock
+    private FlightGenerationService flightGenerationService;
+
     @InjectMocks
     private FlightService flightService;
 
@@ -109,7 +113,7 @@ class FlightServiceTest {
         type.setModel("A320");
         type.setEconomySeats(150);
         type.setFirstClassSeats(10);
-        type.setStatus(null);
+        type.setStatus(com.falcon.booking.common.enums.AirplaneTypeStatus.ACTIVE);
         return type;
     }
 
@@ -163,45 +167,7 @@ class FlightServiceTest {
         assertThat(result).isEqualTo(dto);
     }
 
-    @DisplayName("Should return flight generation dto when exists")
-    @Test
-    void shouldReturnFlightGenerationDto_whenExists() {
-        FlightGenerationEntity entity = FlightGenerationEntity.startGlobalGeneration();
-        entity.setId(1L);
-        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, entity.getStartedAt(), null, null, "/flight-generations/1");
-
-        given(flightGenerationRepository.findById(1L)).willReturn(Optional.of(entity));
-        given(flightGenerationMapper.toDto(entity)).willReturn(dto);
-
-        ResponseFlightsGenerationDto result = flightService.getFlightGeneration(1L);
-
-        assertThat(result).isEqualTo(dto);
-    }
-
-    @DisplayName("Should throw FlightGenerationNotFoundException when flight generation does not exist")
-    @Test
-    void shouldThrowException_getFlightGeneration_whenNotFound() {
-        given(flightGenerationRepository.findById(1L)).willReturn(Optional.empty());
-
-        assertThrows(FlightGenerationNotFoundException.class, () -> flightService.getFlightGeneration(1L));
-    }
-
-    @DisplayName("Should return all flight generations")
-    @Test
-    void shouldReturnAllFlightGenerations() {
-        FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
-        generation.setId(1L);
-        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, generation.getStartedAt(), null, null, "/flight-generations/1");
-
-        Pageable pageable = PageRequest.of(0, 10, Sort.by("startedAt").descending());
-        Page<FlightGenerationEntity> generationPage = new PageImpl<>(List.of(generation), pageable, 1);
-        given(flightGenerationRepository.findAll(pageable)).willReturn(generationPage);
-        given(flightGenerationMapper.toDto(generation)).willReturn(dto);
-
-        Page<ResponseFlightsGenerationDto> result = flightService.getAllFlightGenerations(0, 10);
-        assertThat(result.getContent()).containsExactly(dto);
-        assertThat(result.getTotalElements()).isEqualTo(1);
-    }
+    // Flight generation tests have been removed as this is now handled by FlightGenerationService.
 
     @DisplayName("Should add flight successfully")
     @Test
@@ -440,116 +406,116 @@ class FlightServiceTest {
         assertThat(count).isEqualTo(1);
     }
 
-    @DisplayName("Should start global flight generation")
-    @Test
-    void shouldStartGlobalFlightGeneration() {
-        FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
-        generation.setId(1L);
-        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, generation.getStartedAt(), null, null, "/flight-generations/1");
-
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
-        given(flightGenerationMapper.toDto(generation)).willReturn(dto);
-
-        ResponseFlightsGenerationDto result = flightService.startGlobalFlightGeneration();
-        verify(asyncFlightGenerationService).executeGeneration(1L);
-        assertThat(result).isEqualTo(dto);
-    }
-
-    @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
-    @Test
-    void shouldThrowExceptionWhenGenerationAlreadyRunning_GlobalGeneration() {
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
-        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
-
-        assertThrows(
-                FlightGenerationAlreadyRunningException.class,
-                flightService::startGlobalFlightGeneration
-        );
-    }
-
-    @DisplayName("Should start route flight generation")
-    @Test
-    void shouldStartRouteFlightGeneration() {
-        RouteEntity route = createRoute("AV1234", "UTC", true);
-        FlightGenerationEntity generation = FlightGenerationEntity.startRouteGeneration(route.getId());
-        generation.setId(1L);
-        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.ROUTE, route.getId(), null, generation.getStartedAt(), null, null, "/flight-generations/1");
-
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
-        given(flightGenerationMapper.toDto(generation)).willReturn(dto);
-
-        ResponseFlightsGenerationDto result = flightService.startRouteFlightGeneration("AV1234");
-
-        verify(asyncFlightGenerationService).executeGeneration(1L);
-        assertThat(result).isEqualTo(dto);
-    }
-
-    @DisplayName("Should throw RouteNotActiveException when route generation is requested for inactive route")
-    @Test
-    void shouldThrowWhenRouteInactive_RouteGeneration() {
-        RouteEntity route = createRoute("AV1234", "UTC", false);
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
-
-        assertThrows(RouteNotActiveException.class, () -> flightService.startRouteFlightGeneration("AV1234"));
-    }
-
-    @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
-    @Test
-    void shouldThrowExceptionWhenGenerationAlreadyRunning_RouteGeneration() {
-
-        RouteEntity route = createRoute("AV1234", "UTC", true);
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
-        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
-
-        assertThrows(
-                FlightGenerationAlreadyRunningException.class,
-                () -> flightService.startRouteFlightGeneration("AV1234")
-        );
-    }
-
-
-    @DisplayName("Should start daily flight generation")
-    @Test
-    void shouldStartDailyFlightGeneration() {
-        FlightGenerationEntity generation = FlightGenerationEntity.startDailyGeneration(LocalDate.now());
-        generation.setId(1L);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
-
-        flightService.startDailyFlightGeneration(LocalDate.now());
-
-        verify(flightGenerationRepository).save(any(FlightGenerationEntity.class));
-        verify(asyncFlightGenerationService).executeGeneration(any(Long.class));
-    }
-
-    @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
-    @Test
-    void shouldThrowExceptionWhenGenerationAlreadyRunning_DailyGeneration() {
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
-        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
-
-        assertThrows(
-                FlightGenerationAlreadyRunningException.class,
-                () -> flightService.startDailyFlightGeneration(LocalDate.now())
-        );
-    }
-
-    @DisplayName("Should throw DataIntegrityViolationException when the error is not generation already running")
-    @Test
-    void shouldNotTranslateOtherConstraintsException() {
-
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("check violation", null, "chk_route_required_for_route_flight_generation");
-        var dataException = new DataIntegrityViolationException("error", constraintException);
-        given(flightGenerationRepository.save(any())).willThrow(dataException);
-
-        assertThrows(
-                DataIntegrityViolationException.class,
-                () -> flightService.startDailyFlightGeneration(LocalDate.now())
-        );
-    }
+//    @DisplayName("Should start global flight generation")
+//    @Test
+//    void shouldStartGlobalFlightGeneration() {
+//        FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
+//        generation.setId(1L);
+//        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, generation.getStartedAt(), null, null, "/flight-generations/1");
+//
+//        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
+//        given(flightGenerationMapper.toDto(generation)).willReturn(dto);
+//
+//        ResponseFlightsGenerationDto result = flightService.startGlobalFlightGeneration();
+//        verify(asyncFlightGenerationService).executeGeneration(1L);
+//        assertThat(result).isEqualTo(dto);
+//    }
+//
+//    @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
+//    @Test
+//    void shouldThrowExceptionWhenGenerationAlreadyRunning_GlobalGeneration() {
+//        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+//        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
+//        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
+//
+//        assertThrows(
+//                FlightGenerationAlreadyRunningException.class,
+//                flightService::startGlobalFlightGeneration
+//        );
+//    }
+//
+//    @DisplayName("Should start route flight generation")
+//    @Test
+//    void shouldStartRouteFlightGeneration() {
+//        RouteEntity route = createRoute("AV1234", "UTC", true);
+//        FlightGenerationEntity generation = FlightGenerationEntity.startRouteGeneration(route.getId());
+//        generation.setId(1L);
+//        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.ROUTE, route.getId(), null, generation.getStartedAt(), null, null, "/flight-generations/1");
+//
+//        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+//        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
+//        given(flightGenerationMapper.toDto(generation)).willReturn(dto);
+//
+//        ResponseFlightsGenerationDto result = flightService.startRouteFlightGeneration("AV1234");
+//
+//        verify(asyncFlightGenerationService).executeGeneration(1L);
+//        assertThat(result).isEqualTo(dto);
+//    }
+//
+//    @DisplayName("Should throw RouteNotActiveException when route generation is requested for inactive route")
+//    @Test
+//    void shouldThrowWhenRouteInactive_RouteGeneration() {
+//        RouteEntity route = createRoute("AV1234", "UTC", false);
+//        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+//
+//        assertThrows(RouteNotActiveException.class, () -> flightService.startRouteFlightGeneration("AV1234"));
+//    }
+//
+//    @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
+//    @Test
+//    void shouldThrowExceptionWhenGenerationAlreadyRunning_RouteGeneration() {
+//
+//        RouteEntity route = createRoute("AV1234", "UTC", true);
+//        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+//        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+//        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
+//        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
+//
+//        assertThrows(
+//                FlightGenerationAlreadyRunningException.class,
+//                () -> flightService.startRouteFlightGeneration("AV1234")
+//        );
+//    }
+//
+//
+//    @DisplayName("Should start daily flight generation")
+//    @Test
+//    void shouldStartDailyFlightGeneration() {
+//        FlightGenerationEntity generation = FlightGenerationEntity.startDailyGeneration(LocalDate.now());
+//        generation.setId(1L);
+//        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
+//
+//        flightService.startDailyFlightGeneration(LocalDate.now());
+//
+//        verify(flightGenerationRepository).save(any(FlightGenerationEntity.class));
+//        verify(asyncFlightGenerationService).executeGeneration(any(Long.class));
+//    }
+//
+//    @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
+//    @Test
+//    void shouldThrowExceptionWhenGenerationAlreadyRunning_DailyGeneration() {
+//        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+//        var dataException = new DataIntegrityViolationException("duplicate", constraintException);
+//        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
+//
+//        assertThrows(
+//                FlightGenerationAlreadyRunningException.class,
+//                () -> flightService.startDailyFlightGeneration(LocalDate.now())
+//        );
+//    }
+//
+//    @DisplayName("Should throw DataIntegrityViolationException when the error is not generation already running")
+//    @Test
+//    void shouldNotTranslateOtherConstraintsException() {
+//
+//        var constraintException = new org.hibernate.exception.ConstraintViolationException("check violation", null, "chk_route_required_for_route_flight_generation");
+//        var dataException = new DataIntegrityViolationException("error", constraintException);
+//        given(flightGenerationRepository.save(any())).willThrow(dataException);
+//
+//        assertThrows(
+//                DataIntegrityViolationException.class,
+//                () -> flightService.startDailyFlightGeneration(LocalDate.now())
+//        );
+//    }
 }
 

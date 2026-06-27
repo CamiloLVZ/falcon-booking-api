@@ -5,6 +5,7 @@ import com.falcon.booking.feature.airport.service.AirportService;
 import com.falcon.booking.common.utils.StringNormalizer;
 import com.falcon.booking.feature.airport.mapper.AirportMapper;
 import com.falcon.booking.feature.flightGeneration.service.AsyncFlightGenerationService;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.dto.*;
 import com.falcon.booking.feature.route.exception.*;
 import com.falcon.booking.feature.route.mapper.RouteMapper;
@@ -24,11 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
-
 import java.util.List;
-import java.util.Set;
 
 
 @Service
@@ -37,18 +34,14 @@ public class RouteService {
     private static final Logger logger = LoggerFactory.getLogger(RouteService.class);
 
     private final RouteRepository routeRepository;
-    private final RouteDayRepository routeDayRepository;
-    private final RouteScheduleRepository routeScheduleRepository;
     private final RouteMapper routeMapper;
     private final AirplaneTypeService airplaneTypeService;
     private final AirportService airportService;
     private final AirportMapper airportMapper;
 
     @Autowired
-    public RouteService(RouteRepository routeRepository, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository, RouteMapper routeMapper, AirplaneTypeService airplaneTypeService, AirportService airportService, AsyncFlightGenerationService asyncFlightGenerationService, AirportMapper airportMapper) {
+    public RouteService(RouteRepository routeRepository, RouteMapper routeMapper, AirplaneTypeService airplaneTypeService, AirportService airportService, AirportMapper airportMapper) {
         this.routeRepository = routeRepository;
-        this.routeDayRepository = routeDayRepository;
-        this.routeScheduleRepository = routeScheduleRepository;
         this.routeMapper = routeMapper;
         this.airplaneTypeService = airplaneTypeService;
         this.airportService = airportService;
@@ -178,7 +171,7 @@ public class RouteService {
         logger.info("Route {} deactivated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
     }
-
+/*
     @Transactional
     public RouteWithSchedulesDto setRouteOperatingSchedules(String flightNumber, AddRouteScheduleRequestDto requestDto) {
         RouteEntity routeEntity = getRouteEntity(flightNumber);
@@ -213,4 +206,6 @@ public class RouteService {
         return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
 
     }
+*/
 }
+

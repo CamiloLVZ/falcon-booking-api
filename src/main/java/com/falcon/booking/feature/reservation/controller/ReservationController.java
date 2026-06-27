@@ -157,50 +157,6 @@ public class ReservationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationService.addReservation(addReservationDto));
     }
 
-    @Operation(summary = "Check in passenger",
-            description = "Marks a passenger reservation as checked in using passenger identification and country ISO code.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Passenger checked in successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerReservationDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid query parameters or check-in window",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Reservation or passenger not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PatchMapping("/{reservationNumber}/check-in")
-    public ResponseEntity<ResponsePassengerReservationDto> checkInPassenger(@PathVariable
-                                                                            @Parameter(description = "Reservation unique number", example = "ABC123")
-                                                                            String reservationNumber,
-                                                                            @RequestParam @NotBlank
-                                                                            @Parameter(description = "Passenger identification number", example = "1032456789")
-                                                                            String identificationNumber,
-                                                                            @RequestParam @NotBlank @Size(min = 2, max = 2)
-                                                                            @Parameter(description = "Country two character ISO code", example = "CO")
-                                                                            String countryIsoCode){
-        return ResponseEntity.ok(reservationService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
-    }
 
-    @Operation(summary = "Board passenger",
-            description = "Marks a passenger reservation as boarded using passenger identification and country ISO code.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Passenger boarded successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerReservationDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid query parameters or boarding window",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Reservation or passenger not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PatchMapping("/{reservationNumber}/board")
-    public ResponseEntity<ResponsePassengerReservationDto> boardPassenger(@PathVariable
-                                                                          @Parameter(description = "Reservation unique number", example = "ABC123")
-                                                                          String reservationNumber,
-                                                                          @RequestParam @NotBlank
-                                                                          @Parameter(description = "Passenger identification number", example = "1032456789")
-                                                                          String identificationNumber,
-                                                                          @RequestParam @NotBlank @Size(min = 2, max = 2)
-                                                                          @Parameter(description = "Country two character ISO code", example = "CO")
-                                                                          String countryIsoCode){
-        return ResponseEntity.ok(reservationService.boardByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
-    }
 
 }

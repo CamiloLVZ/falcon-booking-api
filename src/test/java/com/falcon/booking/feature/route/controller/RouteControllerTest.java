@@ -2,9 +2,11 @@ package com.falcon.booking.feature.route.controller;
 
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.exception.RouteNotFoundException;
 import com.falcon.booking.feature.flight.service.FlightService;
 import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
+import com.falcon.booking.feature.route.service.RouteSchedulesService;
 import com.falcon.booking.feature.route.service.RouteService;
 import com.falcon.booking.common.enums.FlightGenerationStatus;
 import com.falcon.booking.common.enums.FlightGenerationType;
@@ -63,11 +65,15 @@ public class RouteControllerTest {
     @MockitoBean
     private RouteService routeService;
 
+
     @MockitoBean
     private FlightService flightService;
 
     @MockitoBean
     private RouteActivationOrchestrator routeActivationOrchestrator;
+
+    @MockitoBean
+    private FlightGenerationService flightGenerationService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -271,44 +277,6 @@ public class RouteControllerTest {
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"));
     }
 
-    @DisplayName("Should return 200 OK when route schedules are set")
-    @Test
-    void shouldReturn200_setRouteOperatingSchedules() throws Exception {
-        AddRouteScheduleRequestDto requestDto = new AddRouteScheduleRequestDto(
-                Set.of(LocalTime.of(8, 0), LocalTime.of(10, 0)),
-                Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)
-        );
-        RouteWithSchedulesDto responseDto =
-                new RouteWithSchedulesDto("AV1234", Set.of(DayOfWeek.MONDAY), Set.of(LocalTime.of(8, 0)));
-
-        given(routeService.setRouteOperatingSchedules("AV1234", requestDto)).willReturn(responseDto);
-
-        ResultActions response = mockMvc.perform(
-                patch("/v1/routes/AV1234/schedules")
-                       .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto))
-                        .accept(MediaType.APPLICATION_JSON)
-        );
-
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.flightNumber").value("AV1234"));
-    }
-
-    @DisplayName("Should return 200 OK and route schedules")
-    @Test
-    void shouldReturn200_getRouteSchedules() throws Exception {
-        RouteWithSchedulesDto responseDto =
-                new RouteWithSchedulesDto("AV1234", Set.of(DayOfWeek.MONDAY), Set.of(LocalTime.of(8, 0)));
-        given(routeService.getRouteWithSchedules("AV1234")).willReturn(responseDto);
-
-        ResultActions response = mockMvc.perform(get("/v1/routes/AV1234/schedules").accept(MediaType.APPLICATION_JSON));
-
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.flightNumber").value("AV1234"));
-    }
-
-
 
     @DisplayName("Should return 200 OK for flights by route and dates")
     @Test
@@ -351,7 +319,7 @@ public class RouteControllerTest {
         ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(
                 1L, FlightGenerationStatus.RUNNING, FlightGenerationType.ROUTE,
                 1L, null, Instant.now(), null, null, "/flight-generations/1");
-        given(flightService.startRouteFlightGeneration("AV1234")).willReturn(dto);
+        given(flightGenerationService.startRouteFlightGeneration("AV1234")).willReturn(dto);
 
 
         ResultActions response = mockMvc.perform(
@@ -368,7 +336,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 400 when a flight generation is already running")
     @Test
     void shouldReturn400GenerationAlwaysRunning_generateFlightsForRoute() throws Exception {
-        given(flightService.startRouteFlightGeneration("AV1234"))
+        given(flightGenerationService.startRouteFlightGeneration("AV1234"))
                 .willThrow(new FlightGenerationAlreadyRunningException());
 
         ResultActions response = mockMvc.perform(
@@ -386,7 +354,7 @@ public class RouteControllerTest {
         ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(
                 1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL,
                 null, null, Instant.now(), null, null, "/flight-generations/1");
-        given(flightService.startGlobalFlightGeneration()).willReturn(dto);
+        given(flightGenerationService.startGlobalFlightGeneration()).willReturn(dto);
 
         ResultActions response = mockMvc.perform(
                 post("/v1/routes/generateFlights")
@@ -402,7 +370,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 400 when a flight generation is already running")
     @Test
     void shouldReturn400GenerationAlwaysRunning_generateFlightsGlobal() throws Exception {
-        given(flightService.startGlobalFlightGeneration())
+        given(flightGenerationService.startGlobalFlightGeneration())
                 .willThrow(new FlightGenerationAlreadyRunningException());
 
         ResultActions response = mockMvc.perform(
