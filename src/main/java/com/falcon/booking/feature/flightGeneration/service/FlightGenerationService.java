@@ -6,7 +6,7 @@ import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNot
 import com.falcon.booking.feature.flightGeneration.mapper.FlightGenerationMapper;
 import com.falcon.booking.feature.route.exception.RouteAirplaneTypeIsNotActiveException;
 import com.falcon.booking.feature.route.exception.RouteNotActiveException;
-import com.falcon.booking.feature.route.service.RouteService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
@@ -27,14 +27,14 @@ public class FlightGenerationService {
     private final FlightGenerationRepository flightGenerationRepository;
     private final FlightGenerationMapper flightGenerationMapper;
     private final AsyncFlightGenerationService asyncFlightGenerationService;
-    private final RouteService routeService;
+    private final RouteQueryService routeQueryService;
 
     @Autowired
-    public FlightGenerationService(FlightGenerationRepository flightGenerationRepository, FlightGenerationMapper flightGenerationMapper, AsyncFlightGenerationService asyncFlightGenerationService, RouteService routeService) {
+    public FlightGenerationService(FlightGenerationRepository flightGenerationRepository, FlightGenerationMapper flightGenerationMapper, AsyncFlightGenerationService asyncFlightGenerationService, RouteQueryService routeQueryService) {
         this.flightGenerationRepository = flightGenerationRepository;
         this.flightGenerationMapper = flightGenerationMapper;
         this.asyncFlightGenerationService = asyncFlightGenerationService;
-        this.routeService = routeService;
+        this.routeQueryService = routeQueryService;
     }
 
     public ResponseFlightsGenerationDto getFlightGeneration(Long id){
@@ -65,7 +65,7 @@ public class FlightGenerationService {
     }
 
     public ResponseFlightsGenerationDto startRouteFlightGeneration(String flightNumber) {
-        RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
+        RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
         if(!routeEntity.isActive())
             throw new RouteNotActiveException(routeEntity.getFlightNumber());
         if(!routeEntity.getDefaultAirplaneType().isActive())

@@ -18,12 +18,12 @@ public class CheckInService {
 
     private final PassengerService passengerService;
     private final PassengerReservationMapper passengerReservationMapper;
-    private final ReservationService reservationService;
+    private final ReservationQueryService reservationQueryService;
 
-    public CheckInService(PassengerService passengerService, PassengerReservationMapper passengerReservationMapper, ReservationService reservationService) {
+    public CheckInService(PassengerService passengerService, PassengerReservationMapper passengerReservationMapper, ReservationQueryService reservationQueryService) {
         this.passengerService = passengerService;
         this.passengerReservationMapper = passengerReservationMapper;
-        this.reservationService = reservationService;
+        this.reservationQueryService = reservationQueryService;
     }
 
 
@@ -34,7 +34,7 @@ public class CheckInService {
     }
 
     public PassengerReservationEntity checkIn(String reservationNumber, PassengerEntity passenger) {
-        ReservationEntity reservationEntity = reservationService.getReservationEntityByNumber(reservationNumber);
+        ReservationEntity reservationEntity = reservationQueryService.getReservationEntityByNumber(reservationNumber);
         logger.info("Passenger with id: {} has checked in for reservation {}", passenger.getId(), reservationEntity.getNumber());
         return reservationEntity.checkInPassenger(passenger);
     }

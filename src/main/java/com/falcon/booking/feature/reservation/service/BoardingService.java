@@ -18,12 +18,12 @@ public class BoardingService {
 
     private final PassengerService passengerService;
     private final PassengerReservationMapper passengerReservationMapper;
-    private final ReservationService reservationService;
+    private final ReservationQueryService reservationQueryService;
 
-    public BoardingService(PassengerService passengerService, PassengerReservationMapper passengerReservationMapper, ReservationService reservationService) {
+    public BoardingService(PassengerService passengerService, PassengerReservationMapper passengerReservationMapper, ReservationQueryService reservationQueryService) {
         this.passengerService = passengerService;
         this.passengerReservationMapper = passengerReservationMapper;
-        this.reservationService = reservationService;
+        this.reservationQueryService = reservationQueryService;
     }
 
     @Transactional
@@ -33,7 +33,7 @@ public class BoardingService {
     }
 
     public PassengerReservationEntity board(String reservationNumber, PassengerEntity passenger) {
-        ReservationEntity reservationEntity = reservationService.getReservationEntityByNumber(reservationNumber);
+        ReservationEntity reservationEntity = reservationQueryService.getReservationEntityByNumber(reservationNumber);
         logger.info("Passenger with id: {} has boarded for reservation {}", passenger.getId(), reservationEntity.getNumber());
         return reservationEntity.board(passenger);
     }

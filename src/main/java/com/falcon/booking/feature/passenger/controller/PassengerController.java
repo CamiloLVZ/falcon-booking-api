@@ -1,7 +1,7 @@
 package com.falcon.booking.feature.passenger.controller;
 
 import com.falcon.booking.feature.passenger.service.PassengerService;
-import com.falcon.booking.feature.reservation.service.ReservationService;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
@@ -34,12 +34,12 @@ import org.springframework.web.bind.annotation.*;
 public class PassengerController {
 
     private final PassengerService passengerService;
-    private final ReservationService reservationService;
+    private final ReservationQueryService reservationQueryService;
 
     @Autowired
-    public PassengerController(PassengerService passengerService, ReservationService reservationService) {
+    public PassengerController(PassengerService passengerService, ReservationQueryService reservationQueryService) {
         this.passengerService = passengerService;
-        this.reservationService = reservationService;
+        this.reservationQueryService = reservationQueryService;
     }
 
     @Operation(summary = "Get a passenger by id",
@@ -138,7 +138,7 @@ public class PassengerController {
                                                                                      @RequestParam @Min(0) @NotNull
                                                                                      @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                                      int page) {
-        Page<ResponseReservationDto> reservations = reservationService.getAllReservationsByPassengerIdentificationNumber(identificationNumber, countryIsoCode, page, size);
+        Page<ResponseReservationDto> reservations = reservationQueryService.getAllReservationsByPassengerIdentificationNumber(identificationNumber, countryIsoCode, page, size);
         return ResponseEntity.ok(PagedResponse.from(reservations));
     }
 

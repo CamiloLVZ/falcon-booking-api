@@ -1,6 +1,6 @@
 package com.falcon.booking.feature.flight.scheduler;
 
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightStatusService;
 import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +15,12 @@ import java.time.LocalDate;
 public class FlightScheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(FlightScheduler.class);
-    private final FlightService flightService;
+    private final FlightStatusService flightStatusService;
     private final FlightGenerationService flightGenerationService;
 
     @Autowired
-    public FlightScheduler(FlightService flightService, FlightGenerationService flightGenerationService) {
-        this.flightService = flightService;
+    public FlightScheduler(FlightStatusService flightStatusService, FlightGenerationService flightGenerationService) {
+        this.flightStatusService = flightStatusService;
         this.flightGenerationService = flightGenerationService;
     }
 
@@ -28,7 +28,7 @@ public class FlightScheduler {
     public void updateFlightsStatus() {
         logger.debug("Checking for flights status updates");
         try{
-            int flightsUpdated = flightService.updateFlightsStatus();
+            int flightsUpdated = flightStatusService.updateFlightsStatus();
             if(flightsUpdated > 0)
                 logger.info("flights status updated: {}", flightsUpdated);
         }catch (Exception e){

@@ -1,10 +1,11 @@
 package com.falcon.booking.feature.route.controller;
 
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.dto.*;
 import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
-import com.falcon.booking.feature.route.service.RouteService;
+import com.falcon.booking.feature.route.service.RouteCommandService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
@@ -40,15 +41,17 @@ import java.util.List;
 @RequestMapping("/v1/routes")
 public class RouteController {
 
-    private final RouteService routeService;
-    private final FlightService flightService;
+    private final RouteQueryService routeQueryService;
+    private final RouteCommandService routeCommandService;
+    private final FlightQueryService flightQueryService;
     private final FlightGenerationService flightGenerationService;
     private final RouteActivationOrchestrator routeActivationOrchestrator;
 
     @Autowired
-    public RouteController(RouteService routeService, FlightService flightService, FlightGenerationService flightGenerationService, RouteActivationOrchestrator routeActivationOrchestrator) {
-        this.routeService = routeService;
-        this.flightService = flightService;
+    public RouteController(RouteQueryService routeQueryService, RouteCommandService routeCommandService, FlightQueryService flightQueryService, FlightGenerationService flightGenerationService, RouteActivationOrchestrator routeActivationOrchestrator) {
+        this.routeQueryService = routeQueryService;
+        this.routeCommandService = routeCommandService;
+        this.flightQueryService = flightQueryService;
         this.flightGenerationService = flightGenerationService;
         this.routeActivationOrchestrator = routeActivationOrchestrator;
     }
@@ -78,7 +81,7 @@ public class RouteController {
                                                                @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                int page) {
 
-        Page<ResponseRouteDto> routes = routeService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status, page, size);
+        Page<ResponseRouteDto> routes = routeQueryService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status, page, size);
         return ResponseEntity.ok(PagedResponse.from(routes));
 
     }
@@ -98,7 +101,7 @@ public class RouteController {
                                                                    @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                                    @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                    String flightNumber) {
-        return ResponseEntity.ok(routeService.getRouteByFlightNumber(flightNumber));
+        return ResponseEntity.ok(routeQueryService.getRouteByFlightNumber(flightNumber));
     }
 
     @Operation(summary = "Get origin airports for search",
@@ -109,7 +112,7 @@ public class RouteController {
     })
     @GetMapping("/search/origins")
     public ResponseEntity<List<AirportSearchOptionDto>> getOriginAirports() {
-        return ResponseEntity.ok(routeService.getOriginAirports());
+        return ResponseEntity.ok(routeQueryService.getOriginAirports());
     }
 
     @Operation(summary = "Get destination airports for search",
@@ -126,7 +129,7 @@ public class RouteController {
                                                                                @Size(min = 3, max = 3, message = "Iata Code must be a 3 letter String")
                                                                                @Parameter(description = "Origin airport IATA code used to find available destinations", example = "BOG")
                                                                                String originIataCode) {
-        return ResponseEntity.ok(routeService.getDestinationAirports(originIataCode));
+        return ResponseEntity.ok(routeQueryService.getDestinationAirports(originIataCode));
     }
 
      @Operation(summary = "Create a route",
@@ -150,7 +153,7 @@ public class RouteController {
                                                              description = "Data for creating a route",
                                                              required = true)
                                                      CreateRouteDto createRouteDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(routeService.addRoute(createRouteDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(routeCommandService.addRoute(createRouteDto));
     }
 
      @Operation(summary = "Update route",
@@ -177,7 +180,7 @@ public class RouteController {
                                                                 description = "Data for updating a route",
                                                                 required = true)
                                                         UpdateRouteDto updateRouteDto) {
-        return ResponseEntity.ok(routeService.updateRoute(flightNumber, updateRouteDto));
+        return ResponseEntity.ok(routeCommandService.updateRoute(flightNumber, updateRouteDto));
     }
 
      @Operation(summary = "Activate route",
@@ -223,7 +226,7 @@ public class RouteController {
                                                           @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                           @Parameter(description = "Route unique flight number", example = "AV1234")
                                                           String flightNumber) {
-        return ResponseEntity.ok(routeService.deactivateRoute(flightNumber));
+        return ResponseEntity.ok(routeCommandService.deactivateRoute(flightNumber));
     }
 
 
@@ -254,7 +257,7 @@ public class RouteController {
                                                                                 @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                                 int page
     ) {
-        Page<ResponseFlightDto> flights = flightService.getAllFlightsByRouteAndDate(flightNumber, date, page, size);
+        Page<ResponseFlightDto> flights = flightQueryService.getAllFlightsByRouteAndDate(flightNumber, date, page, size);
         return ResponseEntity.ok(PagedResponse.from(flights));
     }
 

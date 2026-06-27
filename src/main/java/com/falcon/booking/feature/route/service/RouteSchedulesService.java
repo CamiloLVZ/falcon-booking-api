@@ -20,20 +20,20 @@ public class RouteSchedulesService {
 
     private static final Logger logger = LoggerFactory.getLogger(RouteSchedulesService.class);
 
-    private final RouteService routeService;
+    private final RouteQueryService routeQueryService;
     private final RouteDayRepository routeDayRepository;
     private final RouteScheduleRepository routeScheduleRepository;
 
     @Autowired
-    public RouteSchedulesService(RouteService routeService, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository) {
-        this.routeService = routeService;
+    public RouteSchedulesService(RouteQueryService routeQueryService, RouteDayRepository routeDayRepository, RouteScheduleRepository routeScheduleRepository) {
+        this.routeQueryService = routeQueryService;
         this.routeDayRepository = routeDayRepository;
         this.routeScheduleRepository = routeScheduleRepository;
     }
 
     @Transactional
     public RouteWithSchedulesDto setRouteOperatingSchedules(String flightNumber, AddRouteScheduleRequestDto requestDto) {
-        RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
+        RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
         if (requestDto.daysOfWeek() != null) {
             setRouteDays(routeEntity, requestDto.daysOfWeek());
         }
@@ -61,7 +61,7 @@ public class RouteSchedulesService {
     @Transactional(readOnly = true)
     public RouteWithSchedulesDto getRouteWithSchedules(String flightNumber){
 
-        RouteEntity routeEntity = routeService.getRouteEntity(flightNumber);
+        RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
         return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
 
     }

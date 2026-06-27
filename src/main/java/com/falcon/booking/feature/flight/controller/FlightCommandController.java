@@ -1,6 +1,6 @@
 package com.falcon.booking.feature.flight.controller;
 
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightCommandService;
 import com.falcon.booking.feature.flight.dto.CreateFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.common.web.Error;
@@ -28,11 +28,11 @@ import java.time.LocalDateTime;
 @Validated
 public class FlightCommandController {
 
-    private final FlightService flightService;
+    private final FlightCommandService flightCommandService;
 
     @Autowired
-    public FlightCommandController(FlightService flightService) {
-        this.flightService = flightService;
+    public FlightCommandController(FlightCommandService flightCommandService) {
+        this.flightCommandService = flightCommandService;
     }
 
     @Operation(summary = "Reschedule a flight",
@@ -57,7 +57,7 @@ public class FlightCommandController {
                                                               @RequestParam @Future
                                                               @Parameter(description = "New local departure date time", example = "2026-02-20T14:30:00")
                                                               LocalDateTime newDepartureLocalDateTime) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.rescheduleFLight(id, newDepartureLocalDateTime));
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightCommandService.rescheduleFLight(id, newDepartureLocalDateTime));
     }
 
     @Operation(summary = "Create a new flight",
@@ -81,7 +81,7 @@ public class FlightCommandController {
                                                                description = "Data for creating a new flight",
                                                                required = true)
                                                        CreateFlightDto createFlightDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.addFlight(createFlightDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightCommandService.addFlight(createFlightDto));
     }
 
     @Operation(summary = "Cancel a flight",
@@ -103,7 +103,7 @@ public class FlightCommandController {
     public ResponseEntity<ResponseFlightDto> cancelFlight(@PathVariable
                                                           @Parameter(description = "Flight numeric unique identifier", example = "100")
                                                           Long id) {
-        return ResponseEntity.ok(flightService.cancelFlight(id));
+        return ResponseEntity.ok(flightCommandService.cancelFlight(id));
     }
 
     @Operation(summary = "Change flight airplane type",
@@ -125,6 +125,6 @@ public class FlightCommandController {
     public ResponseEntity<ResponseFlightDto> changeAirplaneType(@PathVariable Long id,
                                                                 @Parameter(description = "Airplane type numeric unique identifier", example = "10")
                                                                 @RequestParam Long idAirplaneType) {
-        return ResponseEntity.ok(flightService.changeAirplaneType(id, idAirplaneType));
+        return ResponseEntity.ok(flightCommandService.changeAirplaneType(id, idAirplaneType));
     }
 }

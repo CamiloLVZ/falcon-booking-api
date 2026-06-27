@@ -9,18 +9,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RouteActivationOrchestrator {
 
-    private final RouteService routeService;
+    private final RouteCommandService routeCommandService;
     private final FlightGenerationService  flightGenerationService;
 
     @Autowired
-    public RouteActivationOrchestrator(RouteService routeService, FlightGenerationService flightGenerationService) {
-        this.routeService = routeService;
+    public RouteActivationOrchestrator(RouteCommandService routeCommandService, FlightGenerationService flightGenerationService) {
+        this.routeCommandService = routeCommandService;
         this.flightGenerationService = flightGenerationService;
     }
 
     @Transactional
     public ResponseRouteDto activateRoute(String flightNumber) {
-        ResponseRouteDto responseRouteDto = routeService.activateRoute(flightNumber);
+        ResponseRouteDto responseRouteDto = routeCommandService.activateRoute(flightNumber);
         flightGenerationService.startRouteFlightGeneration(flightNumber);
 
         return responseRouteDto;

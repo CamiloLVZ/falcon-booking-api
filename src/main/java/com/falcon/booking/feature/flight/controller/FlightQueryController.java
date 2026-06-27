@@ -1,6 +1,6 @@
 package com.falcon.booking.feature.flight.controller;
 
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
@@ -33,12 +33,12 @@ import java.time.LocalDateTime;
 @Validated
 public class FlightQueryController {
 
-    private final FlightService flightService;
+    private final FlightQueryService flightQueryService;
     private final FlightGenerationService  flightGenerationService;
 
     @Autowired
-    public FlightQueryController(FlightService flightService, FlightGenerationService flightGenerationService) {
-        this.flightService = flightService;
+    public FlightQueryController(FlightQueryService flightQueryService, FlightGenerationService flightGenerationService) {
+        this.flightQueryService = flightQueryService;
         this.flightGenerationService = flightGenerationService;
     }
 
@@ -56,7 +56,7 @@ public class FlightQueryController {
     public ResponseEntity<ResponseFlightDto> getFlightById(@PathVariable
                                                            @Parameter(description = "Flight numeric unique identifier", example = "100")
                                                            Long id) {
-        return ResponseEntity.ok(flightService.getFlightById(id));
+        return ResponseEntity.ok(flightQueryService.getFlightById(id));
     }
 
     @Operation(summary = "Get flights by criteria",
@@ -88,7 +88,7 @@ public class FlightQueryController {
                                                                  @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                  int page
     ) {
-        Page<ResponseFlightDto> flights = flightService.getAllFlights(flightNumber, status, dateFrom, dateTo, page, size);
+        Page<ResponseFlightDto> flights = flightQueryService.getAllFlights(flightNumber, status, dateFrom, dateTo, page, size);
         return ResponseEntity.ok(PagedResponse.from(flights));
     }
 
@@ -120,7 +120,7 @@ public class FlightQueryController {
                                                                             @RequestParam @Min(0) @NotNull
                                                                             @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                             int page) {
-        Page<ResponseFlightDto> flights = flightService.getAllFlightsByOriginDestinationAndDate(origin, destination, date, status, page, size);
+        Page<ResponseFlightDto> flights = flightQueryService.getAllFlightsByOriginDestinationAndDate(origin, destination, date, status, page, size);
         return ResponseEntity.ok(PagedResponse.from(flights));
     }
 
