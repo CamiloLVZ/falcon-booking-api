@@ -1,13 +1,13 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.common.enums.FlightStatus;
+import com.falcon.booking.common.enums.PassengerGender;
+import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.feature.flight.exception.OutOfFlightBoardingTimeException;
 import com.falcon.booking.feature.flight.exception.OutOfFlightCheckInTimeException;
 import com.falcon.booking.feature.reservation.exception.InvalidBoardingPassengerReservationException;
 import com.falcon.booking.feature.reservation.exception.InvalidCheckInPassengerReservationException;
 import com.falcon.booking.feature.reservation.exception.ReservationInvalidStatusChangeException;
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.common.enums.PassengerReservationStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

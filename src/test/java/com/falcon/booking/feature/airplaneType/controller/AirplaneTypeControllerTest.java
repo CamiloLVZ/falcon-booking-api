@@ -1,14 +1,14 @@
 package com.falcon.booking.feature.airplaneType.controller;
 
-import com.falcon.booking.feature.airplaneType.exception.AirplaneNotFoundException;
-import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.feature.airplaneType.dto.CorrectAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.UpdateAirplaneTypeDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.feature.airplaneType.exception.AirplaneNotFoundException;
+import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +21,12 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 
-import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(AirplaneTypeController.class)

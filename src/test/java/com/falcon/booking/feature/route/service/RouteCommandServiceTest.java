@@ -1,18 +1,18 @@
 package com.falcon.booking.feature.route.service;
 
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
 import com.falcon.booking.feature.airport.service.AirportService;
+import com.falcon.booking.feature.route.dto.CreateRouteDto;
+import com.falcon.booking.feature.route.dto.ResponseRouteDto;
+import com.falcon.booking.feature.route.dto.UpdateRouteDto;
 import com.falcon.booking.feature.route.exception.RouteAirplaneTypeIsNotActiveException;
 import com.falcon.booking.feature.route.exception.RouteAlreadyExistsException;
 import com.falcon.booking.feature.route.exception.RouteSameOriginAndDestinationException;
 import com.falcon.booking.feature.route.mapper.RouteMapper;
-import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.RouteRepository;
-import com.falcon.booking.feature.route.dto.CreateRouteDto;
-import com.falcon.booking.feature.route.dto.ResponseRouteDto;
-import com.falcon.booking.feature.route.dto.UpdateRouteDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +24,6 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;

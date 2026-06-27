@@ -1,16 +1,16 @@
 package com.falcon.booking.feature.passenger.service;
 
+import com.falcon.booking.common.enums.PassengerGender;
+import com.falcon.booking.feature.country.service.CountryService;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.falcon.booking.feature.passenger.exception.PassengerAlreadyExistsException;
 import com.falcon.booking.feature.passenger.exception.PassengerHasDifferentPassportNumberException;
 import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
-import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
-import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
-import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
-import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,8 +24,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class PassengerServiceTest {

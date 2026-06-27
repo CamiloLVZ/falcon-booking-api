@@ -1,8 +1,8 @@
 package com.falcon.booking.feature.reservation.mapper;
 
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
-import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
+import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

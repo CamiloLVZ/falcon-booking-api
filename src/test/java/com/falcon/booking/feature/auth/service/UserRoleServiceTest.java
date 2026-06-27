@@ -1,6 +1,5 @@
 package com.falcon.booking.feature.auth.service;
 
-import com.falcon.booking.feature.auth.service.UserRoleService;
 import com.falcon.booking.persistence.entity.RoleEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.entity.UserRoleEntity;

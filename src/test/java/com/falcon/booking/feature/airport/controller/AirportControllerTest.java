@@ -1,9 +1,8 @@
 package com.falcon.booking.feature.airport.controller;
 
-import com.falcon.booking.feature.airport.controller.AirportController;
+import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.feature.airport.exception.AirportNotFoundException;
 import com.falcon.booking.feature.airport.service.AirportService;
-import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.feature.country.dto.CountryDto;
 import com.falcon.booking.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;

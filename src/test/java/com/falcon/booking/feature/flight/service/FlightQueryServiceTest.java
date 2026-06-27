@@ -2,17 +2,17 @@ package com.falcon.booking.feature.flight.service;
 
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.feature.airport.service.AirportService;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
 import com.falcon.booking.feature.flight.mapper.FlightMapper;
+import com.falcon.booking.feature.route.exception.RouteNotActiveException;
 import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;
-import com.falcon.booking.feature.airport.service.AirportService;
-import com.falcon.booking.feature.route.exception.RouteNotActiveException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)

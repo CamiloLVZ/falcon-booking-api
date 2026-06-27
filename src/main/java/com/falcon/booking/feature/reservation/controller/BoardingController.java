@@ -1,8 +1,8 @@
 package com.falcon.booking.feature.reservation.controller;
 
-import com.falcon.booking.feature.reservation.service.BoardingService;
-import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
+import com.falcon.booking.feature.reservation.service.BoardingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

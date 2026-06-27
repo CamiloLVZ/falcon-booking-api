@@ -1,18 +1,14 @@
 package com.falcon.booking.feature.route.service;
 
-import com.falcon.booking.feature.airport.mapper.AirportMapper;
-import com.falcon.booking.feature.route.exception.RouteNotFoundException;
-import com.falcon.booking.feature.route.mapper.RouteMapper;
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.entity.AirportEntity;
-import com.falcon.booking.persistence.entity.RouteDayEntity;
-import com.falcon.booking.persistence.entity.RouteEntity;
-import com.falcon.booking.persistence.entity.RouteScheduleEntity;
-import com.falcon.booking.persistence.repository.RouteRepository;
 import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
+import com.falcon.booking.feature.airport.mapper.AirportMapper;
 import com.falcon.booking.feature.route.dto.ResponseRouteDto;
+import com.falcon.booking.feature.route.exception.RouteNotFoundException;
+import com.falcon.booking.feature.route.mapper.RouteMapper;
+import com.falcon.booking.persistence.entity.*;
+import com.falcon.booking.persistence.repository.RouteRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

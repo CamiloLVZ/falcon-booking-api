@@ -1,11 +1,11 @@
 package com.falcon.booking.feature.reservation.mapper;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
+import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
-import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
-import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,18 +1,17 @@
 package com.falcon.booking.feature.flight.controller;
 
-import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
-import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
-import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.common.enums.FlightGenerationStatus;
 import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
-
+import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
+import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
 import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +33,8 @@ import java.util.List;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(FlightQueryController.class)

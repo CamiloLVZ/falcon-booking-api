@@ -1,14 +1,14 @@
 package com.falcon.booking.feature.passenger.controller;
 
-import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
-import com.falcon.booking.feature.passenger.service.PassengerService;
-import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
+import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +26,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(PassengerController.class)

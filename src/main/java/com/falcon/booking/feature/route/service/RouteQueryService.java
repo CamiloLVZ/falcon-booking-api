@@ -1,12 +1,12 @@
 package com.falcon.booking.feature.route.service;
 
+import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.common.utils.StringNormalizer;
 import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
 import com.falcon.booking.feature.airport.mapper.AirportMapper;
 import com.falcon.booking.feature.route.dto.ResponseRouteDto;
 import com.falcon.booking.feature.route.exception.RouteNotFoundException;
 import com.falcon.booking.feature.route.mapper.RouteMapper;
-import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.RouteRepository;
 import com.falcon.booking.persistence.specification.RouteSpecifications;

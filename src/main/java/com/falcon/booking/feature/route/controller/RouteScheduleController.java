@@ -1,9 +1,9 @@
 package com.falcon.booking.feature.route.controller;
 
+import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.route.dto.AddRouteScheduleRequestDto;
 import com.falcon.booking.feature.route.dto.RouteWithSchedulesDto;
 import com.falcon.booking.feature.route.service.RouteSchedulesService;
-import com.falcon.booking.common.web.Error;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

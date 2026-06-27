@@ -1,10 +1,11 @@
 package com.falcon.booking.feature.reservation.mapper;
 
 import com.falcon.booking.feature.flight.mapper.FlightMapper;
-import com.falcon.booking.persistence.entity.ReservationEntity;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
+import com.falcon.booking.persistence.entity.ReservationEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 

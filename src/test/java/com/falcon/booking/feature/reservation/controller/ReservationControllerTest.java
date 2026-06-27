@@ -1,8 +1,5 @@
 package com.falcon.booking.feature.reservation.controller;
 
-import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
-import com.falcon.booking.feature.reservation.service.ReservationQueryService;
-import com.falcon.booking.feature.reservation.service.ReservationCommandService;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
@@ -15,8 +12,11 @@ import com.falcon.booking.feature.reservation.dto.AddPassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.AddReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
+import com.falcon.booking.feature.reservation.service.ReservationCommandService;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +37,10 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(ReservationController.class)

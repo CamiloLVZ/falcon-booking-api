@@ -4,12 +4,7 @@ import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.ReservationStatus;
 import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.entity.AirportEntity;
-import com.falcon.booking.persistence.entity.CountryEntity;
-import com.falcon.booking.persistence.entity.FlightEntity;
-import com.falcon.booking.persistence.entity.ReservationEntity;
-import com.falcon.booking.persistence.entity.RouteEntity;
+import com.falcon.booking.persistence.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +17,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

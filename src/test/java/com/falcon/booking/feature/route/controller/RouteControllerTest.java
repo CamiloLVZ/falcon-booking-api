@@ -1,32 +1,25 @@
 package com.falcon.booking.feature.route.controller;
 
-import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
-import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
-import com.falcon.booking.feature.route.exception.RouteNotFoundException;
-import com.falcon.booking.feature.flight.service.FlightQueryService;
-import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
-import com.falcon.booking.feature.route.service.RouteSchedulesService;
-import com.falcon.booking.feature.route.service.RouteQueryService;
-import com.falcon.booking.feature.route.service.RouteCommandService;
-import com.falcon.booking.common.enums.FlightGenerationStatus;
-import com.falcon.booking.common.enums.FlightGenerationType;
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.common.enums.*;
+import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
+import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
 import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
 import com.falcon.booking.feature.country.dto.CountryDto;
-import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
-import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
-import com.falcon.booking.feature.route.dto.AddRouteScheduleRequestDto;
+import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.dto.CreateRouteDto;
 import com.falcon.booking.feature.route.dto.ResponseRouteDto;
-import com.falcon.booking.feature.route.dto.RouteWithSchedulesDto;
 import com.falcon.booking.feature.route.dto.UpdateRouteDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.feature.route.exception.RouteNotFoundException;
+import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
+import com.falcon.booking.feature.route.service.RouteCommandService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,18 +33,17 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Set;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(RouteController.class)

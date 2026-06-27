@@ -1,14 +1,11 @@
 package com.falcon.booking.feature.auth.service;
 
+import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.exception.UserAlreadyExistException;
 import com.falcon.booking.feature.auth.exception.UserNotFoundException;
-import com.falcon.booking.feature.auth.service.RoleService;
-import com.falcon.booking.feature.auth.service.UserRoleService;
-import com.falcon.booking.feature.auth.service.UserService;
 import com.falcon.booking.persistence.entity.RoleEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.UserRepository;
-import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,8 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {

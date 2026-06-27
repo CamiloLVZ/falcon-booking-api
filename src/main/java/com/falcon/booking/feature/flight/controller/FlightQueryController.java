@@ -1,11 +1,11 @@
 package com.falcon.booking.feature.flight.controller;
 
-import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
-import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
+import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
+import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,7 +15,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Tag(name = "Flight Queries", description = "Operations related to flight querying")

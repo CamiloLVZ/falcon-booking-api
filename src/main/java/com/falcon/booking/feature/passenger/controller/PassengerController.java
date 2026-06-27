@@ -1,12 +1,12 @@
 package com.falcon.booking.feature.passenger.controller;
 
-import com.falcon.booking.feature.passenger.service.PassengerService;
-import com.falcon.booking.feature.reservation.service.ReservationQueryService;
-import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
-import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
-import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
+import com.falcon.booking.feature.passenger.service.PassengerService;
+import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

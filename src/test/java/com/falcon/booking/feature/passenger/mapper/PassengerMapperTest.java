@@ -1,10 +1,10 @@
 package com.falcon.booking.feature.passenger.mapper;
 
 import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.persistence.entity.CountryEntity;
-import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
+import com.falcon.booking.persistence.entity.CountryEntity;
+import com.falcon.booking.persistence.entity.PassengerEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

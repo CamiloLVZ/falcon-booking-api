@@ -2,8 +2,8 @@ package com.falcon.booking.feature.flightGeneration.mapper;
 
 import com.falcon.booking.common.enums.FlightGenerationStatus;
 import com.falcon.booking.common.enums.FlightGenerationType;
-import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
+import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;

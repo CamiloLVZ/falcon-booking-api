@@ -1,9 +1,9 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.feature.route.exception.RouteInvalidStatusChangeException;
-import com.falcon.booking.feature.route.exception.RouteNotActivableException;
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.feature.route.exception.RouteInvalidStatusChangeException;
+import com.falcon.booking.feature.route.exception.RouteNotActivableException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

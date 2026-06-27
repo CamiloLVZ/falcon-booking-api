@@ -1,9 +1,9 @@
 package com.falcon.booking.feature.flight.controller;
 
-import com.falcon.booking.feature.flight.service.FlightCommandService;
+import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.flight.dto.CreateFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
-import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.flight.service.FlightCommandService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

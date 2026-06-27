@@ -1,16 +1,13 @@
 package com.falcon.booking.feature.country.controller;
 
-import com.falcon.booking.feature.country.exception.CountryNotFoundException;
-import com.falcon.booking.feature.country.controller.CountryController;
-import com.falcon.booking.feature.airport.service.AirportService;
-import com.falcon.booking.feature.country.service.CountryService;
-import com.falcon.booking.feature.country.dto.CountryDto;
 import com.falcon.booking.feature.airport.dto.AirportDto;
+import com.falcon.booking.feature.airport.service.AirportService;
+import com.falcon.booking.feature.country.dto.CountryDto;
+import com.falcon.booking.feature.country.exception.CountryNotFoundException;
+import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.mockito.BDDMockito.given;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
@@ -24,6 +21,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

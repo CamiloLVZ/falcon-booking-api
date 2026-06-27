@@ -2,7 +2,10 @@ package com.falcon.booking.persistence.repository;
 
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.persistence.entity.*;
+import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
+import com.falcon.booking.persistence.entity.AirportEntity;
+import com.falcon.booking.persistence.entity.CountryEntity;
+import com.falcon.booking.persistence.entity.RouteEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

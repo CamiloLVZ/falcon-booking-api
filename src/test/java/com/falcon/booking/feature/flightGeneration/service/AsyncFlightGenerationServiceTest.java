@@ -1,7 +1,7 @@
 package com.falcon.booking.feature.flightGeneration.service;
 
-import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
 import com.falcon.booking.common.enums.FlightGenerationStatus;
+import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
 import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
 import org.junit.jupiter.api.DisplayName;
