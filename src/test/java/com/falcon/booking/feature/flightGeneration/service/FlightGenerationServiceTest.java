@@ -10,7 +10,7 @@ import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGeneration
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.mapper.FlightGenerationMapper;
 import com.falcon.booking.feature.route.exception.RouteNotActiveException;
-import com.falcon.booking.feature.route.service.RouteService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
 import com.falcon.booking.persistence.repository.FlightRepository;
@@ -38,7 +38,7 @@ public class FlightGenerationServiceTest {
     private FlightRepository flightRepository;
 
     @Mock
-    private RouteService routeService;
+    private RouteQueryService routeQueryService;
 
     @Mock
     private AirplaneTypeService airplaneTypeService;
@@ -133,7 +133,7 @@ public class FlightGenerationServiceTest {
         generation.setId(1L);
         ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.ROUTE, route.getId(), null, generation.getStartedAt(), null, null, "/flight-generations/1");
 
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
         given(flightGenerationMapper.toDto(generation)).willReturn(dto);
 
@@ -147,7 +147,7 @@ public class FlightGenerationServiceTest {
     @Test
     void shouldThrowWhenRouteInactive_RouteGeneration() {
         RouteEntity route = createRoute("AV1234", "UTC", false);
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
 
         assertThrows(RouteNotActiveException.class, () -> flightGenerationService.startRouteFlightGeneration("AV1234"));
     }
@@ -157,7 +157,7 @@ public class FlightGenerationServiceTest {
     void shouldThrowExceptionWhenGenerationAlreadyRunning_RouteGeneration() {
 
         RouteEntity route = createRoute("AV1234", "UTC", true);
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
         var dataException = new DataIntegrityViolationException("duplicate", constraintException);
         given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);

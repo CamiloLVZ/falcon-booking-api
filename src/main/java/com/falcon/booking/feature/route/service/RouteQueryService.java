@@ -39,6 +39,11 @@ public class RouteQueryService {
                 .orElseThrow(() -> new RouteNotFoundException(normalized));
     }
 
+    public boolean existsByFlightNumber(String flightNumber) {
+        String normalized = StringNormalizer.normalize(flightNumber);
+        return routeRepository.existsByFlightNumber(normalized);
+    }
+
     @Transactional(readOnly = true)
     public List<RouteEntity> getAllRoutesByStatus(RouteStatus status) {
         return routeRepository.findAllByStatus(status);

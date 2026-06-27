@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class FlightQueryService {
@@ -68,7 +70,7 @@ public class FlightQueryService {
         return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);
     }
 
-    public Page<ResponseFlightDto> getAllFlightsByOriginDestinationAndDate(String originIataCode, String destinationIataCode, LocalDate date, FlightStatus status, int page, int size) {
+    public List<ResponseFlightDto> getAllFlightsByOriginDestinationAndDate(String originIataCode, String destinationIataCode, LocalDate date, FlightStatus status) {
         AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(originIataCode);
         if (status == null) status = FlightStatus.SCHEDULED;
 
@@ -76,9 +78,10 @@ public class FlightQueryService {
         OffsetDateTime startDateTime = dayRange.get("start");
         OffsetDateTime endDateTime = dayRange.get("end");
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("departureDateTime").ascending());
-        return flightRepository.findFlightsByAirportsAndDate(originIataCode, destinationIataCode, startDateTime, endDateTime, status, pageable)
-                .map(flightMapper::toDto);
+        return flightRepository.findFlightsByAirportsAndDate(originIataCode, destinationIataCode, startDateTime, endDateTime, status)
+                .stream()
+                .map(flightMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

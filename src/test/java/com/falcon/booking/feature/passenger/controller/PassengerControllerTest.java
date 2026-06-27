@@ -2,7 +2,7 @@ package com.falcon.booking.feature.passenger.controller;
 
 import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
 import com.falcon.booking.feature.passenger.service.PassengerService;
-import com.falcon.booking.feature.reservation.service.ReservationService;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
@@ -50,7 +50,7 @@ public class PassengerControllerTest {
     private PassengerService passengerService;
 
     @MockitoBean
-    private ReservationService reservationService;
+    private ReservationQueryService reservationQueryService;
 
     private ResponsePassengerDto createPassengerDto() {
         return new ResponsePassengerDto(
@@ -131,7 +131,7 @@ public class PassengerControllerTest {
     @Test
     void shouldReturn200AndReservationList_getAllReservationsByPassenger() throws Exception {
         Page<ResponseReservationDto> reservations = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-        given(reservationService.getAllReservationsByPassengerIdentificationNumber("10001", "CO", 0, 10))
+        given(reservationQueryService.getAllReservationsByPassengerIdentificationNumber("10001", "CO", 0, 10))
                 .willReturn(reservations);
 
         ResultActions response = mockMvc.perform(

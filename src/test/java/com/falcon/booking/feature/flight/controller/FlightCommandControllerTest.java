@@ -4,7 +4,7 @@ import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
 import com.falcon.booking.feature.flight.dto.CreateFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightCommandService;
 import com.falcon.booking.security.jwt.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +38,7 @@ class FlightCommandControllerTest {
     private JwtUtil jwtUtil;
 
     @MockitoBean
-    private FlightService flightService;
+    private FlightCommandService flightCommandService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -62,7 +62,7 @@ class FlightCommandControllerTest {
     void shouldReturn201_addFlight() throws Exception {
         CreateFlightDto createDto = new CreateFlightDto("AV1234", LocalDateTime.now().plusDays(10));
         ResponseFlightDto responseDto = createResponseDto(1L, "AV1234", FlightStatus.SCHEDULED);
-        given(flightService.addFlight(createDto)).willReturn(responseDto);
+        given(flightCommandService.addFlight(createDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 post("/v1/flights")
@@ -97,7 +97,7 @@ class FlightCommandControllerTest {
     void shouldReturn201_rescheduleFlight() throws Exception {
         LocalDateTime newDeparture = LocalDateTime.now().plusDays(2);
         ResponseFlightDto responseDto = createResponseDto(10L, "AV1234", FlightStatus.SCHEDULED);
-        given(flightService.rescheduleFLight(10L, newDeparture)).willReturn(responseDto);
+        given(flightCommandService.rescheduleFLight(10L, newDeparture)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 post("/v1/flights/10/reschedule")
@@ -114,7 +114,7 @@ class FlightCommandControllerTest {
     @Test
     void shouldReturn200_cancelFlight() throws Exception {
         ResponseFlightDto responseDto = createResponseDto(1L, "AV1234", FlightStatus.CANCELED);
-        given(flightService.cancelFlight(1L)).willReturn(responseDto);
+        given(flightCommandService.cancelFlight(1L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/flights/1/cancel")
@@ -130,7 +130,7 @@ class FlightCommandControllerTest {
     @Test
     void shouldReturn200_changeAirplaneType() throws Exception {
         ResponseFlightDto responseDto = createResponseDto(1L, "AV1234", FlightStatus.SCHEDULED);
-        given(flightService.changeAirplaneType(1L, 5L)).willReturn(responseDto);
+        given(flightCommandService.changeAirplaneType(1L, 5L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/flights/1/change-airplane-type")

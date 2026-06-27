@@ -36,7 +36,7 @@ public class RouteSchedulesServiceTest {
     @Mock
     private RouteRepository routeRepository;
     @Mock
-    private RouteService routeService;
+    private RouteQueryService routeQueryService;
 
     @InjectMocks
     private RouteSchedulesService routeSchedulesService;
@@ -82,7 +82,7 @@ public class RouteSchedulesServiceTest {
                 Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)
         );
 
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
 
         RouteWithSchedulesDto result = routeSchedulesService.setRouteOperatingSchedules("AV1234", requestDto);
 
@@ -97,7 +97,7 @@ public class RouteSchedulesServiceTest {
     @Test
     void shouldReturnRouteWithSchedules_getRouteWithSchedules() {
         RouteEntity route = createRouteEntity("AV1234");
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
 
         RouteWithSchedulesDto result = routeSchedulesService.getRouteWithSchedules("AV1234");
 

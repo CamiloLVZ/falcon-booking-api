@@ -4,10 +4,11 @@ import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.feature.route.exception.RouteNotFoundException;
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
 import com.falcon.booking.feature.route.service.RouteSchedulesService;
-import com.falcon.booking.feature.route.service.RouteService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
+import com.falcon.booking.feature.route.service.RouteCommandService;
 import com.falcon.booking.common.enums.FlightGenerationStatus;
 import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.common.enums.FlightStatus;
@@ -63,11 +64,14 @@ public class RouteControllerTest {
     private JwtUtil jwtUtil;
 
     @MockitoBean
-    private RouteService routeService;
+    private RouteQueryService routeQueryService;
+
+    @MockitoBean
+    private RouteCommandService routeCommandService;
 
 
     @MockitoBean
-    private FlightService flightService;
+    private FlightQueryService flightQueryService;
 
     @MockitoBean
     private RouteActivationOrchestrator routeActivationOrchestrator;
@@ -92,7 +96,7 @@ public class RouteControllerTest {
     @Test
     void shouldReturn200AndRoute_getRouteByFlightNumber() throws Exception {
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
-        given(routeService.getRouteByFlightNumber("AV1234")).willReturn(responseDto);
+        given(routeQueryService.getRouteByFlightNumber("AV1234")).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(get("/v1/routes/AV1234").accept(MediaType.APPLICATION_JSON));
 
@@ -104,7 +108,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 404 not found when route does not exist")
     @Test
     void shouldReturn404_getRouteByFlightNumber() throws Exception {
-        given(routeService.getRouteByFlightNumber("AV1234")).willThrow(new RouteNotFoundException("AV1234"));
+        given(routeQueryService.getRouteByFlightNumber("AV1234")).willThrow(new RouteNotFoundException("AV1234"));
 
         ResultActions response = mockMvc.perform(get("/v1/routes/AV1234").accept(MediaType.APPLICATION_JSON));
 
@@ -129,7 +133,7 @@ public class RouteControllerTest {
                 List.of(createResponseRouteDto("AV1234"), createResponseRouteDto("AV5678")),
                 PageRequest.of(0, 10),
                 2);
-        given(routeService.getAllRoutes(null, null, null, 0, 10)).willReturn(routes);
+        given(routeQueryService.getAllRoutes(null, null, null, 0, 10)).willReturn(routes);
 
         ResultActions response = mockMvc.perform(get("/v1/routes")
                 .param("page", "0")
@@ -151,7 +155,7 @@ public class RouteControllerTest {
                 new AirportSearchOptionDto("BOG", "Bogota", "El Dorado"),
                 new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba")
         );
-        given(routeService.getOriginAirports()).willReturn(airports);
+        given(routeQueryService.getOriginAirports()).willReturn(airports);
 
         ResultActions response = mockMvc.perform(get("/v1/routes/search/origins").accept(MediaType.APPLICATION_JSON));
 
@@ -168,7 +172,7 @@ public class RouteControllerTest {
                 new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba"),
                 new AirportSearchOptionDto("CLO", "Cali", "Alfonso Bonilla Aragon")
         );
-        given(routeService.getDestinationAirports("BOG")).willReturn(airports);
+        given(routeQueryService.getDestinationAirports("BOG")).willReturn(airports);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/routes/search/destinations")
@@ -198,7 +202,7 @@ public class RouteControllerTest {
     void shouldReturn201_addRoute() throws Exception {
         CreateRouteDto createRouteDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60);
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
-        given(routeService.addRoute(createRouteDto)).willReturn(responseDto);
+        given(routeCommandService.addRoute(createRouteDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 post("/v1/routes")
@@ -233,7 +237,7 @@ public class RouteControllerTest {
     void shouldReturn200_updateRoute() throws Exception {
         UpdateRouteDto updateRouteDto = new UpdateRouteDto(null, null, null, 90);
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
-        given(routeService.updateRoute("AV1234", updateRouteDto)).willReturn(responseDto);
+        given(routeCommandService.updateRoute("AV1234", updateRouteDto)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 put("/v1/routes/AV1234")
@@ -266,7 +270,7 @@ public class RouteControllerTest {
     @Test
     void shouldReturn200_deactivateRoute() throws Exception {
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
-        given(routeService.deactivateRoute("AV1234")).willReturn(responseDto);
+        given(routeCommandService.deactivateRoute("AV1234")).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 patch("/v1/routes/AV1234/deactivate")
@@ -294,7 +298,7 @@ public class RouteControllerTest {
                         FlightStatus.SCHEDULED
                 )
         ), PageRequest.of(0, 10), 1);
-        given(flightService.getAllFlightsByRouteAndDate("AV1234", LocalDate.parse("2026-01-01"), 0, 10))
+        given(flightQueryService.getAllFlightsByRouteAndDate("AV1234", LocalDate.parse("2026-01-01"), 0, 10))
                 .willReturn(flights);
 
         ResultActions response = mockMvc.perform(

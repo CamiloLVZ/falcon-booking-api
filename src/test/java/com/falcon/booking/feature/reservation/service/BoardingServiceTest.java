@@ -38,7 +38,7 @@ public class BoardingServiceTest {
     @Mock
     private PassengerReservationMapper passengerReservationMapper;
     @Mock
-    private ReservationService reservationService;
+    private ReservationQueryService reservationQueryService;
 
     @InjectMocks
     private BoardingService boardingService;
@@ -85,7 +85,7 @@ public class BoardingServiceTest {
         ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, 8, PassengerReservationStatus.BOARDED);
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
-        given(reservationService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
+        given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
         given(passengerReservationMapper.toResponseDto(any(PassengerReservationEntity.class))).willReturn(response);
 
         ResponsePassengerReservationDto result = boardingService.boardByIdentificationNumber("ABC123", "123", "CO");
@@ -93,7 +93,7 @@ public class BoardingServiceTest {
         assertThat(result).isEqualTo(response);
         assertThat(reservation.getPassengerReservations().get(0).getStatus()).isEqualTo(PassengerReservationStatus.BOARDED);
         verify(passengerService).getPassengerEntityByIdentificationNumber("123", "CO");
-        verify(reservationService).getReservationEntityByNumber("ABC123");
+        verify(reservationQueryService).getReservationEntityByNumber("ABC123");
         verify(passengerReservationMapper).toResponseDto(reservation.getPassengerReservations().get(0));
     }
 
@@ -102,13 +102,13 @@ public class BoardingServiceTest {
     void shouldBoard() {
         PassengerEntity passenger = createPassenger("123");
         ReservationEntity reservation = createReservationWithCheckedInPassenger(passenger);
-        given(reservationService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
+        given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
 
         PassengerReservationEntity result = boardingService.board("ABC123", passenger);
 
         assertThat(result.getPassenger()).isEqualTo(passenger);
         assertThat(result.getStatus()).isEqualTo(PassengerReservationStatus.BOARDED);
-        verify(reservationService).getReservationEntityByNumber("ABC123");
+        verify(reservationQueryService).getReservationEntityByNumber("ABC123");
     }
 
     @DisplayName("Should throw exception when passenger reservation is not checked in")
@@ -118,7 +118,7 @@ public class BoardingServiceTest {
         ReservationEntity reservation = createReservationWithPassenger(passenger, FlightStatus.BOARDING);
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
-        given(reservationService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
+        given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
 
         assertThrows(InvalidBoardingPassengerReservationException.class,
                 () -> boardingService.boardByIdentificationNumber("ABC123", "123", "CO"));

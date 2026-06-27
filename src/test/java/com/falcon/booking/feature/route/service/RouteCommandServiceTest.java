@@ -4,22 +4,14 @@ import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
 import com.falcon.booking.feature.airport.service.AirportService;
 import com.falcon.booking.feature.route.exception.RouteAirplaneTypeIsNotActiveException;
 import com.falcon.booking.feature.route.exception.RouteAlreadyExistsException;
-import com.falcon.booking.feature.route.exception.RouteNotFoundException;
 import com.falcon.booking.feature.route.exception.RouteSameOriginAndDestinationException;
-import com.falcon.booking.feature.airport.mapper.AirportMapper;
-import com.falcon.booking.feature.flightGeneration.service.AsyncFlightGenerationService;
 import com.falcon.booking.feature.route.mapper.RouteMapper;
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.persistence.entity.*;
-import com.falcon.booking.persistence.repository.RouteDayRepository;
 import com.falcon.booking.persistence.repository.RouteRepository;
-import com.falcon.booking.persistence.repository.RouteScheduleRepository;
-import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
-import com.falcon.booking.feature.route.dto.AddRouteScheduleRequestDto;
 import com.falcon.booking.feature.route.dto.CreateRouteDto;
 import com.falcon.booking.feature.route.dto.ResponseRouteDto;
-import com.falcon.booking.feature.route.dto.RouteWithSchedulesDto;
 import com.falcon.booking.feature.route.dto.UpdateRouteDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,21 +35,21 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class RouteServiceTest {
+public class RouteCommandServiceTest {
 
+    @Mock
+    private RouteQueryService routeQueryService;
     @Mock
     private RouteRepository routeRepository;
     @Mock
     private RouteMapper routeMapper;
-    @Mock
-    private AirportMapper airportMapper;
     @Mock
     private AirplaneTypeService airplaneTypeService;
     @Mock
     private AirportService airportService;
 
     @InjectMocks
-    private RouteService routeService;
+    private RouteCommandService routeCommandService;
 
     private AirplaneTypeEntity createAirplaneType(AirplaneTypeStatus status) {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
@@ -89,79 +83,6 @@ public class RouteServiceTest {
         return route;
     }
 
-    @DisplayName("Should return RouteEntity when flight number exists")
-    @Test
-    void shouldReturnEntity_getRouteEntity() {
-        RouteEntity route = createRouteEntity("AV1234");
-        given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
-
-        RouteEntity result = routeService.getRouteEntity(" av1234 ");
-
-        assertThat(result).isEqualTo(route);
-        verify(routeRepository).findByFlightNumber("AV1234");
-    }
-
-    @DisplayName("Should throw exception when route does not exist")
-    @Test
-    void shouldThrowException_getRouteEntity() {
-        given(routeRepository.findByFlightNumber("AV9999")).willReturn(Optional.empty());
-
-        RouteNotFoundException exception =
-                assertThrows(RouteNotFoundException.class, () -> routeService.getRouteEntity(" av9999 "));
-
-        assertThat(exception.getMessage()).contains("AV9999");
-    }
-
-    @DisplayName("Should return route dto when flight number exists")
-    @Test
-    void shouldReturnDto_getRouteByFlightNumber() {
-        RouteEntity route = createRouteEntity("AV1234");
-        ResponseRouteDto dto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.DRAFT);
-        given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
-        given(routeMapper.toResponseDto(route)).willReturn(dto);
-
-        ResponseRouteDto result = routeService.getRouteByFlightNumber("av1234");
-
-        assertThat(result).isEqualTo(dto);
-        verify(routeMapper).toResponseDto(route);
-    }
-
-    @DisplayName("Should return origin airport options")
-    @Test
-    void shouldReturnOriginAirportOptions_getOriginAirports() {
-        List<AirportEntity> airports = List.of(createAirport(1L, "BOG"), createAirport(2L, "MDE"));
-        List<AirportSearchOptionDto> airportDtos = List.of(
-                new AirportSearchOptionDto("BOG", "Bogota", "El Dorado"),
-                new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba")
-        );
-        given(routeRepository.findDistinctOrigins()).willReturn(airports);
-        given(airportMapper.toSearchOptionDto(airports)).willReturn(airportDtos);
-
-        List<AirportSearchOptionDto> result = routeService.getOriginAirports();
-
-        assertThat(result).isEqualTo(airportDtos);
-        verify(routeRepository).findDistinctOrigins();
-        verify(airportMapper).toSearchOptionDto(airports);
-    }
-
-    @DisplayName("Should return destination airport options by normalized origin")
-    @Test
-    void shouldReturnDestinationAirportOptions_getDestinationAirports() {
-        List<AirportEntity> airports = List.of(createAirport(2L, "MDE"), createAirport(3L, "CLO"));
-        List<AirportSearchOptionDto> airportDtos = List.of(
-                new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba"),
-                new AirportSearchOptionDto("CLO", "Cali", "Alfonso Bonilla Aragon")
-        );
-        given(routeRepository.findDestinationsByOrigin("BOG")).willReturn(airports);
-        given(airportMapper.toSearchOptionDto(airports)).willReturn(airportDtos);
-
-        List<AirportSearchOptionDto> result = routeService.getDestinationAirports(" bog ");
-
-        assertThat(result).isEqualTo(airportDtos);
-        verify(routeRepository).findDestinationsByOrigin("BOG");
-        verify(airportMapper).toSearchOptionDto(airports);
-    }
-
     @DisplayName("Should add route when data is valid")
     @Test
     void shouldAddRoute_addRoute() {
@@ -182,7 +103,7 @@ public class RouteServiceTest {
         given(routeRepository.save(routeToSave)).willReturn(savedRoute);
         given(routeMapper.toResponseDto(savedRoute)).willReturn(responseDto);
 
-        ResponseRouteDto result = routeService.addRoute(createDto);
+        ResponseRouteDto result = routeCommandService.addRoute(createDto);
 
         assertThat(result).isEqualTo(responseDto);
         assertThat(routeToSave.isDraft()).isTrue();
@@ -194,7 +115,7 @@ public class RouteServiceTest {
         CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60);
         given(routeRepository.existsByFlightNumber("AV1234")).willReturn(true);
 
-        assertThrows(RouteAlreadyExistsException.class, () -> routeService.addRoute(createDto));
+        assertThrows(RouteAlreadyExistsException.class, () -> routeCommandService.addRoute(createDto));
         verify(routeRepository, never()).save(any());
     }
 
@@ -205,8 +126,7 @@ public class RouteServiceTest {
         given(routeRepository.existsByFlightNumber(anyString())).willReturn(false);
 
         assertThrows(RouteSameOriginAndDestinationException.class,
-
-                () -> routeService.addRoute(createDto));
+                () -> routeCommandService.addRoute(createDto));
     }
 
     @DisplayName("Should throw exception when airplane type is not active")
@@ -218,7 +138,7 @@ public class RouteServiceTest {
         given(routeRepository.existsByFlightNumber("AV1234")).willReturn(false);
         given(airplaneTypeService.getAirplaneTypeEntity(1L)).willReturn(airplaneType);
 
-        assertThrows(RouteAirplaneTypeIsNotActiveException.class, () -> routeService.addRoute(createDto));
+        assertThrows(RouteAirplaneTypeIsNotActiveException.class, () -> routeCommandService.addRoute(createDto));
     }
 
     @DisplayName("Should update route when data is valid")
@@ -227,16 +147,14 @@ public class RouteServiceTest {
         RouteEntity route = createRouteEntity("AV1234");
         UpdateRouteDto updateDto = new UpdateRouteDto(null, null, null, 90);
         ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 90, RouteStatus.DRAFT);
-        given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(routeMapper.toResponseDto(route)).willReturn(responseDto);
 
-        ResponseRouteDto result = routeService.updateRoute("AV1234", updateDto);
+        ResponseRouteDto result = routeCommandService.updateRoute("AV1234", updateDto);
 
         assertThat(result).isEqualTo(responseDto);
         assertThat(route.getDurationMinutes()).isEqualTo(90);
     }
-
-
 
     @DisplayName("Should deactivate route")
     @Test
@@ -245,14 +163,12 @@ public class RouteServiceTest {
         route.setStatus(RouteStatus.ACTIVE);
         ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.INACTIVE);
 
-        given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(routeMapper.toResponseDto(route)).willReturn(responseDto);
 
-        ResponseRouteDto result = routeService.deactivateRoute("AV1234");
+        ResponseRouteDto result = routeCommandService.deactivateRoute("AV1234");
 
         assertThat(result).isEqualTo(responseDto);
         assertThat(route.isInactive()).isTrue();
     }
-
-
 }

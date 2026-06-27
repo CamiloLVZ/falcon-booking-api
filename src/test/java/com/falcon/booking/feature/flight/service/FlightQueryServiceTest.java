@@ -5,7 +5,7 @@ import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
 import com.falcon.booking.feature.flight.mapper.FlightMapper;
-import com.falcon.booking.feature.route.service.RouteService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.FlightEntity;
@@ -37,7 +37,7 @@ import static org.mockito.BDDMockito.given;
 class FlightQueryServiceTest {
 
     @Mock private FlightRepository flightRepository;
-    @Mock private RouteService routeService;
+    @Mock private RouteQueryService routeQueryService;
     @Mock private AirportService airportService;
     @Mock private FlightMapper flightMapper;
 
@@ -122,7 +122,7 @@ class FlightQueryServiceTest {
         FlightEntity expectedFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
 
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by("departureDateTime").ascending()), 1);
         given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by("departureDateTime").ascending())))).willReturn(flightPage);
         given(flightMapper.toDto(expectedFlight)).willReturn(dto);
@@ -136,7 +136,7 @@ class FlightQueryServiceTest {
     @Test
     void shouldThrowWhenGetAllFlightsByRouteAndDates_routeInactive() {
         RouteEntity route = createRoute("AV1234", "UTC", false);
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
 
         assertThrows(RouteNotActiveException.class,
                 () -> flightQueryService.getAllFlightsByRouteAndDate("AV1234", LocalDate.of(2026, 8, 1), 0, 10));
@@ -149,7 +149,7 @@ class FlightQueryServiceTest {
         FlightEntity flight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
 
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("departureDateTime").ascending());
         Page<FlightEntity> flightPage = new PageImpl<>(List.of(flight), pageable, 1);
         given(flightRepository.findAllByRouteAndDepartureDateTimeBetween(eq(route), any(OffsetDateTime.class), any(OffsetDateTime.class), eq(pageable))).willReturn(flightPage);

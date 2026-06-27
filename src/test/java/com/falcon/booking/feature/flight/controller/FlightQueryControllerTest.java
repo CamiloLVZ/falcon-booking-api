@@ -2,7 +2,7 @@ package com.falcon.booking.feature.flight.controller;
 
 import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.common.enums.FlightGenerationStatus;
 import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.common.enums.FlightStatus;
@@ -51,7 +51,7 @@ class FlightQueryControllerTest {
     private JwtUtil jwtUtil;
 
     @MockitoBean
-    private FlightService flightService;
+    private FlightQueryService flightQueryService;
 
     @MockitoBean
     private FlightGenerationService flightGenerationService;
@@ -84,7 +84,7 @@ class FlightQueryControllerTest {
     @Test
     void shouldReturn200_getFlightById() throws Exception {
         ResponseFlightDto responseDto = createResponseDto(1L, "AV1234", FlightStatus.SCHEDULED);
-        given(flightService.getFlightById(1L)).willReturn(responseDto);
+        given(flightQueryService.getFlightById(1L)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(get("/v1/flights/1").accept(MediaType.APPLICATION_JSON));
 
@@ -96,7 +96,7 @@ class FlightQueryControllerTest {
     @DisplayName("Should return 404 when flight does not exist")
     @Test
     void shouldReturn400_getFlightById() throws Exception {
-        given(flightService.getFlightById(1L)).willThrow(new FlightNotFoundException(1L));
+        given(flightQueryService.getFlightById(1L)).willThrow(new FlightNotFoundException(1L));
 
         ResultActions response = mockMvc.perform(get("/v1/flights/1").accept(MediaType.APPLICATION_JSON));
 
@@ -112,7 +112,7 @@ class FlightQueryControllerTest {
                 createResponseDto(2L, "AV1234", FlightStatus.CHECK_IN_AVAILABLE)
         ), PageRequest.of(0, 10), 2);
 
-        given(flightService.getAllFlights("AV1234", FlightStatus.SCHEDULED,
+        given(flightQueryService.getAllFlights("AV1234", FlightStatus.SCHEDULED,
                 LocalDate.parse("2026-01-01"), LocalDate.parse("2026-01-31"), 0, 10)).willReturn(flights);
 
         ResultActions response = mockMvc.perform(

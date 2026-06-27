@@ -9,7 +9,7 @@ import com.falcon.booking.feature.flight.exception.FlightAlreadyExistsException;
 import com.falcon.booking.feature.flight.exception.FlightCanNotBeRescheduledException;
 import com.falcon.booking.feature.flight.exception.FlightCanNotChangeAirplaneTypeException;
 import com.falcon.booking.feature.flight.mapper.FlightMapper;
-import com.falcon.booking.feature.route.service.RouteService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.FlightEntity;
@@ -40,7 +40,7 @@ class FlightCommandServiceTest {
 
     @Mock private FlightRepository flightRepository;
     @Mock private FlightQueryService flightQueryService;
-    @Mock private RouteService routeService;
+    @Mock private RouteQueryService routeQueryService;
     @Mock private AirplaneTypeService airplaneTypeService;
     @Mock private FlightMapper flightMapper;
 
@@ -93,7 +93,7 @@ class FlightCommandServiceTest {
         FlightEntity savedEntity = createFlight(1L, route, expectedDeparture, FlightStatus.SCHEDULED);
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedDeparture, expectedDeparture.toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
 
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(flightRepository.existsByRouteAndDepartureDateTime(route, expectedDeparture)).willReturn(false);
         given(flightRepository.save(any(FlightEntity.class))).willReturn(savedEntity);
         given(flightMapper.toDto(savedEntity)).willReturn(dto);
@@ -109,7 +109,7 @@ class FlightCommandServiceTest {
         CreateFlightDto request = new CreateFlightDto("AV1234", LocalDateTime.of(2026, 8, 1, 14, 0));
         OffsetDateTime expectedDeparture = request.departureDateTime().atZone(ZoneId.of("UTC")).toOffsetDateTime();
 
-        given(routeService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(flightRepository.existsByRouteAndDepartureDateTime(route, expectedDeparture)).willReturn(true);
 
         assertThrows(FlightAlreadyExistsException.class, () -> flightCommandService.addFlight(request));
