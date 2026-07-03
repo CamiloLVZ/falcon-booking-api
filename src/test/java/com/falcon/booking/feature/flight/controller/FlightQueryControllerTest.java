@@ -1,17 +1,11 @@
 package com.falcon.booking.feature.flight.controller;
 
-import com.falcon.booking.common.enums.FlightGenerationStatus;
-import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
-import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
-import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
-import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import com.falcon.booking.security.jwt.JwtUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +19,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -49,12 +42,6 @@ class FlightQueryControllerTest {
     @MockitoBean
     private FlightQueryService flightQueryService;
 
-    @MockitoBean
-    private FlightGenerationService flightGenerationService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     private ResponseFlightDto createResponseDto(Long id, String flightNumber, FlightStatus status) {
         return new ResponseFlightDto(
                 id,
@@ -66,13 +53,6 @@ class FlightQueryControllerTest {
                 40,
                 new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
                 status
-        );
-    }
-
-    private ResponseFlightsGenerationDto createResponseFlightGenerationDto(Long id, FlightGenerationStatus status) {
-        return new ResponseFlightsGenerationDto(
-                id, status, FlightGenerationType.ROUTE, 1L, 400,
-                Instant.now(), Instant.now().plusMillis(1500), 10L, "/v1/flight-generations/"+id
         );
     }
 
@@ -192,30 +172,6 @@ class FlightQueryControllerTest {
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.totalElements").value(1));
-    }
-
-    @DisplayName("Should return 200 OK and flight generation by id")
-    @Test
-    void shouldReturn200_getFlightGenerationById() throws Exception {
-        ResponseFlightsGenerationDto responseDto = createResponseFlightGenerationDto(1L, FlightGenerationStatus.RUNNING);
-        given(flightGenerationService.getFlightGeneration(1L)).willReturn(responseDto);
-
-        ResultActions response = mockMvc.perform(get("/v1/flights/generations/1").accept(MediaType.APPLICATION_JSON));
-
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.generationId").value(1L))
-                .andExpect(jsonPath("$.status").value("RUNNING"));
-    }
-
-    @DisplayName("Should return 404 when flight does not exist")
-    @Test
-    void shouldReturn400_getFlightGeneration() throws Exception {
-        given(flightGenerationService.getFlightGeneration(1L)).willThrow(new FlightGenerationNotFoundException(1L));
-
-        ResultActions response = mockMvc.perform(get("/v1/flights/generations/1").accept(MediaType.APPLICATION_JSON));
-
-        response.andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.type").value("flight-generation-does-not-exist"));
     }
 
 }
