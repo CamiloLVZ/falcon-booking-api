@@ -76,7 +76,7 @@ public class FlightQueryService {
         spec = spec.and(FlightSpecifications.hasFlightNumber(flightNumber));
         spec = spec.and(FlightSpecifications.hasStatus(flightStatus));
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "departureDateTime"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "departureDateTime"));
         return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);
     }
 
