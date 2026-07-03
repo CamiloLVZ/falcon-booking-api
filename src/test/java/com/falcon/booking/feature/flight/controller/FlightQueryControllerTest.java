@@ -147,6 +147,53 @@ class FlightQueryControllerTest {
 
 
 
+    @DisplayName("Should return 200 OK with all flights paginated")
+    @Test
+    void shouldReturn200_getAllFlightsPaginated() throws Exception {
+        Page<ResponseFlightDto> flights = new PageImpl<>(List.of(
+                createResponseDto(2L, "AV1234", FlightStatus.SCHEDULED),
+                createResponseDto(1L, "AV1234", FlightStatus.CHECK_IN_AVAILABLE)
+        ), PageRequest.of(0, 10), 2);
+
+        given(flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, 0, 10)).willReturn(flights);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/flights/all")
+                        .param("flightNumber", "AV1234")
+                        .param("status", "SCHEDULED")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(2))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @DisplayName("Should return 200 OK with all flights paginated without filters")
+    @Test
+    void shouldReturn200_getAllFlightsPaginated_noFilters() throws Exception {
+        Page<ResponseFlightDto> flights = new PageImpl<>(List.of(
+                createResponseDto(1L, "AV1234", FlightStatus.SCHEDULED)
+        ), PageRequest.of(0, 10), 1);
+
+        given(flightQueryService.getAllFlightsPaginated(null, null, 0, 10)).willReturn(flights);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/flights/all")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
     @DisplayName("Should return 200 OK and flight generation by id")
     @Test
     void shouldReturn200_getFlightGenerationById() throws Exception {

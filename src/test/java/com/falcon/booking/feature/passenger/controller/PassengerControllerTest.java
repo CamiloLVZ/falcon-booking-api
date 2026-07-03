@@ -21,6 +21,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import com.falcon.booking.common.web.PagedResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -238,6 +239,47 @@ public class PassengerControllerTest {
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("passenger-does-not-exist"))
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    @DisplayName("Should return 200 OK with paginated passengers when getting all")
+    @Test
+    void shouldReturn200AndPagedPassengers_getAllPassengers() throws Exception {
+        ResponsePassengerDto passengerDto = createPassengerDto();
+        Page<ResponsePassengerDto> page = new PageImpl<>(List.of(passengerDto), PageRequest.of(0, 10), 1);
+        given(passengerService.getAllPassengers(0, 10)).willReturn(page);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/passengers")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[0].firstName").value("JUAN"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.page").value(0));
+    }
+
+    @DisplayName("Should return 200 OK with paginated passengers when getting by flight")
+    @Test
+    void shouldReturn200AndPagedPassengers_getPassengersByFlight() throws Exception {
+        ResponsePassengerDto passengerDto = createPassengerDto();
+        Page<ResponsePassengerDto> page = new PageImpl<>(List.of(passengerDto), PageRequest.of(0, 10), 1);
+        given(passengerService.getPassengersByFlightId(5L, 0, 10)).willReturn(page);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/passengers/flight/{flightId}", 5L)
+                        .param("page", "0")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[0].identificationNumber").value("10001"))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 }
 

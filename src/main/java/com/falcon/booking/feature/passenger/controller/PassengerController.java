@@ -42,6 +42,51 @@ public class PassengerController {
         this.reservationQueryService = reservationQueryService;
     }
 
+    @Operation(summary = "Get all passengers",
+            description = "Returns a paginated list of all passengers sorted by first name and last name. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Paginated passengers retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid pagination parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve passengers",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping
+    public ResponseEntity<PagedResponse<ResponsePassengerDto>> getAllPassengers(
+            @RequestParam @Min(1) @NotNull
+            @Parameter(description = "Number of passenger records per page", example = "10", required = true) int size,
+            @RequestParam @Min(0) @NotNull
+            @Parameter(description = "Zero-based page number", example = "0", required = true) int page) {
+        return ResponseEntity.ok(PagedResponse.from(passengerService.getAllPassengers(page, size)));
+    }
+
+    @Operation(summary = "Get passengers by flight",
+            description = "Returns a paginated list of passengers linked to a specific flight, sorted by first name and last name. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Paginated passengers retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve passengers",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/flight/{flightId}")
+    public ResponseEntity<PagedResponse<ResponsePassengerDto>> getPassengersByFlight(
+            @PathVariable @Parameter(description = "Flight numeric unique identifier", example = "12") Long flightId,
+            @RequestParam @Min(1) @NotNull
+            @Parameter(description = "Number of passenger records per page", example = "10", required = true) int size,
+            @RequestParam @Min(0) @NotNull
+            @Parameter(description = "Zero-based page number", example = "0", required = true) int page) {
+        return ResponseEntity.ok(PagedResponse.from(passengerService.getPassengersByFlightId(flightId, page, size)));
+    }
+
     @Operation(summary = "Get a passenger by id",
             description = "Returns a passenger record using its numeric unique identifier. Requires authentication with JWT token and ADMIN role",
             security = @SecurityRequirement(name = "bearerAuth"))

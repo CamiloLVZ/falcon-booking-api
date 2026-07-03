@@ -160,4 +160,20 @@ class FlightQueryServiceTest {
         assertThat(result.getContent()).containsExactly(dto);
         assertThat(result.getTotalElements()).isEqualTo(1);
     }
+
+    @DisplayName("Should return paginated flights ordered by departure date descending")
+    @Test
+    void shouldReturnFlightsPaginated_OrderedDesc() {
+        RouteEntity route = createRoute("AV1234", "UTC", true);
+        FlightEntity expectedFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+
+        Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "departureDateTime")), 1);
+        given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "departureDateTime"))))).willReturn(flightPage);
+        given(flightMapper.toDto(expectedFlight)).willReturn(dto);
+
+        Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, 0, 10);
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
 }

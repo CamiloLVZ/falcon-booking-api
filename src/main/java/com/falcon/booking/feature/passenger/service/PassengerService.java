@@ -14,6 +14,9 @@ import com.falcon.booking.persistence.repository.PassengerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -135,5 +138,19 @@ public class PassengerService {
     @Transactional(readOnly = true)
     public ResponsePassengerDto getPassengerByIdentificationNumber(String identificationNumber, String nationalityIsoCode){
         return passengerMapper.toResponseDto(getPassengerEntityByIdentificationNumber(identificationNumber, nationalityIsoCode));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponsePassengerDto> getAllPassengers(int page, int size) {
+        Sort sort = Sort.by(Sort.Order.asc("firstName"), Sort.Order.asc("lastName"));
+        return passengerRepository.findAll(PageRequest.of(page, size, sort))
+                .map(passengerMapper::toResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponsePassengerDto> getPassengersByFlightId(Long flightId, int page, int size) {
+        Sort sort = Sort.by(Sort.Order.asc("firstName"), Sort.Order.asc("lastName"));
+        return passengerRepository.findDistinctByPassengerReservationsFlightId(flightId, PageRequest.of(page, size, sort))
+                .map(passengerMapper::toResponseDto);
     }
 }

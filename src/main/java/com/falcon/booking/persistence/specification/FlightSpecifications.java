@@ -20,6 +20,15 @@ public class FlightSpecifications {
         };
     }
 
+    public static Specification<FlightEntity> hasFlightNumber(String flightNumber) {
+        return (root, query, cb)->{
+            if(flightNumber==null || flightNumber.isBlank()) {
+                return cb.conjunction();
+            }
+            else return cb.equal(root.join("route").get("flightNumber"), flightNumber);
+        };
+    }
+
     public static Specification<FlightEntity> hasStatus(FlightStatus status) {
 
         return (root, query, cb)->{

@@ -70,6 +70,16 @@ public class FlightQueryService {
         return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<ResponseFlightDto> getAllFlightsPaginated(String flightNumber, FlightStatus flightStatus, int page, int size) {
+        Specification<FlightEntity> spec = Specification.allOf();
+        spec = spec.and(FlightSpecifications.hasFlightNumber(flightNumber));
+        spec = spec.and(FlightSpecifications.hasStatus(flightStatus));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "departureDateTime"));
+        return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);
+    }
+
     public List<ResponseFlightDto> getAllFlightsByOriginDestinationAndDate(String originIataCode, String destinationIataCode, LocalDate date, FlightStatus status) {
         AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(originIataCode);
         if (status == null) status = FlightStatus.SCHEDULED;

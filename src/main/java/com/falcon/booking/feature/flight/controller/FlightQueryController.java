@@ -93,6 +93,34 @@ public class FlightQueryController {
     }
 
 
+    @Operation(summary = "Get all flights paginated",
+            description = "Returns a paginated list of all flights ordered from newest to oldest, optionally filtered by flight number and status.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Paginated flights retrieved successfully, even if content is empty",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid pagination parameters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/all")
+    public ResponseEntity<PagedResponse<ResponseFlightDto>> getAllFlightsPaginated(
+            @RequestParam(required = false)
+            @Parameter(description = "Route flight number", example = "AV1234")
+            String flightNumber,
+            @RequestParam(required = false)
+            @Parameter(description = "Flight status", example = "SCHEDULED")
+            FlightStatus status,
+            @RequestParam @Min(1) @NotNull
+            @Parameter(description = "Number of flight records to be returned per page", example = "10", required = true)
+            int size,
+            @RequestParam @Min(0) @NotNull
+            @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+            int page
+    ) {
+        Page<ResponseFlightDto> flights = flightQueryService.getAllFlightsPaginated(flightNumber, status, page, size);
+        return ResponseEntity.ok(PagedResponse.from(flights));
+    }
+
+
     @Operation(summary = "Search flights by route and date",
             description = "Returns a list of flights available for a given origin airport, destination airport, and departure date.")
     @ApiResponses(value = {
