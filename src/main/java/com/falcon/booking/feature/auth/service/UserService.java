@@ -1,11 +1,11 @@
 package com.falcon.booking.feature.auth.service;
 
+import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.exception.UserAlreadyExistException;
 import com.falcon.booking.feature.auth.exception.UserNotFoundException;
 import com.falcon.booking.persistence.entity.RoleEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.UserRepository;
-import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,12 +1,11 @@
 package com.falcon.booking.feature.auth.controller;
 
-import com.falcon.booking.feature.auth.controller.AuthController;
+import com.falcon.booking.feature.auth.dto.CreateUserDto;
+import com.falcon.booking.feature.auth.dto.LoginRequestDto;
+import com.falcon.booking.feature.auth.dto.LoginResponseDto;
 import com.falcon.booking.feature.auth.exception.UserAlreadyExistException;
 import com.falcon.booking.security.jwt.JwtFilter;
 import com.falcon.booking.security.service.AuthService;
-import com.falcon.booking.feature.auth.dto.LoginRequestDto;
-import com.falcon.booking.feature.auth.dto.LoginResponseDto;
-import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +17,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static org.mockito.BDDMockito.doNothing;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -96,8 +93,8 @@ public class AuthControllerTest {
                         """));
 
         response.andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0].type").exists())
-                .andExpect(jsonPath("$[0].message").exists());
+                .andExpect(jsonPath("$.type").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @DisplayName("Should return 201 created when register client is successful")

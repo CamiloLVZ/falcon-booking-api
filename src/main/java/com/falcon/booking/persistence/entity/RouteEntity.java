@@ -1,8 +1,8 @@
 package com.falcon.booking.persistence.entity;
 
+import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.feature.route.exception.RouteInvalidStatusChangeException;
 import com.falcon.booking.feature.route.exception.RouteNotActivableException;
-import com.falcon.booking.common.enums.RouteStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

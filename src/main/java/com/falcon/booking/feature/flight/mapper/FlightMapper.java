@@ -1,10 +1,9 @@
 package com.falcon.booking.feature.flight.mapper;
 
-import com.falcon.booking.feature.airplaneType.mapper.AirplaneTypeMapper;
-import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
+import com.falcon.booking.feature.airplaneType.mapper.AirplaneTypeMapper;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
-
+import com.falcon.booking.persistence.entity.FlightEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

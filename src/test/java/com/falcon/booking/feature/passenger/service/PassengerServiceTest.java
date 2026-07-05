@@ -1,16 +1,16 @@
 package com.falcon.booking.feature.passenger.service;
 
+import com.falcon.booking.common.enums.PassengerGender;
+import com.falcon.booking.feature.country.service.CountryService;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.falcon.booking.feature.passenger.exception.PassengerAlreadyExistsException;
 import com.falcon.booking.feature.passenger.exception.PassengerHasDifferentPassportNumberException;
 import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
-import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
-import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
-import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
-import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,13 +19,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class PassengerServiceTest {
@@ -271,5 +278,44 @@ public class PassengerServiceTest {
         assertThat(passengerEntity.getPassportNumber()).isEqualTo("AB9999");
         assertThat(result).isEqualTo(responsePassengerDto);
         verify(passengerRepository, never()).save(passengerEntity);
+    }
+
+    @DisplayName("Should return paginated page of all passengers sorted by name")
+    @Test
+    void shouldReturnPagedPassengers_getAllPassengers() {
+        CountryEntity country = createCountry("CO");
+        PassengerEntity passengerEntity = createPassenger("10001", "AB1234", country);
+        ResponsePassengerDto responseDto = new ResponsePassengerDto(1L, "Juan", "Perez",
+                PassengerGender.M, "CO", LocalDate.of(1990, 1, 10), "AB1234", "10001");
+
+        Page<PassengerEntity> entityPage = new PageImpl<>(List.of(passengerEntity),
+                PageRequest.of(0, 10, Sort.by(Sort.Order.asc("firstName"), Sort.Order.asc("lastName"))), 1);
+        given(passengerRepository.findAll(any(PageRequest.class))).willReturn(entityPage);
+        given(passengerMapper.toResponseDto(passengerEntity)).willReturn(responseDto);
+
+        Page<ResponsePassengerDto> result = passengerService.getAllPassengers(0, 10);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).firstName()).isEqualTo("Juan");
+    }
+
+    @DisplayName("Should return paginated page of passengers filtered by flight")
+    @Test
+    void shouldReturnPagedPassengers_getPassengersByFlightId() {
+        CountryEntity country = createCountry("CO");
+        PassengerEntity passengerEntity = createPassenger("10001", "AB1234", country);
+        ResponsePassengerDto responseDto = new ResponsePassengerDto(1L, "Juan", "Perez",
+                PassengerGender.M, "CO", LocalDate.of(1990, 1, 10), "AB1234", "10001");
+
+        Page<PassengerEntity> entityPage = new PageImpl<>(List.of(passengerEntity),
+                PageRequest.of(0, 10, Sort.by(Sort.Order.asc("firstName"), Sort.Order.asc("lastName"))), 1);
+        given(passengerRepository.findDistinctByPassengerReservationsFlightId(any(Long.class), any(PageRequest.class)))
+                .willReturn(entityPage);
+        given(passengerMapper.toResponseDto(passengerEntity)).willReturn(responseDto);
+
+        Page<ResponsePassengerDto> result = passengerService.getPassengersByFlightId(5L, 0, 10);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).identificationNumber()).isEqualTo("10001");
     }
 }

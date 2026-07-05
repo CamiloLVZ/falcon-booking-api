@@ -1,13 +1,13 @@
 package com.falcon.booking.feature.airport.service;
 
 import com.falcon.booking.common.utils.StringNormalizer;
+import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.feature.airport.exception.AirportNotFoundException;
 import com.falcon.booking.feature.airport.mapper.AirportMapper;
 import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.AirportRepository;
-import com.falcon.booking.feature.airport.dto.AirportDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

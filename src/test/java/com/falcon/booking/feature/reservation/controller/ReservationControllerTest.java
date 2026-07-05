@@ -1,7 +1,5 @@
 package com.falcon.booking.feature.reservation.controller;
 
-import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
-import com.falcon.booking.feature.reservation.service.ReservationService;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
@@ -14,8 +12,11 @@ import com.falcon.booking.feature.reservation.dto.AddPassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.AddReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
+import com.falcon.booking.feature.reservation.service.ReservationCommandService;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +37,10 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(ReservationController.class)
@@ -54,7 +53,12 @@ class ReservationControllerTest {
     private JwtUtil jwtUtil;
 
     @MockitoBean
-    private ReservationService reservationService;
+    private ReservationQueryService reservationQueryService;
+
+    @MockitoBean
+    private ReservationCommandService reservationCommandService;
+
+
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -97,7 +101,7 @@ class ReservationControllerTest {
     @Test
     void shouldReturn200_getReservationByNumber() throws Exception {
         ResponseReservationDto dto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
-        given(reservationService.getReservationByNumber("ABC123")).willReturn(dto);
+        given(reservationQueryService.getReservationByNumber("ABC123")).willReturn(dto);
 
         ResultActions response = mockMvc.perform(get("/v1/reservations/ABC123").accept(MediaType.APPLICATION_JSON));
 
@@ -109,7 +113,7 @@ class ReservationControllerTest {
     @DisplayName("Should return 404 when reservation does not exist")
     @Test
     void shouldReturn404_getReservationByNumber() throws Exception {
-        given(reservationService.getReservationByNumber("ABC123")).willThrow(new ReservationNotFoundException("ABC123"));
+        given(reservationQueryService.getReservationByNumber("ABC123")).willThrow(new ReservationNotFoundException("ABC123"));
 
         ResultActions response = mockMvc.perform(get("/v1/reservations/ABC123").accept(MediaType.APPLICATION_JSON));
 
@@ -122,7 +126,7 @@ class ReservationControllerTest {
     void shouldReturn200_getAllReservationsByFlight() throws Exception {
         ResponseReservationDto dto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
         Page<ResponseReservationDto> reservations = new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1);
-        given(reservationService.getAllReservationsByFlight(10L, 0, 10)).willReturn(reservations);
+        given(reservationQueryService.getAllReservationsByFlight(10L, 0, 10)).willReturn(reservations);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/reservations/flight/10")
@@ -147,7 +151,7 @@ class ReservationControllerTest {
         AddReservationDto request = new AddReservationDto(10L, "contact@test.com",
                 List.of(new AddPassengerReservationDto(passenger, 12)));
         ResponseReservationDto responseDto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
-        given(reservationService.addReservation(request)).willReturn(responseDto);
+        given(reservationCommandService.addReservation(request)).willReturn(responseDto);
 
         ResultActions response = mockMvc.perform(
                 post("/v1/reservations")
@@ -182,7 +186,7 @@ class ReservationControllerTest {
     @Test
     void shouldReturn200_cancelPassengerByIdentification() throws Exception {
         ResponseReservationDto dto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
-        given(reservationService.cancelPassengerReservationByIdentificationNumber("ABC123", "110011", "CO"))
+        given(reservationCommandService.cancelPassengerReservationByIdentificationNumber("ABC123", "110011", "CO"))
                 .willReturn(dto);
 
         ResultActions response = mockMvc.perform(

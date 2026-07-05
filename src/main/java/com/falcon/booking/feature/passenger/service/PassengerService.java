@@ -1,19 +1,22 @@
 package com.falcon.booking.feature.passenger.service;
 
 import com.falcon.booking.common.utils.StringNormalizer;
-import com.falcon.booking.feature.passenger.exception.PassengerAlreadyExistsException;
-import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
-import com.falcon.booking.feature.passenger.exception.PassengerHasDifferentPassportNumberException;
 import com.falcon.booking.feature.country.service.CountryService;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
+import com.falcon.booking.feature.passenger.exception.PassengerAlreadyExistsException;
+import com.falcon.booking.feature.passenger.exception.PassengerHasDifferentPassportNumberException;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
-import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
-import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -135,5 +138,19 @@ public class PassengerService {
     @Transactional(readOnly = true)
     public ResponsePassengerDto getPassengerByIdentificationNumber(String identificationNumber, String nationalityIsoCode){
         return passengerMapper.toResponseDto(getPassengerEntityByIdentificationNumber(identificationNumber, nationalityIsoCode));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponsePassengerDto> getAllPassengers(int page, int size) {
+        Sort sort = Sort.by(Sort.Order.asc("firstName"), Sort.Order.asc("lastName"));
+        return passengerRepository.findAll(PageRequest.of(page, size, sort))
+                .map(passengerMapper::toResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponsePassengerDto> getPassengersByFlightId(Long flightId, int page, int size) {
+        Sort sort = Sort.by(Sort.Order.asc("firstName"), Sort.Order.asc("lastName"));
+        return passengerRepository.findDistinctByPassengerReservationsFlightId(flightId, PageRequest.of(page, size, sort))
+                .map(passengerMapper::toResponseDto);
     }
 }

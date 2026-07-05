@@ -2,7 +2,10 @@ package com.falcon.booking.feature.passenger.dto;
 
 import com.falcon.booking.common.enums.PassengerGender;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 

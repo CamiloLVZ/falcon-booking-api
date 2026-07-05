@@ -1,15 +1,19 @@
 package com.falcon.booking.feature.route.controller;
 
-import com.falcon.booking.feature.flight.service.FlightService;
-import com.falcon.booking.feature.route.dto.*;
-import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
-import com.falcon.booking.feature.route.service.RouteService;
 import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
-import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
-import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
+import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
+import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
+import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
+import com.falcon.booking.feature.route.dto.CreateRouteDto;
+import com.falcon.booking.feature.route.dto.ResponseRouteDto;
+import com.falcon.booking.feature.route.dto.UpdateRouteDto;
+import com.falcon.booking.feature.route.service.RouteActivationOrchestrator;
+import com.falcon.booking.feature.route.service.RouteCommandService;
+import com.falcon.booking.feature.route.service.RouteQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -39,14 +43,18 @@ import java.util.List;
 @RequestMapping("/v1/routes")
 public class RouteController {
 
-    private final RouteService routeService;
-    private final FlightService flightService;
+    private final RouteQueryService routeQueryService;
+    private final RouteCommandService routeCommandService;
+    private final FlightQueryService flightQueryService;
+    private final FlightGenerationService flightGenerationService;
     private final RouteActivationOrchestrator routeActivationOrchestrator;
 
     @Autowired
-    public RouteController(RouteService routeService, FlightService flightService, RouteActivationOrchestrator routeActivationOrchestrator) {
-        this.routeService = routeService;
-        this.flightService = flightService;
+    public RouteController(RouteQueryService routeQueryService, RouteCommandService routeCommandService, FlightQueryService flightQueryService, FlightGenerationService flightGenerationService, RouteActivationOrchestrator routeActivationOrchestrator) {
+        this.routeQueryService = routeQueryService;
+        this.routeCommandService = routeCommandService;
+        this.flightQueryService = flightQueryService;
+        this.flightGenerationService = flightGenerationService;
         this.routeActivationOrchestrator = routeActivationOrchestrator;
     }
 
@@ -75,7 +83,7 @@ public class RouteController {
                                                                @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                int page) {
 
-        Page<ResponseRouteDto> routes = routeService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status, page, size);
+        Page<ResponseRouteDto> routes = routeQueryService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status, page, size);
         return ResponseEntity.ok(PagedResponse.from(routes));
 
     }
@@ -95,7 +103,7 @@ public class RouteController {
                                                                    @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                                    @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                    String flightNumber) {
-        return ResponseEntity.ok(routeService.getRouteByFlightNumber(flightNumber));
+        return ResponseEntity.ok(routeQueryService.getRouteByFlightNumber(flightNumber));
     }
 
     @Operation(summary = "Get origin airports for search",
@@ -106,7 +114,7 @@ public class RouteController {
     })
     @GetMapping("/search/origins")
     public ResponseEntity<List<AirportSearchOptionDto>> getOriginAirports() {
-        return ResponseEntity.ok(routeService.getOriginAirports());
+        return ResponseEntity.ok(routeQueryService.getOriginAirports());
     }
 
     @Operation(summary = "Get destination airports for search",
@@ -123,7 +131,7 @@ public class RouteController {
                                                                                @Size(min = 3, max = 3, message = "Iata Code must be a 3 letter String")
                                                                                @Parameter(description = "Origin airport IATA code used to find available destinations", example = "BOG")
                                                                                String originIataCode) {
-        return ResponseEntity.ok(routeService.getDestinationAirports(originIataCode));
+        return ResponseEntity.ok(routeQueryService.getDestinationAirports(originIataCode));
     }
 
      @Operation(summary = "Create a route",
@@ -147,7 +155,7 @@ public class RouteController {
                                                              description = "Data for creating a route",
                                                              required = true)
                                                      CreateRouteDto createRouteDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(routeService.addRoute(createRouteDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(routeCommandService.addRoute(createRouteDto));
     }
 
      @Operation(summary = "Update route",
@@ -174,7 +182,7 @@ public class RouteController {
                                                                 description = "Data for updating a route",
                                                                 required = true)
                                                         UpdateRouteDto updateRouteDto) {
-        return ResponseEntity.ok(routeService.updateRoute(flightNumber, updateRouteDto));
+        return ResponseEntity.ok(routeCommandService.updateRoute(flightNumber, updateRouteDto));
     }
 
      @Operation(summary = "Activate route",
@@ -220,55 +228,11 @@ public class RouteController {
                                                           @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
                                                           @Parameter(description = "Route unique flight number", example = "AV1234")
                                                           String flightNumber) {
-        return ResponseEntity.ok(routeService.deactivateRoute(flightNumber));
+        return ResponseEntity.ok(routeCommandService.deactivateRoute(flightNumber));
     }
 
 
-     @Operation(summary = "Set route operating schedules",
-             description = "Defines the set of route departure local times and week days used for flight generation. Requires authentication with JWT token and ADMIN role",
-             security = @SecurityRequirement(name = "bearerAuth"))
-     @ApiResponses(value = {
-             @ApiResponse(responseCode = "200", description = "Route schedules configured successfully",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = RouteWithSchedulesDto.class))),
-             @ApiResponse(responseCode = "400", description = "Error by invalid schedule payload",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-             @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-             @ApiResponse(responseCode = "403", description = "Insufficient permissions to configure route schedules",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-             @ApiResponse(responseCode = "404", description = "Route not found",
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-     })
-    @PatchMapping("/{flightNumber}/schedules")
-    public ResponseEntity<RouteWithSchedulesDto> setRouteOperatingSchedules(@PathVariable
-                                                                            @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
-                                                                            @Parameter(description = "Route unique flight number", example = "AV1234")
-                                                                            String flightNumber,
-                                                                            @RequestBody
-                                                                            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                                                                    description = "Data for setting route schedules and week days",
-                                                                                    required = true)
-                                                                            AddRouteScheduleRequestDto schedules) {
-        return ResponseEntity.ok(routeService.setRouteOperatingSchedules(flightNumber, schedules));
-    }
 
-    @Operation(summary = "Get route schedules",
-            description = "Returns configured week days and local schedules for a route.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Route schedules retrieved successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = RouteWithSchedulesDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid flight number format",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Route not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @GetMapping("/{flightNumber}/schedules")
-    public ResponseEntity<RouteWithSchedulesDto> getRouteSchedules(@PathVariable
-                                                                   @Size(min = 5, max = 7, message = "Flight number must be an alphanumeric value with 5 to 7 characters")
-                                                                   @Parameter(description = "Route unique flight number", example = "AV1234")
-                                                                   String flightNumber) {
-        return ResponseEntity.ok(routeService.getRouteWithSchedules(flightNumber));
-    }
 
     @Operation(summary = "Get route flights in a specific date",
             description = "Returns generated flights for a route scheduled in a specific date (origin airport local date).")
@@ -295,7 +259,7 @@ public class RouteController {
                                                                                 @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                                 int page
     ) {
-        Page<ResponseFlightDto> flights = flightService.getAllFlightsByRouteAndDate(flightNumber, date, page, size);
+        Page<ResponseFlightDto> flights = flightQueryService.getAllFlightsByRouteAndDate(flightNumber, date, page, size);
         return ResponseEntity.ok(PagedResponse.from(flights));
     }
 
@@ -321,7 +285,7 @@ public class RouteController {
                                                                                @Parameter(description = "Route unique flight number", example = "AV1234")
                                                                                String flightNumber) {
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startRouteFlightGeneration(flightNumber));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightGenerationService.startRouteFlightGeneration(flightNumber));
     }
 
 
@@ -338,7 +302,7 @@ public class RouteController {
      })
     @PostMapping("/generateFlights")
     public ResponseEntity<ResponseFlightsGenerationDto> generateFlightForAllRoutes() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightService.startGlobalFlightGeneration());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(flightGenerationService.startGlobalFlightGeneration());
     }
 
 }

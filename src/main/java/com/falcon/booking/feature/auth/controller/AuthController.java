@@ -1,10 +1,10 @@
 package com.falcon.booking.feature.auth.controller;
 
-import com.falcon.booking.security.service.AuthService;
+import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.dto.LoginRequestDto;
 import com.falcon.booking.feature.auth.dto.LoginResponseDto;
-import com.falcon.booking.feature.auth.dto.CreateUserDto;
-import com.falcon.booking.common.web.Error;
+import com.falcon.booking.security.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

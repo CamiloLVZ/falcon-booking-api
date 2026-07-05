@@ -1,15 +1,15 @@
 package com.falcon.booking.feature.airplaneType.service;
 
-import com.falcon.booking.feature.airplaneType.exception.AirplaneNotFoundException;
-import com.falcon.booking.feature.airplaneType.exception.AirplaneTypeAlreadyExistsException;
-import com.falcon.booking.feature.airplaneType.mapper.AirplaneTypeMapper;
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
 import com.falcon.booking.feature.airplaneType.dto.CorrectAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.UpdateAirplaneTypeDto;
+import com.falcon.booking.feature.airplaneType.exception.AirplaneNotFoundException;
+import com.falcon.booking.feature.airplaneType.exception.AirplaneTypeAlreadyExistsException;
+import com.falcon.booking.feature.airplaneType.mapper.AirplaneTypeMapper;
+import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
+import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

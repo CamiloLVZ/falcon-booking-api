@@ -1,11 +1,11 @@
 package com.falcon.booking.feature.reservation.controller;
 
-import com.falcon.booking.feature.reservation.service.ReservationService;
-import com.falcon.booking.feature.reservation.dto.AddReservationDto;
-import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
-import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
+import com.falcon.booking.feature.reservation.dto.AddReservationDto;
+import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
+import com.falcon.booking.feature.reservation.service.ReservationCommandService;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,11 +30,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/reservations")
 @Validated
 public class ReservationController {
-    private final ReservationService reservationService;
+    private final ReservationQueryService reservationQueryService;
+    private final ReservationCommandService reservationCommandService;
 
     @Autowired
-    public ReservationController(ReservationService reservationService) {
-        this.reservationService = reservationService;
+    public ReservationController(ReservationQueryService reservationQueryService, ReservationCommandService reservationCommandService) {
+        this.reservationQueryService = reservationQueryService;
+        this.reservationCommandService = reservationCommandService;
     }
 
     @Operation(summary = "Get a reservation by number",
@@ -51,7 +53,7 @@ public class ReservationController {
     public ResponseEntity<ResponseReservationDto> getReservation(@PathVariable
                                                                  @Parameter(description = "Reservation unique number", example = "ABC123")
                                                                  String reservationNumber) {
-        return ResponseEntity.ok(reservationService.getReservationByNumber(reservationNumber));
+        return ResponseEntity.ok(reservationQueryService.getReservationByNumber(reservationNumber));
     }
 
     @Operation(summary = "Get reservations by flight",
@@ -74,7 +76,7 @@ public class ReservationController {
                                                                                    @RequestParam @Min(0) @NotNull
                                                                                    @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                                    int page) {
-        Page<ResponseReservationDto> reservations = reservationService.getAllReservationsByFlight(flightId, page, size);
+        Page<ResponseReservationDto> reservations = reservationQueryService.getAllReservationsByFlight(flightId, page, size);
         return ResponseEntity.ok(PagedResponse.from(reservations));
     }
 
@@ -92,7 +94,7 @@ public class ReservationController {
     public ResponseEntity<ResponseReservationDto> cancelReservation(@PathVariable
                                                                     @Parameter(description = "Reservation unique number", example = "ABC123")
                                                                     String reservationNumber) {
-        return ResponseEntity.ok(reservationService.cancelReservation(reservationNumber));
+        return ResponseEntity.ok(reservationCommandService.cancelReservation(reservationNumber));
     }
 
     @Operation(summary = "Cancel passenger reservation by identification",
@@ -115,7 +117,7 @@ public class ReservationController {
                                                                              @RequestParam @NotBlank @Size(min = 2, max = 2)
                                                                              @Parameter(description = "Country two character ISO code", example = "CO")
                                                                              String countryIsoCode) {
-        return ResponseEntity.ok(reservationService.cancelPassengerReservationByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
+        return ResponseEntity.ok(reservationCommandService.cancelPassengerReservationByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
     }
 
     @Operation(summary = "Cancel passenger reservation by passport",
@@ -135,7 +137,7 @@ public class ReservationController {
                                                                              @PathVariable
                                                                              @Parameter(description = "Passenger passport number", example = "A1234567")
                                                                              String passportNumber) {
-        return ResponseEntity.ok(reservationService.cancelPassengerReservationByPassportNumber(reservationNumber, passportNumber));
+        return ResponseEntity.ok(reservationCommandService.cancelPassengerReservationByPassportNumber(reservationNumber, passportNumber));
     }
 
     @Operation(summary = "Create a reservation",
@@ -154,53 +156,9 @@ public class ReservationController {
                                                                          description = "Data for creating a reservation",
                                                                          required = true)
                                                                  AddReservationDto addReservationDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservationService.addReservation(addReservationDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservationCommandService.addReservation(addReservationDto));
     }
 
-    @Operation(summary = "Check in passenger",
-            description = "Marks a passenger reservation as checked in using passenger identification and country ISO code.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Passenger checked in successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerReservationDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid query parameters or check-in window",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Reservation or passenger not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PatchMapping("/{reservationNumber}/check-in")
-    public ResponseEntity<ResponsePassengerReservationDto> checkInPassenger(@PathVariable
-                                                                            @Parameter(description = "Reservation unique number", example = "ABC123")
-                                                                            String reservationNumber,
-                                                                            @RequestParam @NotBlank
-                                                                            @Parameter(description = "Passenger identification number", example = "1032456789")
-                                                                            String identificationNumber,
-                                                                            @RequestParam @NotBlank @Size(min = 2, max = 2)
-                                                                            @Parameter(description = "Country two character ISO code", example = "CO")
-                                                                            String countryIsoCode){
-        return ResponseEntity.ok(reservationService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
-    }
 
-    @Operation(summary = "Board passenger",
-            description = "Marks a passenger reservation as boarded using passenger identification and country ISO code.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Passenger boarded successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerReservationDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid query parameters or boarding window",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Reservation or passenger not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PatchMapping("/{reservationNumber}/board")
-    public ResponseEntity<ResponsePassengerReservationDto> boardPassenger(@PathVariable
-                                                                          @Parameter(description = "Reservation unique number", example = "ABC123")
-                                                                          String reservationNumber,
-                                                                          @RequestParam @NotBlank
-                                                                          @Parameter(description = "Passenger identification number", example = "1032456789")
-                                                                          String identificationNumber,
-                                                                          @RequestParam @NotBlank @Size(min = 2, max = 2)
-                                                                          @Parameter(description = "Country two character ISO code", example = "CO")
-                                                                          String countryIsoCode){
-        return ResponseEntity.ok(reservationService.boardByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
-    }
 
 }

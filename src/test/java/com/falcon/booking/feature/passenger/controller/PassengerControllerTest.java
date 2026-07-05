@@ -1,14 +1,14 @@
 package com.falcon.booking.feature.passenger.controller;
 
-import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
-import com.falcon.booking.feature.passenger.service.PassengerService;
-import com.falcon.booking.feature.reservation.service.ReservationService;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
+import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,17 +21,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import com.falcon.booking.common.web.PagedResponse;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(PassengerController.class)
@@ -50,7 +49,7 @@ public class PassengerControllerTest {
     private PassengerService passengerService;
 
     @MockitoBean
-    private ReservationService reservationService;
+    private ReservationQueryService reservationQueryService;
 
     private ResponsePassengerDto createPassengerDto() {
         return new ResponsePassengerDto(
@@ -131,7 +130,7 @@ public class PassengerControllerTest {
     @Test
     void shouldReturn200AndReservationList_getAllReservationsByPassenger() throws Exception {
         Page<ResponseReservationDto> reservations = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-        given(reservationService.getAllReservationsByPassengerIdentificationNumber("10001", "CO", 0, 10))
+        given(reservationQueryService.getAllReservationsByPassengerIdentificationNumber("10001", "CO", 0, 10))
                 .willReturn(reservations);
 
         ResultActions response = mockMvc.perform(
@@ -240,6 +239,47 @@ public class PassengerControllerTest {
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("passenger-does-not-exist"))
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    @DisplayName("Should return 200 OK with paginated passengers when getting all")
+    @Test
+    void shouldReturn200AndPagedPassengers_getAllPassengers() throws Exception {
+        ResponsePassengerDto passengerDto = createPassengerDto();
+        Page<ResponsePassengerDto> page = new PageImpl<>(List.of(passengerDto), PageRequest.of(0, 10), 1);
+        given(passengerService.getAllPassengers(0, 10)).willReturn(page);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/passengers")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[0].firstName").value("JUAN"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.page").value(0));
+    }
+
+    @DisplayName("Should return 200 OK with paginated passengers when getting by flight")
+    @Test
+    void shouldReturn200AndPagedPassengers_getPassengersByFlight() throws Exception {
+        ResponsePassengerDto passengerDto = createPassengerDto();
+        Page<ResponsePassengerDto> page = new PageImpl<>(List.of(passengerDto), PageRequest.of(0, 10), 1);
+        given(passengerService.getPassengersByFlightId(5L, 0, 10)).willReturn(page);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/passengers/flight/{flightId}", 5L)
+                        .param("page", "0")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[0].identificationNumber").value("10001"))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 }
 

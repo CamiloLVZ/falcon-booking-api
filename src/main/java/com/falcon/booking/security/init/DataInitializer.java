@@ -1,8 +1,8 @@
 package com.falcon.booking.security.init;
 
+import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.service.RoleService;
 import com.falcon.booking.feature.auth.service.UserService;
-import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;

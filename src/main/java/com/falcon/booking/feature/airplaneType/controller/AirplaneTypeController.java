@@ -1,12 +1,12 @@
 package com.falcon.booking.feature.airplaneType.controller;
 
-import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
+import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.airplaneType.dto.CorrectAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
+import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.UpdateAirplaneTypeDto;
-import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

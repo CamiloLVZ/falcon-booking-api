@@ -1,9 +1,9 @@
 package com.falcon.booking.feature.flightGeneration.service;
 
-import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationPartialFailureException;
-import com.falcon.booking.feature.route.exception.RouteNotFoundException;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationPartialFailureException;
+import com.falcon.booking.feature.route.exception.RouteNotFoundException;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;

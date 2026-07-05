@@ -1,15 +1,10 @@
 package com.falcon.booking.feature.flightGeneration.service;
 
-import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationPartialFailureException;
-import com.falcon.booking.feature.route.exception.RouteNotFoundException;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.entity.AirportEntity;
-import com.falcon.booking.persistence.entity.FlightEntity;
-import com.falcon.booking.persistence.entity.RouteDayEntity;
-import com.falcon.booking.persistence.entity.RouteEntity;
-import com.falcon.booking.persistence.entity.RouteScheduleEntity;
+import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationPartialFailureException;
+import com.falcon.booking.feature.route.exception.RouteNotFoundException;
+import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import com.falcon.booking.persistence.repository.RouteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,30 +17,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.*;
+import java.util.*;
 import java.util.concurrent.Executor;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willAnswer;
-import static org.mockito.BDDMockito.willDoNothing;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.atLeastOnce;
 
 @ExtendWith(MockitoExtension.class)

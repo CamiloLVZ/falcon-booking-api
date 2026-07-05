@@ -1,11 +1,10 @@
 package com.falcon.booking.feature.country.service;
 
+import com.falcon.booking.feature.country.dto.CountryDto;
 import com.falcon.booking.feature.country.exception.CountryNotFoundException;
 import com.falcon.booking.feature.country.mapper.CountryMapper;
-import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.CountryRepository;
-import com.falcon.booking.feature.country.dto.CountryDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.flight.scheduler;
 
-import com.falcon.booking.feature.flight.service.FlightService;
+import com.falcon.booking.feature.flight.service.FlightStatusService;
+import com.falcon.booking.feature.flightGeneration.service.FlightGenerationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +15,20 @@ import java.time.LocalDate;
 public class FlightScheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(FlightScheduler.class);
-    private final FlightService flightService;
+    private final FlightStatusService flightStatusService;
+    private final FlightGenerationService flightGenerationService;
 
     @Autowired
-    public FlightScheduler(FlightService flightService) {
-        this.flightService = flightService;
+    public FlightScheduler(FlightStatusService flightStatusService, FlightGenerationService flightGenerationService) {
+        this.flightStatusService = flightStatusService;
+        this.flightGenerationService = flightGenerationService;
     }
 
     @Scheduled(fixedRateString = "${app.flight.status.update-rate-ms:60000}")
     public void updateFlightsStatus() {
         logger.debug("Checking for flights status updates");
         try{
-            int flightsUpdated = flightService.updateFlightsStatus();
+            int flightsUpdated = flightStatusService.updateFlightsStatus();
             if(flightsUpdated > 0)
                 logger.info("flights status updated: {}", flightsUpdated);
         }catch (Exception e){
@@ -36,7 +39,7 @@ public class FlightScheduler {
     @Scheduled(cron = "0 1 0 * * *")
     public void generateFlightsForHorizonDay(){
         logger.info("Starting daily flights generation");
-        flightService.startDailyFlightGeneration(LocalDate.now());
+        flightGenerationService.startDailyFlightGeneration(LocalDate.now());
     }
 
 }

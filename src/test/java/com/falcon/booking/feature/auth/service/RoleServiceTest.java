@@ -1,7 +1,6 @@
 package com.falcon.booking.feature.auth.service;
 
 import com.falcon.booking.feature.auth.exception.RoleNotFoundException;
-import com.falcon.booking.feature.auth.service.RoleService;
 import com.falcon.booking.persistence.entity.RoleEntity;
 import com.falcon.booking.persistence.repository.RoleRepository;
 import org.junit.jupiter.api.DisplayName;

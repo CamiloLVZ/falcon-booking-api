@@ -44,7 +44,7 @@ public interface FlightRepository extends JpaRepository<FlightEntity, Long>, Jpa
     ORDER BY f.departureDateTime ASC
 """)
     @EntityGraph(attributePaths = {"airplaneType", "route", "route.airportOrigin", "route.airportDestination"})
-    Page<FlightEntity> findFlightsByAirportsAndDate(String origin, String destination, OffsetDateTime start, OffsetDateTime end, FlightStatus status, Pageable pageable);
+    List<FlightEntity> findFlightsByAirportsAndDate(String origin, String destination, OffsetDateTime start, OffsetDateTime end, FlightStatus status);
 
 
 }

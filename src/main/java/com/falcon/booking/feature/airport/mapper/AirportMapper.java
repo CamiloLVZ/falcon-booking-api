@@ -1,8 +1,8 @@
 package com.falcon.booking.feature.airport.mapper;
 
-import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
+import com.falcon.booking.persistence.entity.AirportEntity;
 import org.mapstruct.Mapper;
 
 import java.util.List;

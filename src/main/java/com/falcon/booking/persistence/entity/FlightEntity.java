@@ -1,7 +1,7 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.feature.flight.exception.FlightInvalidStatusChangeException;
 import com.falcon.booking.common.enums.FlightStatus;
+import com.falcon.booking.feature.flight.exception.FlightInvalidStatusChangeException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
