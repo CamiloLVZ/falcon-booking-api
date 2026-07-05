@@ -31,6 +31,7 @@ This project is built as a modular monolith utilizing a **Package by Feature** o
 - Dockerized packaging with a multi-stage build for reproducible deployment
 - REST API documented with OpenAPI / Swagger UI
 - Automated tests covering business logic, controller behavior, and application context bootstrapping
+- CI/CD (GitHub Actions): tests run on PRs/pushes; Docker image built and published from `main`; deployment triggered via Render webhook (secret `RENDER_DEPLOY_HOOK`).
 
 ---
 
@@ -225,18 +226,6 @@ Note: the application is deployed on a free-tier service, so the first request m
 ### Preview
 ![Swagger UI Preview](docs/swagger-preview.png)
 
-### Documentation Links
-
-- Swagger UI: `https://tu-url/swagger-ui/index.html`
-- OpenAPI JSON: `https://tu-url/v3/api-docs`
-
-For recruiter-facing presentation, the best combination is:
-
-- a live Swagger link so the project can be verified
-- a screenshot so the API is understandable immediately
-- a short note about free-tier cold start behavior
-
----
 
 This project is for educational and portfolio purposes.
 
@@ -244,5 +233,5 @@ This project is for educational and portfolio purposes.
 
 ## Author
 
-Juan Camilo Londono  
+Juan Camilo Londoño  
 Backend Developer (Java / Spring Boot)
