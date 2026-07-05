@@ -1,7 +1,7 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
-import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.persistence.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,7 +63,7 @@ public class RouteScheduleRepositoryTest {
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
         route.setDefaultAirplaneType(airplaneType);
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setStatus(RouteStatus.DRAFT);
         return routeRepository.save(route);
     }

@@ -1,6 +1,6 @@
 package com.falcon.booking.persistence.specification;
 
-import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import org.springframework.data.jpa.domain.Specification;
 

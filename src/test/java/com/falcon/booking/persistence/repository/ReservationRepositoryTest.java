@@ -1,25 +1,22 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
-import com.falcon.booking.domain.valueobject.FlightStatus;
-import com.falcon.booking.domain.valueobject.ReservationStatus;
-import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.entity.AirportEntity;
-import com.falcon.booking.persistence.entity.CountryEntity;
-import com.falcon.booking.persistence.entity.FlightEntity;
-import com.falcon.booking.persistence.entity.ReservationEntity;
-import com.falcon.booking.persistence.entity.RouteEntity;
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.FlightStatus;
+import com.falcon.booking.common.enums.ReservationStatus;
+import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.persistence.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -81,7 +78,7 @@ class ReservationRepositoryTest {
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
         route.setDefaultAirplaneType(airplaneType);
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setStatus(RouteStatus.ACTIVE);
         route = routeRepository.save(route);
 
@@ -125,9 +122,14 @@ class ReservationRepositoryTest {
         ReflectionTestUtils.setField(canceled, "status", ReservationStatus.CANCELED);
         reservationRepository.save(canceled);
 
-        List<ReservationEntity> reservations = reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED);
+        Page<ReservationEntity> reservations = reservationRepository.findAllByFlightAndStatus(
+                flight,
+                ReservationStatus.RESERVED,
+                PageRequest.of(0, 10, Sort.by("reservationDatetime").ascending())
+        );
 
-        assertThat(reservations).hasSize(1);
-        assertThat(reservations.get(0).getNumber()).isEqualTo(reserved.getNumber());
+        assertThat(reservations.getContent()).hasSize(1);
+        assertThat(reservations.getContent().get(0).getNumber()).isEqualTo(reserved.getNumber());
+        assertThat(reservations.getTotalElements()).isEqualTo(1);
     }
 }

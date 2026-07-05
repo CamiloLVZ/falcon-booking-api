@@ -1,8 +1,11 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
-import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.persistence.entity.*;
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
+import com.falcon.booking.persistence.entity.AirportEntity;
+import com.falcon.booking.persistence.entity.CountryEntity;
+import com.falcon.booking.persistence.entity.RouteEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +71,7 @@ public class RouteRepositoryTest {
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
         route.setDefaultAirplaneType(airplaneType);
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setStatus(status);
         return route;
     }
@@ -79,7 +82,7 @@ public class RouteRepositoryTest {
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
         route.setDefaultAirplaneType(airplaneType);
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setStatus(status);
         return route;
     }

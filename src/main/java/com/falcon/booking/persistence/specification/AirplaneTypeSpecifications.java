@@ -1,6 +1,6 @@
 package com.falcon.booking.persistence.specification;
 
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import org.springframework.data.jpa.domain.Specification;
 

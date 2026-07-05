@@ -1,21 +1,16 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.domain.valueobject.AirplaneTypeStatus;
-import com.falcon.booking.domain.valueobject.FlightStatus;
-import com.falcon.booking.domain.valueobject.PassengerGender;
-import com.falcon.booking.domain.valueobject.RouteStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.entity.AirportEntity;
-import com.falcon.booking.persistence.entity.CountryEntity;
-import com.falcon.booking.persistence.entity.FlightEntity;
-import com.falcon.booking.persistence.entity.PassengerEntity;
-import com.falcon.booking.persistence.entity.PassengerReservationEntity;
-import com.falcon.booking.persistence.entity.ReservationEntity;
-import com.falcon.booking.persistence.entity.RouteEntity;
+import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.common.enums.FlightStatus;
+import com.falcon.booking.common.enums.PassengerGender;
+import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.persistence.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
@@ -88,7 +83,7 @@ class PassengerReservationRepositoryTest {
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
         route.setDefaultAirplaneType(airplaneType);
-        route.setLengthMinutes(60);
+        route.setDurationMinutes(60);
         route.setStatus(RouteStatus.ACTIVE);
         route = routeRepository.save(route);
 
@@ -147,8 +142,9 @@ class PassengerReservationRepositoryTest {
         passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationOne, 5));
         passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationTwo, 6));
 
-        List<PassengerReservationEntity> result = passengerReservationRepository.findAllByPassenger(passenger);
+        Page<PassengerReservationEntity> result = passengerReservationRepository.findAllByPassenger(passenger, PageRequest.of(0, 10));
 
-        assertThat(result).hasSize(2);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
     }
 }

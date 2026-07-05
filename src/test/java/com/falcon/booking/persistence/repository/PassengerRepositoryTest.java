@@ -1,6 +1,6 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.domain.valueobject.PassengerGender;
+import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import org.junit.jupiter.api.DisplayName;

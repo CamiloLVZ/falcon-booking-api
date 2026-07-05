@@ -3,6 +3,8 @@ package com.falcon.booking.persistence.repository;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,9 +17,10 @@ public interface PassengerReservationRepository extends JpaRepository<PassengerR
 
     List<PassengerReservationEntity> findAllBySeatNumberAndFlight(Integer seatNumber, FlightEntity flight);
 
-    @Query("SELECT pr FROM PassengerReservationEntity pr " +
+    @Query(value = "SELECT pr FROM PassengerReservationEntity pr " +
             "JOIN FETCH pr.reservation r " +
             "WHERE pr.passenger = :passenger " +
-            "ORDER BY r.datetimeReservation ASC")
-    List<PassengerReservationEntity> findAllByPassenger(@Param("passenger") PassengerEntity passenger);
+            "ORDER BY r.reservationDatetime ASC",
+            countQuery = "SELECT COUNT(pr) FROM PassengerReservationEntity pr WHERE pr.passenger = :passenger")
+    Page<PassengerReservationEntity> findAllByPassenger(@Param("passenger") PassengerEntity passenger, Pageable pageable);
 }

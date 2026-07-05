@@ -1,8 +1,8 @@
 package com.falcon.booking.persistence.entity;
 
 
-import com.falcon.booking.domain.valueobject.FlightGenerationStatus;
-import com.falcon.booking.domain.valueobject.FlightGenerationType;
+import com.falcon.booking.common.enums.FlightGenerationStatus;
+import com.falcon.booking.common.enums.FlightGenerationType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

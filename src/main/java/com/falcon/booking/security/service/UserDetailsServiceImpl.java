@@ -1,7 +1,7 @@
 package com.falcon.booking.security.service;
 
-import com.falcon.booking.domain.exception.User.UserNotFoundException;
-import com.falcon.booking.domain.service.UserService;
+import com.falcon.booking.feature.auth.exception.UserNotFoundException;
+import com.falcon.booking.feature.auth.service.UserService;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.security.model.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,13 +1,14 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.domain.common.utils.StringNormalizer;
-import com.falcon.booking.domain.valueobject.PassengerGender;
+import com.falcon.booking.common.enums.PassengerGender;
+import com.falcon.booking.common.utils.StringNormalizer;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -55,6 +56,8 @@ public class PassengerEntity {
     @Column(name = "identification_number", length = 20, nullable = false)
     private String identificationNumber;
 
+    @OneToMany(mappedBy = "passenger")
+    private List<PassengerReservationEntity> passengerReservations;
 
     public void setFirstName(String firstName) {
         this.firstName = StringNormalizer.normalize(firstName);

@@ -1,6 +1,6 @@
 # Falcon Airlines - Flight Reservation System (Backend)
 
-Backend application for the flight management system of Falcon Airlines, a fictional airline company. The system manages routes, flights, seat availability, reservations, and admin operations. It is designed as a portfolio-ready backend focused on maintainability, domain modeling, and real-world operational flows.
+Backend application for the flight management system of Falcon Airlines, a fictional airline company. The system manages routes, flights, seat availability, reservations, and admin operations. It is designed as a portfolio-ready backend focused on maintainability, modularity, and real-world operational flows.
 
 ---
 
@@ -17,7 +17,7 @@ The Flight Reservation System handles:
 - Flight seat reservations
 - Authentication and authorization for admin operations
 
-This project is built as a modular monolith with a layered architecture and a clean architecture mindset, with emphasis on clarity, extensibility, and realistic airline domain rules.
+This project is built as a modular monolith utilizing a **Package by Feature** organization combined with a **Layered Architecture** approach for cross-cutting concerns. This structure emphasizes high cohesion, clarity, extensibility, and realistic airline business rules.
 
 ---
 
@@ -26,25 +26,24 @@ This project is built as a modular monolith with a layered architecture and a cl
 - JWT-based authentication and role-based authorization for protected admin operations
 - Automatic flight generation workflows with configurable planning horizon
 - Reservation flow with passenger management and seat assignment rules
-- Layered backend architecture separating web, domain, persistence, config, and security concerns
+- Hybrid backend architecture separating functional features (controllers, services, DTOs) from persistence, config, and security concerns
 - Flyway-driven database versioning for reproducible schema evolution
 - Dockerized packaging with a multi-stage build for reproducible deployment
 - REST API documented with OpenAPI / Swagger UI
-- Automated tests covering domain logic, controller behavior, and application context bootstrapping
+- Automated tests covering business logic, controller behavior, and application context bootstrapping
 
 ---
 
 ## Architecture
 
-The application follows a layered architecture inspired by MVC principles:
+The application implements a Package by Feature architecture combined with a Layered approach for cross-cutting concerns. This structure provides high cohesion by grouping components related to a single functionality together.
 
-- **Web layer** - REST API endpoints and external communication
-- **Domain layer** - Business logic and application rules
-- **Persistence layer** - Data access using Spring Data JPA
-- **Configuration layer** - Cross-cutting configuration such as Async and OpenAPI
-- **Security layer** - Authentication and authorization using Spring Security and JWT
+- **Feature Modules** (`feature/`) - Contains isolated business capabilities such as `flight`, `route`, `passenger`, and `reservation`. Each feature encapsulates its own web endpoints (Controllers) and business logic (Services, DTOs, Mappers).
+- **Persistence Layer** (`persistence/`) - Centralized data access using Spring Data JPA (Entities, Repositories, and Specifications).
+- **Security Layer** (`security/`) - Authentication and authorization using Spring Security and JWT, decoupled from the core business logic.
+- **Common & Config** (`common/`, `config/`) - Shared utilities, enumerations, global exceptions, and cross-cutting configurations (Async, OpenAPI).
 
-Key domain concepts:
+Key business entities:
 
 - **Route:** Represents a flight path between two airports
 - **RouteSchedule:** Days and times when a route is operated
@@ -100,7 +99,7 @@ DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 ```
 
-### Domain Configuration
+### Business Configuration
 
 Part of the business behavior is intentionally configured through
 [`application.properties`](/src/main/resources/application.properties)
@@ -141,7 +140,7 @@ instead of being hardcoded. This makes the system easier to adapt to different o
 - `app.flight.boarding.minutes-before-to-close`
   Number of minutes before departure when boarding closes.
 
-These properties are useful to show recruiters that core domain rules were designed to be configurable and environment-driven, rather than hidden inside service implementations.
+These properties are useful to show recruiters that core business rules were designed to be configurable and environment-driven, rather than hidden inside service implementations.
 
 ### Run with Docker
 

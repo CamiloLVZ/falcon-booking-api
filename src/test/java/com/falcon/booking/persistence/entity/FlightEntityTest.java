@@ -1,7 +1,7 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.domain.exception.Flight.FlightInvalidStatusChangeException;
-import com.falcon.booking.domain.valueobject.FlightStatus;
+import com.falcon.booking.common.enums.FlightStatus;
+import com.falcon.booking.feature.flight.exception.FlightInvalidStatusChangeException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

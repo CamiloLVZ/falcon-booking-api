@@ -1,6 +1,6 @@
 package com.falcon.booking.persistence.specification;
 
-import com.falcon.booking.domain.valueobject.FlightStatus;
+import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,6 +17,15 @@ public class FlightSpecifications {
                 return cb.conjunction();
             }
             else return cb.equal(root.get("route"), route);
+        };
+    }
+
+    public static Specification<FlightEntity> hasFlightNumber(String flightNumber) {
+        return (root, query, cb)->{
+            if(flightNumber==null || flightNumber.isBlank()) {
+                return cb.conjunction();
+            }
+            else return cb.equal(root.join("route").get("flightNumber"), flightNumber);
         };
     }
 

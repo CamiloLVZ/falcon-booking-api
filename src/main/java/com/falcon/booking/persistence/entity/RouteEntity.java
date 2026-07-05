@@ -1,8 +1,8 @@
 package com.falcon.booking.persistence.entity;
 
-import com.falcon.booking.domain.exception.Route.RouteInvalidStatusChangeException;
-import com.falcon.booking.domain.exception.Route.RouteNotActivableException;
-import com.falcon.booking.domain.valueobject.RouteStatus;
+import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.feature.route.exception.RouteInvalidStatusChangeException;
+import com.falcon.booking.feature.route.exception.RouteNotActivableException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,8 +38,8 @@ public class RouteEntity {
     @JoinColumn(name = "id_default_airplane_type", nullable = false)
     AirplaneTypeEntity defaultAirplaneType;
 
-    @Column(name = "length_minutes", nullable = false)
-    Integer lengthMinutes;
+    @Column(name = "duration_minutes", nullable = false)
+    Integer durationMinutes;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,length = 20)
@@ -75,12 +75,15 @@ public class RouteEntity {
             errors.add("Route must have at least one operating schedule");
         }
 
-        if (lengthMinutes == null || lengthMinutes <= 0) {
+        if (durationMinutes == null || durationMinutes <= 0) {
             errors.add("Route duration must be greater than 0");
         }
 
         if (defaultAirplaneType == null) {
             errors.add("Route must have default airplane type");
+        }
+        else if(!defaultAirplaneType.isActive()){
+            errors.add("Route must have active default airplane type");
         }
 
         if (!errors.isEmpty()) {
@@ -138,7 +141,7 @@ public class RouteEntity {
     public Set<DayOfWeek> getOperatingDays(){
         Set<DayOfWeek> weekDays = new HashSet<>();
         for(RouteDayEntity routeDay : routeDays){
-            weekDays.add(routeDay.getWeekDay());
+            weekDays.add(routeDay.getDayOfWeek());
         }
         return weekDays;
     }
