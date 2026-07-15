@@ -1,6 +1,7 @@
 package com.falcon.booking.persistence.repository;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
@@ -19,8 +20,9 @@ public interface PassengerReservationRepository extends JpaRepository<PassengerR
     List<PassengerReservationEntity> findAllBySeatNumberAndFlight(Integer seatNumber, FlightEntity flight);
     
     List<PassengerReservationEntity> findAllByFlight(FlightEntity flight);
-    
-    long countByFlightAndStatusNot(FlightEntity flight, PassengerReservationStatus status);
+
+    long countByFlightAndSeatClassAndStatusNot(FlightEntity flight, SeatClass seatClass, PassengerReservationStatus status);
+
 
     @Query(value = "SELECT pr FROM PassengerReservationEntity pr " +
             "JOIN FETCH pr.reservation r " +

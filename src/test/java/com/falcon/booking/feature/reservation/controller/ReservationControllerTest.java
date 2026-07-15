@@ -4,6 +4,7 @@ import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.common.enums.ReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
@@ -93,7 +94,7 @@ class ReservationControllerTest {
                 Instant.parse("2026-01-01T12:00:00Z"),
                 status,
                 flight,
-                List.of(new ResponsePassengerReservationDto(passenger, 12, PassengerReservationStatus.RESERVED))
+                List.of(new ResponsePassengerReservationDto(passenger, 12, SeatClass.ECONOMY, PassengerReservationStatus.RESERVED))
         );
     }
 
@@ -149,7 +150,7 @@ class ReservationControllerTest {
         AddPassengerDto passenger = new AddPassengerDto("Ana", "Perez", PassengerGender.F, "CO",
                 LocalDate.now().minusYears(25), "P123456", "110011");
         AddReservationDto request = new AddReservationDto(10L, "contact@test.com",
-                List.of(new AddPassengerReservationDto(passenger, 12)));
+                List.of(new AddPassengerReservationDto(passenger, 12, SeatClass.ECONOMY)));
         ResponseReservationDto responseDto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
         given(reservationCommandService.addReservation(request)).willReturn(responseDto);
 

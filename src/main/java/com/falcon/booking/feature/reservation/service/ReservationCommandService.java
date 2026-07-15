@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.reservation.service;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.flight.exception.FlightCanNotBeReservedException;
 import com.falcon.booking.feature.flight.mapper.FlightMapper;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
@@ -27,9 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class ReservationCommandService {
@@ -90,14 +89,29 @@ public class ReservationCommandService {
         if (addPassengersReservationsDto == null || addPassengersReservationsDto.isEmpty())
             throw new ReservationMustHavePassengersException();
 
-        long currentPassengers = passengerReservationRepository.countByFlightAndStatusNot(reservation.getFlight(), PassengerReservationStatus.CANCELED);
-        if (currentPassengers + addPassengersReservationsDto.size() > reservation.getFlight().getAirplaneType().getTotalSeats()) {
-            throw new FlightCapacityExceededException(reservation.getFlight().getId());
+        long firstClassRequested = addPassengersReservationsDto.stream()
+                .filter(dto -> dto.seatClass() == SeatClass.FIRST_CLASS)
+                .count();
+
+        long economyRequested = addPassengersReservationsDto.size() - firstClassRequested;
+
+        if (firstClassRequested > 0) {
+            long currentFirstClass = passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(reservation.getFlight(), SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED);
+            if (currentFirstClass + firstClassRequested > reservation.getFlight().getAirplaneType().getFirstClassSeats()) {
+                throw new FlightCapacityExceededException(reservation.getFlight().getId());
+            }
+        }
+
+        if (economyRequested > 0) {
+            long currentEconomy = passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(reservation.getFlight(), SeatClass.ECONOMY, PassengerReservationStatus.CANCELED);
+            if (currentEconomy + economyRequested > reservation.getFlight().getAirplaneType().getEconomySeats()) {
+                throw new FlightCapacityExceededException(reservation.getFlight().getId());
+            }
         }
 
         for (AddPassengerReservationDto dto : addPassengersReservationsDto) {
             PassengerEntity passenger = passengerService.createOrGetPassenger(dto.passenger());
-            PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, dto.seatNumber());
+            PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, dto.seatNumber(), dto.seatClass());
             passengerReservations.add(passengerReservation);
         }
         return passengerReservations;

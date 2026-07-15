@@ -3,9 +3,12 @@ package com.falcon.booking.feature.reservation.service;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.exception.InvalidCheckInPassengerReservationException;
+import com.falcon.booking.feature.reservation.exception.SeatNumberOutOfRangeException;
 import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
@@ -39,6 +42,8 @@ public class CheckInServiceTest {
     private ReservationQueryService reservationQueryService;
     @Mock
     private PassengerReservationRepository passengerReservationRepository;
+    @Mock
+    private FlightQueryService flightQueryService;
 
     @InjectMocks
     private CheckInService checkInService;
@@ -61,7 +66,7 @@ public class CheckInServiceTest {
     private FlightEntity createFlight(FlightStatus flightStatus) {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
         airplaneType.setEconomySeats(100);
-        airplaneType.setFirstClassSeats(20); // total 120
+        airplaneType.setFirstClassSeats(20); // total 120: seats 1-20 first class, 21-120 economy
 
         FlightEntity flight = new FlightEntity();
         flight.setId(5L);
@@ -71,42 +76,79 @@ public class CheckInServiceTest {
         return flight;
     }
 
-    private ReservationEntity createReservationWithPassenger(PassengerEntity passenger, FlightEntity flight) {
+    private ReservationEntity createReservationWithPassenger(PassengerEntity passenger, FlightEntity flight, SeatClass seatClass) {
         ReservationEntity reservation = new ReservationEntity("ABC123", flight, "contact@test.com", Instant.now());
-        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, null);
+        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, null, seatClass);
         reservation.getPassengerReservations().add(passengerReservation);
         return reservation;
     }
 
-    @DisplayName("Should check in passenger by identification number providing a seat")
+    @DisplayName("Should check in passenger by identification number providing an economy seat")
     @Test
-    void shouldCheckInByIdentificationNumberWithSeat() {
+    void shouldCheckInByIdentificationNumberWithEconomySeat() {
         PassengerEntity passenger = createPassenger("123");
         FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
-        ReservationEntity reservation = createReservationWithPassenger(passenger, flight);
-        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, 8, PassengerReservationStatus.CHECKED_IN);
+        ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.ECONOMY);
+        // Seat 25 is valid for economy (range 21-120)
+        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, 25, SeatClass.ECONOMY, PassengerReservationStatus.CHECKED_IN);
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
         given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
         given(passengerReservationMapper.toResponseDto(any(PassengerReservationEntity.class))).willReturn(response);
 
-        ResponsePassengerReservationDto result = checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 8);
+        ResponsePassengerReservationDto result = checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 25);
 
         assertThat(result).isEqualTo(response);
         assertThat(reservation.getPassengerReservations().get(0).getStatus()).isEqualTo(PassengerReservationStatus.CHECKED_IN);
-        assertThat(reservation.getPassengerReservations().get(0).getSeatNumber()).isEqualTo(8);
+        assertThat(reservation.getPassengerReservations().get(0).getSeatNumber()).isEqualTo(25);
         verify(passengerService).getPassengerEntityByIdentificationNumber("123", "CO");
         verify(reservationQueryService).getReservationEntityByNumber("ABC123");
         verify(passengerReservationMapper).toResponseDto(reservation.getPassengerReservations().get(0));
     }
 
-    @DisplayName("Should check in passenger without providing seat, assigning random one")
+    @DisplayName("Should check in first class passenger providing a first class seat")
+    @Test
+    void shouldCheckInByIdentificationNumberWithFirstClassSeat() {
+        PassengerEntity passenger = createPassenger("123");
+        FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
+        ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.FIRST_CLASS);
+        // Seat 5 is valid for first class (range 1-20)
+        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, 5, SeatClass.FIRST_CLASS, PassengerReservationStatus.CHECKED_IN);
+
+        given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
+        given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
+        given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
+        given(passengerReservationMapper.toResponseDto(any(PassengerReservationEntity.class))).willReturn(response);
+
+        ResponsePassengerReservationDto result = checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 5);
+
+        assertThat(result).isEqualTo(response);
+        assertThat(reservation.getPassengerReservations().get(0).getSeatNumber()).isEqualTo(5);
+    }
+
+    @DisplayName("Should throw exception when economy passenger requests a first class seat")
+    @Test
+    void shouldThrowExceptionWhenEconomyPassengerRequestsFirstClassSeat() {
+        PassengerEntity passenger = createPassenger("123");
+        FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
+        ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.ECONOMY);
+
+        given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
+        given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
+        given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
+
+        // Seat 5 is a first class seat (range 1-20), not valid for economy (range 21-120)
+        assertThrows(SeatNumberOutOfRangeException.class,
+                () -> checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 5));
+    }
+
+    @DisplayName("Should check in passenger without providing seat, assigning random economy one")
     @Test
     void shouldCheckInWithoutSeat() {
         PassengerEntity passenger = createPassenger("123");
         FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
-        ReservationEntity reservation = createReservationWithPassenger(passenger, flight);
+        ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.ECONOMY);
 
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
         given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
@@ -116,8 +158,28 @@ public class CheckInServiceTest {
         assertThat(result.getPassenger()).isEqualTo(passenger);
         assertThat(result.getStatus()).isEqualTo(PassengerReservationStatus.CHECKED_IN);
         assertThat(result.getSeatNumber()).isNotNull();
-        assertThat(result.getSeatNumber()).isGreaterThan(0);
+        // Economy range: 21-120
+        assertThat(result.getSeatNumber()).isGreaterThanOrEqualTo(21);
+        assertThat(result.getSeatNumber()).isLessThanOrEqualTo(120);
         verify(reservationQueryService).getReservationEntityByNumber("ABC123");
+    }
+
+    @DisplayName("Should check in first class passenger without seat, assigning random first class seat")
+    @Test
+    void shouldCheckInFirstClassWithoutSeat() {
+        PassengerEntity passenger = createPassenger("123");
+        FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
+        ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.FIRST_CLASS);
+
+        given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
+        given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
+
+        PassengerReservationEntity result = checkInService.checkIn("ABC123", passenger, null);
+
+        assertThat(result.getSeatNumber()).isNotNull();
+        // First class range: 1-20
+        assertThat(result.getSeatNumber()).isGreaterThanOrEqualTo(1);
+        assertThat(result.getSeatNumber()).isLessThanOrEqualTo(20);
     }
 
     @DisplayName("Should throw exception when passenger reservation is not reserved")
@@ -125,15 +187,16 @@ public class CheckInServiceTest {
     void shouldThrowExceptionWhenPassengerReservationIsNotReserved() {
         PassengerEntity passenger = createPassenger("123");
         FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
-        ReservationEntity reservation = createReservationWithPassenger(passenger, flight);
-        reservation.getPassengerReservations().get(0).setSeatNumber(8);
-        reservation.checkInPassenger(passenger, 8); // Now it's checked in
+        ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.ECONOMY);
+        reservation.getPassengerReservations().get(0).setSeatNumber(25);
+        reservation.checkInPassenger(passenger, 25); // Now it's checked in
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
+        given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
 
         assertThrows(InvalidCheckInPassengerReservationException.class,
-                () -> checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 8));
+                () -> checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 25));
 
         verify(passengerReservationMapper, never()).toResponseDto(any(PassengerReservationEntity.class));
     }

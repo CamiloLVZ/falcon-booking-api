@@ -122,21 +122,21 @@ class ReservationCommandServiceTest {
         AddPassengerDto addPassengerDto = new AddPassengerDto("Ana", "Perez", PassengerGender.F,
                 "CO", LocalDate.now().minusYears(20), "P123", "123");
         AddReservationDto request = new AddReservationDto(5L, "contact@test.com",
-                List.of(new AddPassengerReservationDto(addPassengerDto, null)));
+                List.of(new AddPassengerReservationDto(addPassengerDto, null, SeatClass.ECONOMY)));
 
         ReservationEntity savedReservation = new ReservationEntity("ABC123", flight, "contact@test.com", Instant.now());
         PassengerEntity passenger = createPassenger("123");
-        PassengerReservationEntity savedPassengerReservation = new PassengerReservationEntity(passenger, savedReservation, null);
+        PassengerReservationEntity savedPassengerReservation = new PassengerReservationEntity(passenger, savedReservation, null, SeatClass.ECONOMY);
 
         given(flightQueryService.getFlightEntity(5L)).willReturn(flight);
         given(reservationNumberGenerator.generate()).willReturn("ABC123");
         given(reservationRepository.save(any(ReservationEntity.class))).willReturn(savedReservation);
-        given(passengerReservationRepository.countByFlightAndStatusNot(flight, PassengerReservationStatus.CANCELED)).willReturn(0L);
+        given(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).willReturn(0L);
         given(passengerService.createOrGetPassenger(addPassengerDto)).willReturn(passenger);
         given(passengerReservationRepository.saveAll(any())).willReturn(List.of(savedPassengerReservation));
         given(flightMapper.toDto(any(FlightEntity.class))).willReturn(new com.falcon.booking.feature.flight.dto.ResponseFlightDto(1L, "AV1234", "BOG", "MDE", null, null, 100, null, com.falcon.booking.common.enums.FlightStatus.SCHEDULED));
         given(passengerReservationMapper.toResponseDto(List.of(savedPassengerReservation)))
-                .willReturn(List.of(new ResponsePassengerReservationDto(null, null, PassengerReservationStatus.RESERVED)));
+                .willReturn(List.of(new ResponsePassengerReservationDto(null, null, SeatClass.ECONOMY, PassengerReservationStatus.RESERVED)));
 
         ResponseReservationDto result = reservationCommandService.addReservation(request);
 
@@ -169,22 +169,42 @@ class ReservationCommandServiceTest {
         assertThrows(ReservationMustHavePassengersException.class, () -> reservationCommandService.addReservation(request));
     }
 
-    @DisplayName("Should throw exception when flight capacity is exceeded")
+    @DisplayName("Should throw exception when flight economy capacity is exceeded")
     @Test
     void shouldThrowExceptionFlightCapacityExceeded_addReservation() {
-        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 10, 0); // Capacity 10
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 10, 5); // Economy capacity 10
         AddPassengerDto passenger1 = new AddPassengerDto("Ana", "Perez", PassengerGender.F,
                 "CO", LocalDate.now().minusYears(20), "P123", "123");
 
         AddReservationDto request = new AddReservationDto(5L, "contact@test.com", List.of(
-                new AddPassengerReservationDto(passenger1, null)
+                new AddPassengerReservationDto(passenger1, null, SeatClass.ECONOMY)
         ));
 
         given(flightQueryService.getFlightEntity(5L)).willReturn(flight);
         given(reservationNumberGenerator.generate()).willReturn("ABC123");
         given(reservationRepository.save(any(ReservationEntity.class)))
                 .willReturn(new ReservationEntity("ABC123", flight, "contact@test.com", Instant.now()));
-        given(passengerReservationRepository.countByFlightAndStatusNot(flight, PassengerReservationStatus.CANCELED)).willReturn(10L); // Flight is full
+        given(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).willReturn(10L); // Economy is full
+
+        assertThrows(FlightCapacityExceededException.class, () -> reservationCommandService.addReservation(request));
+    }
+
+    @DisplayName("Should throw exception when flight first class capacity is exceeded")
+    @Test
+    void shouldThrowExceptionFirstClassCapacityExceeded_addReservation() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 100, 5); // First class capacity 5
+        AddPassengerDto passenger1 = new AddPassengerDto("Ana", "Perez", PassengerGender.F,
+                "CO", LocalDate.now().minusYears(20), "P123", "123");
+
+        AddReservationDto request = new AddReservationDto(5L, "contact@test.com", List.of(
+                new AddPassengerReservationDto(passenger1, null, SeatClass.FIRST_CLASS)
+        ));
+
+        given(flightQueryService.getFlightEntity(5L)).willReturn(flight);
+        given(reservationNumberGenerator.generate()).willReturn("ABC123");
+        given(reservationRepository.save(any(ReservationEntity.class)))
+                .willReturn(new ReservationEntity("ABC123", flight, "contact@test.com", Instant.now()));
+        given(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).willReturn(5L); // First class is full
 
         assertThrows(FlightCapacityExceededException.class, () -> reservationCommandService.addReservation(request));
     }

@@ -3,6 +3,7 @@ package com.falcon.booking.feature.reservation.service;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.exception.InvalidBoardingPassengerReservationException;
@@ -61,7 +62,7 @@ public class BoardingServiceTest {
         flight.setStatus(flightStatus);
 
         ReservationEntity reservation = new ReservationEntity("ABC123", flight, "contact@test.com", Instant.now());
-        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, 8);
+        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, 8, SeatClass.ECONOMY);
         reservation.getPassengerReservations().add(passengerReservation);
         return reservation;
     }
@@ -78,7 +79,7 @@ public class BoardingServiceTest {
     void shouldBoardByIdentificationNumber() {
         PassengerEntity passenger = createPassenger("123");
         ReservationEntity reservation = createReservationWithCheckedInPassenger(passenger);
-        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, 8, PassengerReservationStatus.BOARDED);
+        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, 8, SeatClass.ECONOMY, PassengerReservationStatus.BOARDED);
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
