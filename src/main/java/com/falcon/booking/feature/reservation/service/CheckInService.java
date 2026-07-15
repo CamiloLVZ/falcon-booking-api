@@ -100,4 +100,28 @@ public class CheckInService {
             throw new FlightCapacityExceededException(flight.getId());
         }
     }
+
+    public List<Integer> getAvailableSeats(Long flightId, SeatClass seatClass) {
+        FlightEntity flight = flightQueryService.getFlightEntity(flightId);
+        List<PassengerReservationEntity> allReservations = passengerReservationRepository.findAllByFlight(flight);
+
+        int firstClassSeats = flight.getAirplaneType().getFirstClassSeats();
+        int totalSeats = flight.getAirplaneType().getTotalSeats();
+
+        int minSeat = seatClass == SeatClass.FIRST_CLASS ? 1 : firstClassSeats + 1;
+        int maxSeat = seatClass == SeatClass.FIRST_CLASS ? firstClassSeats : totalSeats;
+
+        Set<Integer> takenSeats = allReservations.stream()
+                .filter(pr -> pr.getSeatNumber() != null && !pr.getStatus().equals(PassengerReservationStatus.CANCELED))
+                .map(PassengerReservationEntity::getSeatNumber)
+                .collect(Collectors.toSet());
+
+        List<Integer> availableSeats = new ArrayList<>();
+        for (int i = minSeat; i <= maxSeat; i++) {
+            if (!takenSeats.contains(i)) {
+                availableSeats.add(i);
+            }
+        }
+        return availableSeats;
+    }
 }

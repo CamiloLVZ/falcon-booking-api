@@ -64,4 +64,21 @@ public class CheckInController {
                                                                             Integer seatNumber){
         return ResponseEntity.ok(checkInService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode, seatNumber));
     }
+
+    @Operation(summary = "Get available seats for a flight",
+            description = "Returns a list of available seat numbers for a specific flight and seat class.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of available seats retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Flight not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/flight/{flightId}/available-seats")
+    public ResponseEntity<java.util.List<Integer>> getAvailableSeats(@PathVariable
+                                                           @Parameter(description = "Flight ID", example = "1")
+                                                           Long flightId,
+                                                           @RequestParam
+                                                           @Parameter(description = "Seat class", example = "ECONOMY")
+                                                           SeatClass seatClass) {
+        return ResponseEntity.ok(checkInService.getAvailableSeats(flightId, seatClass));
+    }
 }
