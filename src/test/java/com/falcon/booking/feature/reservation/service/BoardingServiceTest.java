@@ -68,7 +68,7 @@ public class BoardingServiceTest {
 
     private ReservationEntity createReservationWithCheckedInPassenger(PassengerEntity passenger) {
         ReservationEntity reservation = createReservationWithPassenger(passenger, FlightStatus.CHECK_IN_AVAILABLE);
-        reservation.checkInPassenger(passenger);
+        reservation.checkInPassenger(passenger, 8);
         reservation.getFlight().setStatus(FlightStatus.BOARDING);
         return reservation;
     }

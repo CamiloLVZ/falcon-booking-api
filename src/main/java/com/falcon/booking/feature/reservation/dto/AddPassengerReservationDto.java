@@ -10,7 +10,7 @@ public record AddPassengerReservationDto(
         @NotNull
         AddPassengerDto passenger,
 
-        @Schema(description = "Seat number assigned to the passenger", example = "12")
-        @NotNull @Positive
+        @Schema(description = "Seat number selected (optional)", example = "12")
+        @Positive
         Integer seatNumber
 ) { }

@@ -10,10 +10,8 @@ import com.falcon.booking.feature.reservation.dto.AddPassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.AddReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
-import com.falcon.booking.feature.reservation.exception.DuplicateSeatNumberInReservationException;
+import com.falcon.booking.feature.reservation.exception.FlightCapacityExceededException;
 import com.falcon.booking.feature.reservation.exception.ReservationMustHavePassengersException;
-import com.falcon.booking.feature.reservation.exception.SeatNumberAlreadyTakenException;
-import com.falcon.booking.feature.reservation.exception.SeatNumberOutOfRangeException;
 import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
 import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.FlightEntity;
@@ -88,37 +86,21 @@ public class ReservationCommandService {
 
     private List<PassengerReservationEntity> createPassengerReservationEntities(List<AddPassengerReservationDto> addPassengersReservationsDto, ReservationEntity reservation) {
         List<PassengerReservationEntity> passengerReservations = new ArrayList<>();
-        Set<Integer> seatNumbersRegistered = new HashSet<>();
 
         if (addPassengersReservationsDto == null || addPassengersReservationsDto.isEmpty())
             throw new ReservationMustHavePassengersException();
 
+        long currentPassengers = passengerReservationRepository.countByFlightAndStatusNot(reservation.getFlight(), PassengerReservationStatus.CANCELED);
+        if (currentPassengers + addPassengersReservationsDto.size() > reservation.getFlight().getAirplaneType().getTotalSeats()) {
+            throw new FlightCapacityExceededException(reservation.getFlight().getId());
+        }
+
         for (AddPassengerReservationDto dto : addPassengersReservationsDto) {
-            if (seatNumbersRegistered.contains(dto.seatNumber()))
-                throw new DuplicateSeatNumberInReservationException(dto.seatNumber());
-
-            validateSeatNumber(dto.seatNumber(), reservation.getFlight());
-
             PassengerEntity passenger = passengerService.createOrGetPassenger(dto.passenger());
             PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, dto.seatNumber());
             passengerReservations.add(passengerReservation);
-            seatNumbersRegistered.add(passengerReservation.getSeatNumber());
         }
         return passengerReservations;
-    }
-
-    private void validateSeatNumber(Integer seatNumber, FlightEntity flight) {
-        int maximumSeatNumber = flight.getAirplaneType().getTotalSeats();
-        if (seatNumber > maximumSeatNumber || seatNumber <= 0)
-            throw new SeatNumberOutOfRangeException(seatNumber, maximumSeatNumber);
-
-        List<PassengerReservationEntity> seatReservations = passengerReservationRepository.findAllBySeatNumberAndFlight(seatNumber, flight);
-        for (PassengerReservationEntity passengerReservation : seatReservations) {
-            if (passengerReservation != null) {
-                if (!passengerReservation.getStatus().equals(PassengerReservationStatus.CANCELED))
-                    throw new SeatNumberAlreadyTakenException(seatNumber, flight.getId());
-            }
-        }
     }
 
     @Transactional

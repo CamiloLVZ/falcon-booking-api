@@ -47,7 +47,8 @@ public class PassengerReservationEntity {
     @JoinColumn(name = "id_flight", nullable = false)
     private FlightEntity flight;
 
-    @Column(name = "seat_number", nullable = false)
+    @Setter
+    @Column(name = "seat_number")
     private Integer seatNumber;
 
     @Enumerated(EnumType.STRING)

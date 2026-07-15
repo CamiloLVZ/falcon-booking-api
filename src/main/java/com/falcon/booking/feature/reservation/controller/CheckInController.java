@@ -49,7 +49,10 @@ public class CheckInController {
                                                                             String identificationNumber,
                                                                             @RequestParam @NotBlank @Size(min = 2, max = 2)
                                                                             @Parameter(description = "Country two character ISO code", example = "CO")
-                                                                            String countryIsoCode){
-        return ResponseEntity.ok(checkInService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
+                                                                            String countryIsoCode,
+                                                                            @RequestParam(required = false)
+                                                                            @Parameter(description = "Seat number requested. If not provided, a random one is assigned.", example = "12")
+                                                                            Integer seatNumber){
+        return ResponseEntity.ok(checkInService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode, seatNumber));
     }
 }
