@@ -26,6 +26,9 @@ This project is built as a modular monolith utilizing a **Package by Feature** o
 - JWT-based authentication and role-based authorization for protected admin operations
 - Automatic flight generation workflows with configurable planning horizon
 - Reservation flow with passenger management and seat assignment rules
+- **Seat Selection Engine**: Interactive seat assignment where passengers select their specific seats during the reservation flow
+- **Dynamic Pricing**: Configurable base prices for routes that calculate specific ticket costs per class (Economy, First Class) for each flight
+- **Simulated Atomic Payments**: An atomic "pay-to-reserve" flow utilizing a simulated payment gateway to ensure reservations are only persisted upon successful payment confirmation
 - Hybrid backend architecture separating functional features (controllers, services, DTOs) from persistence, config, and security concerns
 - Flyway-driven database versioning for reproducible schema evolution
 - Dockerized packaging with a multi-stage build for reproducible deployment
