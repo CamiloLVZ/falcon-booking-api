@@ -1,12 +1,9 @@
 package com.falcon.booking.feature.reservation.controller;
 
-import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.service.CheckInService;
-import com.falcon.booking.persistence.entity.FlightEntity;
-import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,10 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Tag(name = "Check-In", description = "Operations related to passenger check-in")
 @RestController
@@ -73,7 +67,7 @@ public class CheckInController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @GetMapping("/flight/{flightId}/available-seats")
-    public ResponseEntity<java.util.List<Integer>> getAvailableSeats(@PathVariable
+    public ResponseEntity<List<Integer>> getAvailableSeats(@PathVariable
                                                            @Parameter(description = "Flight ID", example = "1")
                                                            Long flightId,
                                                            @RequestParam

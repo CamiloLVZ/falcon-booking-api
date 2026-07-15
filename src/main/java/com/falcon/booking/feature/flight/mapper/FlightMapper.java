@@ -32,7 +32,8 @@ public class FlightMapper {
         return new ResponseFlightDto(flightEntity.getId(), flightEntity.getRoute().getFlightNumber(),
                 flightEntity.getRoute().getAirportOrigin().getIataCode(),
                 flightEntity.getRoute().getAirportDestination().getIataCode(),flightEntity.getDepartureDateTime(),
-                localDepartureDateTime, flightEntity.getRoute().getDurationMinutes(), airplaneTypeDto, flightEntity.getStatus());
+                localDepartureDateTime, flightEntity.getRoute().getDurationMinutes(), airplaneTypeDto, flightEntity.getStatus(),
+                flightEntity.getBasePriceEconomy(), flightEntity.getBasePriceFirstClass());
     }
     public List<ResponseFlightDto> toDto (List<FlightEntity> entities){
         List<ResponseFlightDto> dtoList = new ArrayList<>();

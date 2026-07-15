@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
@@ -60,6 +61,10 @@ public class PassengerReservationEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PassengerReservationStatus status;
+
+    @Setter
+    @Column(nullable = false)
+    private BigDecimal price = BigDecimal.ZERO;
 
     public void cancel(){
         if(this.isCanceled()) return;

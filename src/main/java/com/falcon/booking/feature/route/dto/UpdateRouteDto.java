@@ -3,7 +3,10 @@ package com.falcon.booking.feature.route.dto;
 import com.falcon.booking.common.utils.StringNormalizer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
 
 public record UpdateRouteDto(
 
@@ -21,7 +24,15 @@ public record UpdateRouteDto(
 
         @Schema(description = "Route duration in minutes", example = "180")
         @Positive(message = "duration minutes must be a integer greater than zero")
-        Integer durationMinutes
+        Integer durationMinutes,
+
+        @Schema(description = "Base price for economy class", example = "100.00")
+        @PositiveOrZero(message = "Base price economy must be positive or zero")
+        BigDecimal basePriceEconomy,
+
+        @Schema(description = "Base price for first class", example = "200.00")
+        @PositiveOrZero(message = "Base price first class must be positive or zero")
+        BigDecimal basePriceFirstClass
 ) {
         public UpdateRouteDto{
                 airportOriginIataCode= StringNormalizer.normalize(airportOriginIataCode);

@@ -33,6 +33,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -81,7 +82,7 @@ public class RouteControllerTest {
         ResponseAirplaneTypeDto airplaneType =
                 new ResponseAirplaneTypeDto(1L, "Airbus", "A320", 100, 10, AirplaneTypeStatus.ACTIVE);
 
-        return new ResponseRouteDto(flightNumber, origin, destination, airplaneType, 60, RouteStatus.DRAFT);
+        return new ResponseRouteDto(flightNumber, origin, destination, airplaneType, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
     }
 
     @DisplayName("Should return 200 OK and route by flight number")
@@ -192,7 +193,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 201 created when route is added")
     @Test
     void shouldReturn201_addRoute() throws Exception {
-        CreateRouteDto createRouteDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60);
+        CreateRouteDto createRouteDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
         given(routeCommandService.addRoute(createRouteDto)).willReturn(responseDto);
 
@@ -211,7 +212,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 400 bad request when create route body is invalid")
     @Test
     void shouldReturn400_addRoute() throws Exception {
-        CreateRouteDto createRouteDto = new CreateRouteDto("", "BO", "", -1L, -1);
+        CreateRouteDto createRouteDto = new CreateRouteDto("", "BO", "", -1L, -1, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         ResultActions response = mockMvc.perform(
                 post("/v1/routes")
@@ -227,7 +228,7 @@ public class RouteControllerTest {
     @DisplayName("Should return 200 OK when route is updated")
     @Test
     void shouldReturn200_updateRoute() throws Exception {
-        UpdateRouteDto updateRouteDto = new UpdateRouteDto(null, null, null, 90);
+        UpdateRouteDto updateRouteDto = new UpdateRouteDto(null, null, null, 90, null, null);
         ResponseRouteDto responseDto = createResponseRouteDto("AV1234");
         given(routeCommandService.updateRoute("AV1234", updateRouteDto)).willReturn(responseDto);
 
@@ -287,7 +288,9 @@ public class RouteControllerTest {
                         LocalDateTime.now(),
                         40,
                         new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
-                        FlightStatus.SCHEDULED
+                        FlightStatus.SCHEDULED,
+                        BigDecimal.valueOf(100.0),
+                        BigDecimal.valueOf(200.0)
                 )
         ), PageRequest.of(0, 10), 1);
         given(flightQueryService.getAllFlightsByRouteAndDate("AV1234", LocalDate.parse("2026-01-01"), 0, 10))
