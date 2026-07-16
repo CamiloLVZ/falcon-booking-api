@@ -1,15 +1,9 @@
 package com.falcon.booking.feature.reservation.controller;
 
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.enums.ReservationStatus;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
-import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
-import com.falcon.booking.feature.reservation.dto.AddPassengerReservationDto;
-import com.falcon.booking.feature.reservation.dto.AddReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
@@ -30,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,7 +33,8 @@ import java.util.List;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -73,7 +69,9 @@ class ReservationControllerTest {
                 LocalDateTime.parse("2026-01-01T08:00:00"),
                 40,
                 new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
-                FlightStatus.SCHEDULED
+                FlightStatus.SCHEDULED,
+                BigDecimal.valueOf(100.0),
+                BigDecimal.valueOf(200.0)
         );
 
         ResponsePassengerDto passenger = new ResponsePassengerDto(
@@ -93,7 +91,7 @@ class ReservationControllerTest {
                 Instant.parse("2026-01-01T12:00:00Z"),
                 status,
                 flight,
-                List.of(new ResponsePassengerReservationDto(passenger, 12, PassengerReservationStatus.RESERVED))
+                List.of(new ResponsePassengerReservationDto(passenger, 12, SeatClass.ECONOMY, PassengerReservationStatus.RESERVED))
         );
     }
 
@@ -143,44 +141,7 @@ class ReservationControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
-    @DisplayName("Should return 201 Created when reservation is added")
-    @Test
-    void shouldReturn201_addReservation() throws Exception {
-        AddPassengerDto passenger = new AddPassengerDto("Ana", "Perez", PassengerGender.F, "CO",
-                LocalDate.now().minusYears(25), "P123456", "110011");
-        AddReservationDto request = new AddReservationDto(10L, "contact@test.com",
-                List.of(new AddPassengerReservationDto(passenger, 12)));
-        ResponseReservationDto responseDto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
-        given(reservationCommandService.addReservation(request)).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(
-                post("/v1/reservations")
-                       .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .accept(MediaType.APPLICATION_JSON)
-        );
-
-        response.andExpect(status().isCreated())
-                .andExpect(jsonPath("$.number").value("ABC123"));
-    }
-
-    @DisplayName("Should return 400 when add reservation payload is invalid")
-    @Test
-    void shouldReturn400_addReservation() throws Exception {
-        AddReservationDto invalid = new AddReservationDto(null, "mail-invalido",
-                List.of());
-
-        ResultActions response = mockMvc.perform(
-                post("/v1/reservations")
-                       .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalid))
-                        .accept(MediaType.APPLICATION_JSON)
-        );
-
-        response.andExpect(status().isBadRequest());
-    }
 
     @DisplayName("Should return 200 OK when canceling passenger by identification")
     @Test

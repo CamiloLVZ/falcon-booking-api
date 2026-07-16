@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -107,7 +108,7 @@ class FlightQueryServiceTest {
     @Test
     void shouldReturnDto_getFlightById() {
         FlightEntity entity = createFlight(1L, createRoute("AV1234", "UTC", true), OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", entity.getDepartureDateTime(), entity.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", entity.getDepartureDateTime(), entity.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(flightRepository.findById(1L)).willReturn(Optional.of(entity));
         given(flightMapper.toDto(entity)).willReturn(dto);
@@ -121,7 +122,7 @@ class FlightQueryServiceTest {
     void shouldReturnFlights_whenGetAllFlights() {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity expectedFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by("departureDateTime").ascending()), 1);
@@ -148,7 +149,7 @@ class FlightQueryServiceTest {
     void shouldReturnFlightsByRouteAndDates() {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity flight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("departureDateTime").ascending());
@@ -166,7 +167,7 @@ class FlightQueryServiceTest {
     void shouldReturnFlightsPaginated_OrderedDesc() {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity expectedFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "departureDateTime")), 1);
         given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "departureDateTime"))))).willReturn(flightPage);

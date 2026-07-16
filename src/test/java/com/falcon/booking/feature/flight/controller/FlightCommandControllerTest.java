@@ -17,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
@@ -53,7 +54,9 @@ class FlightCommandControllerTest {
                 LocalDateTime.parse("2026-01-01T08:00:00"),
                 40,
                 new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
-                status
+                status,
+                BigDecimal.valueOf(100.0),
+                BigDecimal.valueOf(200.0)
         );
     }
 

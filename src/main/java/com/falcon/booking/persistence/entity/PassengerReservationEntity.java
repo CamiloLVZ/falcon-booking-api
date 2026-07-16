@@ -1,6 +1,7 @@
 package com.falcon.booking.persistence.entity;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.flight.exception.OutOfFlightBoardingTimeException;
 import com.falcon.booking.feature.flight.exception.OutOfFlightCheckInTimeException;
 import com.falcon.booking.feature.reservation.exception.InvalidBoardingPassengerReservationException;
@@ -11,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
@@ -22,11 +24,12 @@ import java.util.Objects;
 @Getter
 public class PassengerReservationEntity {
 
-    public PassengerReservationEntity(PassengerEntity passenger, ReservationEntity reservation, Integer seatNumber) {
+    public PassengerReservationEntity(PassengerEntity passenger, ReservationEntity reservation, Integer seatNumber, SeatClass seatClass) {
         this.passenger = passenger;
         this.reservation = reservation;
         this.flight = reservation.getFlight();
         this.seatNumber = seatNumber;
+        this.seatClass = seatClass;
         this.status = PassengerReservationStatus.RESERVED;
     }
 
@@ -47,12 +50,21 @@ public class PassengerReservationEntity {
     @JoinColumn(name = "id_flight", nullable = false)
     private FlightEntity flight;
 
-    @Column(name = "seat_number", nullable = false)
+    @Setter
+    @Column(name = "seat_number")
     private Integer seatNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "seat_class", nullable = false)
+    private SeatClass seatClass;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PassengerReservationStatus status;
+
+    @Setter
+    @Column(nullable = false)
+    private BigDecimal price = BigDecimal.ZERO;
 
     public void cancel(){
         if(this.isCanceled()) return;

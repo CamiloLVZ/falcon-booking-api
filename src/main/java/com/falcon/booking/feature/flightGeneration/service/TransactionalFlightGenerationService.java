@@ -136,7 +136,10 @@ public class TransactionalFlightGenerationService {
                     if (existingDepartures.contains(departureInstant))
                         continue;
 
-                    batch.add(new FlightEntity(route, route.getDefaultAirplaneType(), departure, FlightStatus.SCHEDULED));
+                    FlightEntity flight = new FlightEntity(route, route.getDefaultAirplaneType(), departure, FlightStatus.SCHEDULED);
+                    flight.setBasePriceEconomy(route.getBasePriceEconomy());
+                    flight.setBasePriceFirstClass(route.getBasePriceFirstClass());
+                    batch.add(flight);
                     existingDepartures.add(departureInstant);
 
                     if (batch.size() >= batchSize) {
@@ -177,8 +180,11 @@ public class TransactionalFlightGenerationService {
         for (OffsetDateTime departureDateTime : departureTimes) {
             Instant departureInstant = departureDateTime.toInstant();
             if (!existingDepartures.contains(departureInstant)) {
-                flightEntities.add(new FlightEntity(route, route.getDefaultAirplaneType(),
-                        departureDateTime, FlightStatus.SCHEDULED));
+                FlightEntity flight = new FlightEntity(route, route.getDefaultAirplaneType(),
+                        departureDateTime, FlightStatus.SCHEDULED);
+                flight.setBasePriceEconomy(route.getBasePriceEconomy());
+                flight.setBasePriceFirstClass(route.getBasePriceFirstClass());
+                flightEntities.add(flight);
                 existingDepartures.add(departureInstant);
             }
         }

@@ -69,4 +69,11 @@ public class ReservationExceptionHandler {
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(FlightCapacityExceededException.class)
+    public ResponseEntity<Error> handleException(FlightCapacityExceededException exception){
+        Error error = new Error("flight-capacity-exceeded", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }

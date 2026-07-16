@@ -2,7 +2,6 @@ package com.falcon.booking.feature.reservation.controller;
 
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
-import com.falcon.booking.feature.reservation.dto.AddReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.service.ReservationCommandService;
 import com.falcon.booking.feature.reservation.service.ReservationQueryService;
@@ -13,14 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -139,26 +136,5 @@ public class ReservationController {
                                                                              String passportNumber) {
         return ResponseEntity.ok(reservationCommandService.cancelPassengerReservationByPassportNumber(reservationNumber, passportNumber));
     }
-
-    @Operation(summary = "Create a reservation",
-            description = "Creates a reservation with one to three passenger-seat assignments for a given flight.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Reservation created successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseReservationDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid request body or business rules",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-            @ApiResponse(responseCode = "404", description = "Flight not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @PostMapping
-    public ResponseEntity<ResponseReservationDto> addReservation(@RequestBody @Valid
-                                                                 @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                                                         description = "Data for creating a reservation",
-                                                                         required = true)
-                                                                 AddReservationDto addReservationDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservationCommandService.addReservation(addReservationDto));
-    }
-
-
 
 }

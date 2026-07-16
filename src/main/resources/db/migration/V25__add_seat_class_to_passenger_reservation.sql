@@ -1,0 +1,2 @@
+ALTER TABLE passenger_reservation
+ADD COLUMN seat_class VARCHAR(20) NOT NULL DEFAULT 'ECONOMY';

@@ -1,5 +1,6 @@
 package com.falcon.booking.feature.reservation.controller;
 
+import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.service.CheckInService;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Check-In", description = "Operations related to passenger check-in")
 @RestController
@@ -49,7 +52,27 @@ public class CheckInController {
                                                                             String identificationNumber,
                                                                             @RequestParam @NotBlank @Size(min = 2, max = 2)
                                                                             @Parameter(description = "Country two character ISO code", example = "CO")
-                                                                            String countryIsoCode){
-        return ResponseEntity.ok(checkInService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode));
+                                                                            String countryIsoCode,
+                                                                            @RequestParam(required = false)
+                                                                            @Parameter(description = "Seat number requested. If not provided, a random one is assigned.", example = "12")
+                                                                            Integer seatNumber){
+        return ResponseEntity.ok(checkInService.checkInByIdentificationNumber(reservationNumber, identificationNumber, countryIsoCode, seatNumber));
+    }
+
+    @Operation(summary = "Get available seats for a flight",
+            description = "Returns a list of available seat numbers for a specific flight and seat class.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of available seats retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Flight not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/flight/{flightId}/available-seats")
+    public ResponseEntity<List<Integer>> getAvailableSeats(@PathVariable
+                                                           @Parameter(description = "Flight ID", example = "1")
+                                                           Long flightId,
+                                                           @RequestParam
+                                                           @Parameter(description = "Seat class", example = "ECONOMY")
+                                                           SeatClass seatClass) {
+        return ResponseEntity.ok(checkInService.getAvailableSeats(flightId, seatClass));
     }
 }

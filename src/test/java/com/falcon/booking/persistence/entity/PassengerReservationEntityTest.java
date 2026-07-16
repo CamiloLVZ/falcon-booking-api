@@ -3,6 +3,7 @@ package com.falcon.booking.persistence.entity;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.flight.exception.OutOfFlightBoardingTimeException;
 import com.falcon.booking.feature.flight.exception.OutOfFlightCheckInTimeException;
 import com.falcon.booking.feature.reservation.exception.InvalidBoardingPassengerReservationException;
@@ -62,7 +63,7 @@ public class PassengerReservationEntityTest {
         }
     }
 
-    @DisplayName("Should set flight, seat and reserved status when created")
+    @DisplayName("Should set flight, seat, seatClass and reserved status when created")
     @Test
     void shouldInitializeFields_constructor() {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.SCHEDULED);
@@ -70,12 +71,13 @@ public class PassengerReservationEntityTest {
         PassengerEntity passengerEntity = createPassenger("10001", createCountry("CO"));
 
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(passengerEntity, reservationEntity, 12);
+                new PassengerReservationEntity(passengerEntity, reservationEntity, 12, SeatClass.ECONOMY);
 
         assertThat(passengerReservationEntity.getPassenger()).isEqualTo(passengerEntity);
         assertThat(passengerReservationEntity.getReservation()).isEqualTo(reservationEntity);
         assertThat(passengerReservationEntity.getFlight()).isEqualTo(flightEntity);
         assertThat(passengerReservationEntity.getSeatNumber()).isEqualTo(12);
+        assertThat(passengerReservationEntity.getSeatClass()).isEqualTo(SeatClass.ECONOMY);
         assertThat(passengerReservationEntity.getStatus()).isEqualTo(PassengerReservationStatus.RESERVED);
     }
 
@@ -85,7 +87,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.SCHEDULED);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
 
         passengerReservationEntity.cancel();
 
@@ -98,7 +100,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.SCHEDULED);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
         setStatus(passengerReservationEntity, PassengerReservationStatus.CANCELED);
 
         passengerReservationEntity.cancel();
@@ -112,7 +114,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.SCHEDULED);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
         setStatus(passengerReservationEntity, PassengerReservationStatus.BOARDED);
 
         ReservationInvalidStatusChangeException exception =
@@ -127,7 +129,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.CHECK_IN_AVAILABLE);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
 
         passengerReservationEntity.checkIn();
 
@@ -140,7 +142,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.CHECK_IN_AVAILABLE);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
         setStatus(passengerReservationEntity, PassengerReservationStatus.CANCELED);
 
         assertThrows(InvalidCheckInPassengerReservationException.class, passengerReservationEntity::checkIn);
@@ -152,7 +154,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(55L, FlightStatus.SCHEDULED);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
 
         OutOfFlightCheckInTimeException exception =
                 assertThrows(OutOfFlightCheckInTimeException.class, passengerReservationEntity::checkIn);
@@ -166,7 +168,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.BOARDING);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
         setStatus(passengerReservationEntity, PassengerReservationStatus.CHECKED_IN);
 
         passengerReservationEntity.board();
@@ -180,7 +182,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.BOARDING);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
 
         assertThrows(InvalidBoardingPassengerReservationException.class, passengerReservationEntity::board);
     }
@@ -191,7 +193,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(77L, FlightStatus.CHECK_IN_AVAILABLE);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
         setStatus(passengerReservationEntity, PassengerReservationStatus.CHECKED_IN);
 
         OutOfFlightBoardingTimeException exception =
@@ -206,7 +208,7 @@ public class PassengerReservationEntityTest {
         FlightEntity flightEntity = createFlight(1L, FlightStatus.SCHEDULED);
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerReservationEntity passengerReservationEntity =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.FIRST_CLASS);
 
         assertThat(passengerReservationEntity.isReserved()).isTrue();
         assertThat(passengerReservationEntity.isCheckedIn()).isFalse();
@@ -230,8 +232,8 @@ public class PassengerReservationEntityTest {
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
         PassengerEntity passengerEntity = createPassenger("10001", createCountry("CO"));
 
-        PassengerReservationEntity first = new PassengerReservationEntity(passengerEntity, reservationEntity, 1);
-        PassengerReservationEntity second = new PassengerReservationEntity(passengerEntity, reservationEntity, 7);
+        PassengerReservationEntity first = new PassengerReservationEntity(passengerEntity, reservationEntity, 1, SeatClass.ECONOMY);
+        PassengerReservationEntity second = new PassengerReservationEntity(passengerEntity, reservationEntity, 7, SeatClass.ECONOMY);
 
         assertThat(first.equals(second)).isTrue();
     }
@@ -243,9 +245,9 @@ public class PassengerReservationEntityTest {
         ReservationEntity reservationEntity = createReservation("rsv001", flightEntity);
 
         PassengerReservationEntity first =
-                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 1);
+                new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 1, SeatClass.ECONOMY);
         PassengerReservationEntity second =
-                new PassengerReservationEntity(createPassenger("10002", createCountry("CO")), reservationEntity, 1);
+                new PassengerReservationEntity(createPassenger("10002", createCountry("CO")), reservationEntity, 1, SeatClass.ECONOMY);
 
         assertThat(first.hashCode()).isNotEqualTo(second.hashCode());
     }

@@ -117,7 +117,7 @@ class PassengerReservationRepositoryTest {
                 new ReservationEntity("ABC123", flight, "test@mail.com", Instant.now()));
 
         PassengerEntity passenger = createPassenger("1001", country);
-        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, 12);
+        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, 12, com.falcon.booking.common.enums.SeatClass.ECONOMY);
         passengerReservationRepository.save(passengerReservation);
 
         List<PassengerReservationEntity> result = passengerReservationRepository.findAllBySeatNumberAndFlight(12, flight);
@@ -139,8 +139,8 @@ class PassengerReservationRepositoryTest {
 
         PassengerEntity passenger = createPassenger("2002", country);
 
-        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationOne, 5));
-        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationTwo, 6));
+        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationOne, 5, com.falcon.booking.common.enums.SeatClass.ECONOMY));
+        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationTwo, 6, com.falcon.booking.common.enums.SeatClass.ECONOMY));
 
         Page<PassengerReservationEntity> result = passengerReservationRepository.findAllByPassenger(passenger, PageRequest.of(0, 10));
 

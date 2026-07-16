@@ -2,10 +2,9 @@ package com.falcon.booking.feature.route.dto;
 
 import com.falcon.booking.common.utils.StringNormalizer;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
+import java.math.BigDecimal;
 
 public record CreateRouteDto(
         @Schema(description = "Route unique flight number", example = "AV1234")
@@ -31,7 +30,17 @@ public record CreateRouteDto(
         @Schema(description = "Route duration in minutes", example = "180")
         @NotNull(message = "duration minutes can not be null")
         @Positive(message = "duration minutes must be a integer greater than zero")
-        Integer durationMinutes
+        Integer durationMinutes,
+
+        @Schema(description = "Base price for economy class", example = "100.00")
+        @NotNull(message = "Base price economy can not be null")
+        @PositiveOrZero(message = "Base price economy must be positive or zero")
+        BigDecimal basePriceEconomy,
+
+        @Schema(description = "Base price for first class", example = "200.00")
+        @NotNull(message = "Base price first class can not be null")
+        @PositiveOrZero(message = "Base price first class must be positive or zero")
+        BigDecimal basePriceFirstClass
 ) {
 
         public CreateRouteDto{
