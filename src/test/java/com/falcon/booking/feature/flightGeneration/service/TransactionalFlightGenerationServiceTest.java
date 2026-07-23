@@ -74,7 +74,7 @@ class TransactionalFlightGenerationServiceTest {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
         airplaneType.setId(1L);
         airplaneType.setModel("Boeing 737");
-        airplaneType.setEconomySeats(180);
+        airplaneType.configureSeats(180, 0, "ABCDEF");
 
         RouteEntity route = new RouteEntity();
         route.setId(1L);

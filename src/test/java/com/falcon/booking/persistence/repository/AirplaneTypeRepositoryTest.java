@@ -21,8 +21,7 @@ public class AirplaneTypeRepositoryTest {
         AirplaneTypeEntity airplaneTypeEntity = new AirplaneTypeEntity();
         airplaneTypeEntity.setProducer(producer);
         airplaneTypeEntity.setModel(model);
-        airplaneTypeEntity.setEconomySeats(100);
-        airplaneTypeEntity.setFirstClassSeats(0);
+        airplaneTypeEntity.configureSeats(120, 0, "ABCDEF");
         airplaneTypeEntity.setStatus(AirplaneTypeStatus.INACTIVE);
         return airplaneTypeEntity;
     }

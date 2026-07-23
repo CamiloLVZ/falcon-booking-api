@@ -53,8 +53,7 @@ public class RouteRepositoryTest {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
         airplaneType.setProducer("Airbus " + suffix);
         airplaneType.setModel("A320-" + suffix);
-        airplaneType.setEconomySeats(100);
-        airplaneType.setFirstClassSeats(10);
+        airplaneType.configureSeats(108, 12, "ABCDEF");
         airplaneType.setStatus(AirplaneTypeStatus.ACTIVE);
         return airplaneType;
     }

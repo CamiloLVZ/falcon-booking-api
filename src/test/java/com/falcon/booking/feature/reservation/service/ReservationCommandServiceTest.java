@@ -66,8 +66,7 @@ class ReservationCommandServiceTest {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
         airplaneType.setProducer("Airbus");
         airplaneType.setModel("A320");
-        airplaneType.setEconomySeats(economySeats);
-        airplaneType.setFirstClassSeats(firstClassSeats);
+        airplaneType.configureSeats(economySeats, firstClassSeats, "ABCDEF");
         airplaneType.setStatus(AirplaneTypeStatus.ACTIVE);
 
         RouteEntity route = new RouteEntity();

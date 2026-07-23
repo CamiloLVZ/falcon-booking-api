@@ -48,6 +48,9 @@ public class SecurityConfig {
                         //RESERVATIONS
                         .requestMatchers("/v1/reservations/**").permitAll()
 
+                        //PAYMENTS
+                        .requestMatchers("/v1/payments/**").permitAll()
+
                         //COUNTRIES
                         .requestMatchers(HttpMethod.GET, "/v1/countries/**").permitAll()
 

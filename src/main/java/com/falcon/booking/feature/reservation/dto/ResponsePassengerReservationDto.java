@@ -6,6 +6,8 @@ import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ResponsePassengerReservationDto (
+        @Schema(description = "Passenger reservation internal ID", example = "100")
+        Long id,
         @Schema(description = "Passenger data")
         ResponsePassengerDto passenger,
         @Schema(description = "Seat number assigned to the passenger", example = "12")

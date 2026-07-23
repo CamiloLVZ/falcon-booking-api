@@ -2,13 +2,9 @@ package com.falcon.booking.feature.reservation.service;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.common.enums.SeatClass;
-import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
-import com.falcon.booking.feature.reservation.exception.FlightCapacityExceededException;
-import com.falcon.booking.feature.reservation.exception.PassengerNotFoundInReservationException;
-import com.falcon.booking.feature.reservation.exception.SeatNumberAlreadyTakenException;
-import com.falcon.booking.feature.reservation.exception.SeatNumberOutOfRangeException;
+import com.falcon.booking.feature.reservation.exception.*;
 import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
@@ -20,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,18 +29,14 @@ public class CheckInService {
     private final PassengerReservationMapper passengerReservationMapper;
     private final ReservationQueryService reservationQueryService;
     private final PassengerReservationRepository passengerReservationRepository;
-    private final FlightQueryService flightQueryService;
-
     public CheckInService(PassengerService passengerService,
                           PassengerReservationMapper passengerReservationMapper,
                           ReservationQueryService reservationQueryService,
-                          PassengerReservationRepository passengerReservationRepository,
-                          FlightQueryService flightQueryService) {
+                          PassengerReservationRepository passengerReservationRepository) {
         this.passengerService = passengerService;
         this.passengerReservationMapper = passengerReservationMapper;
         this.reservationQueryService = reservationQueryService;
         this.passengerReservationRepository = passengerReservationRepository;
-        this.flightQueryService = flightQueryService;
     }
 
     @Transactional
@@ -65,12 +56,16 @@ public class CheckInService {
 
         SeatClass seatClass = passengerReservation.getSeatClass();
 
+        if (!passengerReservation.isReserved()) {
+            throw new InvalidCheckInPassengerReservationException(passengerReservation.getStatus());
+        }
+
         List<PassengerReservationEntity> allReservations = passengerReservationRepository.findAllByFlight(reservationEntity.getFlight());
 
         Integer finalSeat = validateOrGenerateSeatNumber(seatNumber, reservationEntity.getFlight(), seatClass, allReservations);
-
         logger.info("Passenger with id: {} has checked in for reservation {}", passenger.getId(), reservationEntity.getNumber());
-        return reservationEntity.checkInPassenger(passenger, finalSeat);
+        PassengerReservationEntity finalPassengerReservation = reservationEntity.checkInPassenger(passenger, finalSeat);
+        return finalPassengerReservation;
     }
 
     private Integer validateOrGenerateSeatNumber(Integer requestedSeatNumber, FlightEntity flight, SeatClass seatClass, List<PassengerReservationEntity> allReservations) {
@@ -87,7 +82,7 @@ public class CheckInService {
 
         if (requestedSeatNumber != null) {
             if (requestedSeatNumber < minSeat || requestedSeatNumber > maxSeat)
-                throw new SeatNumberOutOfRangeException(requestedSeatNumber, maxSeat);
+                throw new SeatNumberOutOfRangeException(requestedSeatNumber,minSeat, maxSeat);
             if (takenSeats.contains(requestedSeatNumber))
                 throw new SeatNumberAlreadyTakenException(requestedSeatNumber, flight.getId());
             return requestedSeatNumber;
@@ -101,27 +96,7 @@ public class CheckInService {
         }
     }
 
-    public List<Integer> getAvailableSeats(Long flightId, SeatClass seatClass) {
-        FlightEntity flight = flightQueryService.getFlightEntity(flightId);
-        List<PassengerReservationEntity> allReservations = passengerReservationRepository.findAllByFlight(flight);
-
-        int firstClassSeats = flight.getAirplaneType().getFirstClassSeats();
-        int totalSeats = flight.getAirplaneType().getTotalSeats();
-
-        int minSeat = seatClass == SeatClass.FIRST_CLASS ? 1 : firstClassSeats + 1;
-        int maxSeat = seatClass == SeatClass.FIRST_CLASS ? firstClassSeats : totalSeats;
-
-        Set<Integer> takenSeats = allReservations.stream()
-                .filter(pr -> pr.getSeatNumber() != null && !pr.getStatus().equals(PassengerReservationStatus.CANCELED))
-                .map(PassengerReservationEntity::getSeatNumber)
-                .collect(Collectors.toSet());
-
-        List<Integer> availableSeats = new ArrayList<>();
-        for (int i = minSeat; i <= maxSeat; i++) {
-            if (!takenSeats.contains(i)) {
-                availableSeats.add(i);
-            }
-        }
-        return availableSeats;
+    public List<PassengerReservationEntity> getPassengerReservationsByFlight(FlightEntity flight) {
+        return passengerReservationRepository.findAllByFlight(flight);
     }
 }

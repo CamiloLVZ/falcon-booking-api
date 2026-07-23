@@ -60,8 +60,7 @@ class FlightCommandServiceTest {
         type.setId(id);
         type.setProducer("Airbus");
         type.setModel("A320");
-        type.setEconomySeats(150);
-        type.setFirstClassSeats(10);
+        type.configureSeats(150, 12, "ABCDEF");
         type.setStatus(com.falcon.booking.common.enums.AirplaneTypeStatus.ACTIVE);
         return type;
     }

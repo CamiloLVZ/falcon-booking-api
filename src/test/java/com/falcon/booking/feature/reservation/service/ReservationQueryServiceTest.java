@@ -61,8 +61,7 @@ class ReservationQueryServiceTest {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
         airplaneType.setProducer("Airbus");
         airplaneType.setModel("A320");
-        airplaneType.setEconomySeats(economySeats);
-        airplaneType.setFirstClassSeats(firstClassSeats);
+        airplaneType.configureSeats(economySeats, firstClassSeats, "ABCDEF");
         airplaneType.setStatus(AirplaneTypeStatus.ACTIVE);
 
         RouteEntity route = new RouteEntity();
@@ -85,7 +84,7 @@ class ReservationQueryServiceTest {
     @DisplayName("Should return reservation entity by number")
     @Test
     void shouldReturnEntity_getReservationEntityByNumber() {
-        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 100, 10);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
         ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
         given(reservationRepository.findByNumber("ABC123")).willReturn(Optional.of(reservation));
 
@@ -109,7 +108,7 @@ class ReservationQueryServiceTest {
     @DisplayName("Should return active reservation entities by flight")
     @Test
     void shouldReturnEntities_getAllReservationEntitiesActiveByFlight() {
-        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 100, 10);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
         ReservationEntity reservation = new ReservationEntity("ABC123", flight, "contact@test.com", Instant.now());
         Pageable pageable = PageRequest.of(0, 10, Sort.by("reservationDatetime").ascending());
 

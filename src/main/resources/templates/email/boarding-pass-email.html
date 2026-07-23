@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8"/>
+
+    <title>Falcon Airlines</title>
+
+    <style th:utext="${css}"></style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <img
+                th:src="${logo}"
+                alt="Falcon Airlines"/>
+
+        <div>
+
+            <h1>Falcon Airlines</h1>
+
+            <span>Your Boarding Pass</span>
+
+        </div>
+
+    </header>
+
+    <main>
+
+        <h2>Hello <span th:text="${passengerName}"></span>,</h2>
+
+        <p>
+
+            Your boarding pass has been successfully generated and is attached
+            to this email as a PDF document.
+
+        </p>
+
+        <div class="flight-card">
+
+            <div>
+
+                <span class="label">Flight</span>
+
+                <span class="value"
+                      th:text="${flightNumber}">
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Route</span>
+
+                <span class="value">
+
+                    <span th:text="${originAirport}"></span>
+
+                    →
+
+                    <span th:text="${destinationAirport}"></span>
+
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Departure</span>
+
+                <span class="value">
+
+                    <span th:text="${departure.toLocalDate()}"></span>
+
+                    ·
+
+                    <span th:text="${departure.toLocalTime()}"></span>
+
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Boarding Starts</span>
+
+                <span class="value">
+
+                    <span th:text="${boardingStart.toLocalTime()}"></span>
+
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Boarding Ends</span>
+
+                <span class="value">
+
+                    <span th:text="${boardingEnd.toLocalTime()}"></span>
+
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Seat</span>
+
+                <span class="value seat"
+                      th:text="${seat}">
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="notice">
+
+            Please present your boarding pass together with your identification
+            document at the boarding gate.
+
+        </div>
+
+        <p>
+
+            We recommend arriving at the boarding gate before the boarding
+            start time to ensure a smooth boarding process.
+
+        </p>
+
+    </main>
+
+    <footer>
+
+        Thank you for choosing Falcon Airlines.
+
+    </footer>
+
+</div>
+
+</body>
+
+</html>

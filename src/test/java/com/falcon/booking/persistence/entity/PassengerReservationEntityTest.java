@@ -131,7 +131,7 @@ public class PassengerReservationEntityTest {
         PassengerReservationEntity passengerReservationEntity =
                 new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
 
-        passengerReservationEntity.checkIn();
+        passengerReservationEntity.checkIn(12);
 
         assertThat(passengerReservationEntity.isCheckedIn()).isTrue();
     }
@@ -145,7 +145,7 @@ public class PassengerReservationEntityTest {
                 new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
         setStatus(passengerReservationEntity, PassengerReservationStatus.CANCELED);
 
-        assertThrows(InvalidCheckInPassengerReservationException.class, passengerReservationEntity::checkIn);
+        assertThrows(InvalidCheckInPassengerReservationException.class, () -> passengerReservationEntity.checkIn(12));
     }
 
     @DisplayName("Should throw exception when check in is out of flight check in time")
@@ -157,7 +157,7 @@ public class PassengerReservationEntityTest {
                 new PassengerReservationEntity(createPassenger("10001", createCountry("CO")), reservationEntity, 12, SeatClass.ECONOMY);
 
         OutOfFlightCheckInTimeException exception =
-                assertThrows(OutOfFlightCheckInTimeException.class, passengerReservationEntity::checkIn);
+                assertThrows(OutOfFlightCheckInTimeException.class, () -> passengerReservationEntity.checkIn(12));
 
         assertThat(exception.getMessage()).contains("55");
     }

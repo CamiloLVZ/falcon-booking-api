@@ -36,7 +36,7 @@ class FlightMapperTest {
     @Test
     void shouldMapFlightEntityToDto() {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
-        AirplaneTypeInFlightDto airplaneTypeDto = new AirplaneTypeInFlightDto("Boeing", "737", 150, 12);
+        AirplaneTypeInFlightDto airplaneTypeDto = new AirplaneTypeInFlightDto("Boeing", "737", 150, 12, "ABCDEF");
         AirportEntity origin = new AirportEntity();
         origin.setIataCode("BOG");
         origin.setTimezone("America/Bogota");
@@ -78,7 +78,7 @@ class FlightMapperTest {
     @Test
     void shouldMapFlightEntityListToDtoList() {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
-        AirplaneTypeInFlightDto airplaneTypeDto = new AirplaneTypeInFlightDto("Airbus", "A320", 160, 8);
+        AirplaneTypeInFlightDto airplaneTypeDto = new AirplaneTypeInFlightDto("Airbus", "A320", 160, 8, "ABCDEF");
 
         AirportEntity origin = new AirportEntity();
         origin.setIataCode("MAD");

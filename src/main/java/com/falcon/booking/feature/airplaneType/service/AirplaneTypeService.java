@@ -2,10 +2,7 @@ package com.falcon.booking.feature.airplaneType.service;
 
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.utils.StringNormalizer;
-import com.falcon.booking.feature.airplaneType.dto.CorrectAirplaneTypeDto;
-import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
-import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
-import com.falcon.booking.feature.airplaneType.dto.UpdateAirplaneTypeDto;
+import com.falcon.booking.feature.airplaneType.dto.*;
 import com.falcon.booking.feature.airplaneType.exception.AirplaneNotFoundException;
 import com.falcon.booking.feature.airplaneType.exception.AirplaneTypeAlreadyExistsException;
 import com.falcon.booking.feature.airplaneType.mapper.AirplaneTypeMapper;
@@ -19,6 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,9 +32,9 @@ public class AirplaneTypeService {
         this.airplaneTypeMapper = airplaneTypeMapper;
     }
 
-    public AirplaneTypeEntity getAirplaneTypeEntity(Long id){
-        return airplaneTypeRepository.findById(id).
-                orElseThrow(() -> new AirplaneNotFoundException(id));
+    public AirplaneTypeEntity getAirplaneTypeEntity(Long id) {
+        return airplaneTypeRepository.findById(id)
+                .orElseThrow(() -> new AirplaneNotFoundException(id));
     }
 
     public ResponseAirplaneTypeDto getAirplaneTypeById(Long id) {
@@ -65,25 +63,43 @@ public class AirplaneTypeService {
         String model = createAirplaneTypeDto.model();
 
         boolean exists = airplaneTypeRepository.existsByProducerAndModel(producer, model);
-        if(exists) throw new AirplaneTypeAlreadyExistsException(producer, model);
+        if (exists) throw new AirplaneTypeAlreadyExistsException(producer, model);
 
         AirplaneTypeEntity entityToSave = airplaneTypeMapper.toEntity(createAirplaneTypeDto);
+        entityToSave.configureSeats(
+                createAirplaneTypeDto.economySeats(),
+                createAirplaneTypeDto.firstClassSeats(),
+                createAirplaneTypeDto.seatColumns()
+        );
         entityToSave.activate();
+
         AirplaneTypeEntity entityCreated = airplaneTypeRepository.save(entityToSave);
         logger.info("Airplane Type created: {}", entityCreated.getFullName());
         return airplaneTypeMapper.toResponseDto(entityCreated);
     }
 
+    public List<SeatDefinition> getSeats(AirplaneTypeEntity airplaneTypeEntity) {
+
+        List<SeatDefinition> seats = new ArrayList<>();
+
+        for (int seat = 1; seat <= airplaneTypeEntity.getTotalSeats(); seat++) {
+            seats.add(new SeatDefinition(seat, airplaneTypeEntity.getSeatLabel(seat), airplaneTypeEntity.getSeatClass(seat)));
+        }
+        return seats;
+    }
+
     @Transactional
-    public ResponseAirplaneTypeDto updateAirplaneType(Long id, UpdateAirplaneTypeDto updateAirplaneTypeDto) {
+    public ResponseAirplaneTypeDto configureSeats(Long id, ConfigureSeatsDto configureSeatsDto) {
 
-        AirplaneTypeEntity entityToUpdate = getAirplaneTypeEntity(id);
+        AirplaneTypeEntity entity = getAirplaneTypeEntity(id);
+        entity.configureSeats(
+                configureSeatsDto.economySeats(),
+                configureSeatsDto.firstClassSeats(),
+                configureSeatsDto.seatColumns()
+        );
 
-        if(updateAirplaneTypeDto.economySeats()!=null) entityToUpdate.setEconomySeats(updateAirplaneTypeDto.economySeats());
-        if(updateAirplaneTypeDto.firstClassSeats()!=null) entityToUpdate.setFirstClassSeats(updateAirplaneTypeDto.firstClassSeats());
-
-        logger.info("Airplane Type {} updated", entityToUpdate.getFullName());
-        return airplaneTypeMapper.toResponseDto(entityToUpdate);
+        logger.info("Airplane Type {} seat configuration updated", entity.getFullName());
+        return airplaneTypeMapper.toResponseDto(entity);
     }
 
     @Transactional
@@ -93,15 +109,15 @@ public class AirplaneTypeService {
         String newProducer = StringNormalizer.normalize(correctAirplaneTypeDto.producer());
         String newModel = StringNormalizer.normalize(correctAirplaneTypeDto.model());
 
-        String producerToValidate= newProducer != null ? newProducer: entityToCorrect.getProducer();
-        String modelToValidate= newModel != null ? newModel: entityToCorrect.getModel();
+        String producerToValidate = newProducer != null ? newProducer : entityToCorrect.getProducer();
+        String modelToValidate = newModel != null ? newModel : entityToCorrect.getModel();
 
         boolean isChanging = !entityToCorrect.getModel().equals(modelToValidate)
                 || !entityToCorrect.getProducer().equals(producerToValidate);
 
-        if(!isChanging) return airplaneTypeMapper.toResponseDto(entityToCorrect);
+        if (!isChanging) return airplaneTypeMapper.toResponseDto(entityToCorrect);
 
-        if(airplaneTypeRepository.existsByProducerAndModel(producerToValidate, modelToValidate)){
+        if (airplaneTypeRepository.existsByProducerAndModel(producerToValidate, modelToValidate)) {
             throw new AirplaneTypeAlreadyExistsException(producerToValidate, modelToValidate);
         }
 

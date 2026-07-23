@@ -79,7 +79,7 @@ public class BoardingServiceTest {
     void shouldBoardByIdentificationNumber() {
         PassengerEntity passenger = createPassenger("123");
         ReservationEntity reservation = createReservationWithCheckedInPassenger(passenger);
-        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, 8, SeatClass.ECONOMY, PassengerReservationStatus.BOARDED);
+        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, null, 8, SeatClass.ECONOMY, PassengerReservationStatus.BOARDED);
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);

@@ -50,7 +50,6 @@ public class PassengerReservationEntity {
     @JoinColumn(name = "id_flight", nullable = false)
     private FlightEntity flight;
 
-    @Setter
     @Column(name = "seat_number")
     private Integer seatNumber;
 
@@ -75,13 +74,14 @@ public class PassengerReservationEntity {
         this.status = PassengerReservationStatus.CANCELED;
     }
 
-    public void checkIn() {
+    public void checkIn(int seatNumber) {
         if(!this.isReserved()){
             throw new InvalidCheckInPassengerReservationException(this.status);
         }
         if(!this.flight.isCheckInAvailable()){
             throw new OutOfFlightCheckInTimeException(this.flight.getId());
         }
+            this.seatNumber = seatNumber;
             this.status = PassengerReservationStatus.CHECKED_IN;
     }
 

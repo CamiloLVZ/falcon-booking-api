@@ -1,4 +1,4 @@
-package com.falcon.booking.feature.reservation.controller;
+package com.falcon.booking.feature.boardingPass.controller;
 
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;

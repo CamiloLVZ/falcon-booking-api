@@ -80,7 +80,7 @@ public class RouteControllerTest {
         AirportDto origin = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
         AirportDto destination = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", countryDto, "America/Bogota");
         ResponseAirplaneTypeDto airplaneType =
-                new ResponseAirplaneTypeDto(1L, "Airbus", "A320", 100, 10, AirplaneTypeStatus.ACTIVE);
+                new ResponseAirplaneTypeDto(1L, "Airbus", "A320", 100, 10, "ABCDEF", AirplaneTypeStatus.ACTIVE);
 
         return new ResponseRouteDto(flightNumber, origin, destination, airplaneType, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
     }
@@ -287,7 +287,7 @@ public class RouteControllerTest {
                         OffsetDateTime.now(),
                         LocalDateTime.now(),
                         40,
-                        new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
+                        new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10, "ABCDEF"),
                         FlightStatus.SCHEDULED,
                         BigDecimal.valueOf(100.0),
                         BigDecimal.valueOf(200.0)

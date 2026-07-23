@@ -2,10 +2,10 @@ package com.falcon.booking.feature.airplaneType.controller;
 
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.airplaneType.dto.ConfigureSeatsDto;
 import com.falcon.booking.feature.airplaneType.dto.CorrectAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
-import com.falcon.booking.feature.airplaneType.dto.UpdateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -53,7 +53,7 @@ public class AirplaneTypeController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseAirplaneTypeDto> getAirplaneTypeById(@PathVariable
-                                                                       @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
+                                                                       @Parameter(description = "Airplane type numeric unique identifier", example = "10")
                                                                        Long id) {
         return ResponseEntity.ok(airplaneTypeService.getAirplaneTypeById(id));
     }
@@ -70,15 +70,16 @@ public class AirplaneTypeController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @GetMapping
-    public ResponseEntity<List<ResponseAirplaneTypeDto>> getAllAirplanesType(@RequestParam(required = false)
-                                                                             @Parameter(description = "Airplane type producers name", example = "AIRBUS")
-                                                                             String producer,
-                                                                             @RequestParam(required = false)
-                                                                             @Parameter(description = "Airplane type model name", example = "320-200")
-                                                                             String model,
-                                                                             @RequestParam(required = false)
-                                                                             @Parameter(description = "Airplane type status", example = "ACTIVE")
-                                                                             AirplaneTypeStatus status) {
+    public ResponseEntity<List<ResponseAirplaneTypeDto>> getAllAirplanesType(
+            @RequestParam(required = false)
+            @Parameter(description = "Airplane type producer name", example = "AIRBUS")
+            String producer,
+            @RequestParam(required = false)
+            @Parameter(description = "Airplane type model name", example = "320-200")
+            String model,
+            @RequestParam(required = false)
+            @Parameter(description = "Airplane type status", example = "ACTIVE")
+            AirplaneTypeStatus status) {
 
         return ResponseEntity.ok(airplaneTypeService.getAirplaneTypes(producer, model, status));
     }
@@ -94,25 +95,27 @@ public class AirplaneTypeController {
             @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "403", description = "Insufficient permissions to create airplane types",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "422", description = "Invalid seat configuration",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PostMapping
-    public ResponseEntity<ResponseAirplaneTypeDto> createAirplaneType(@RequestBody @Valid
-                                                                      @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                                                              description = "Data for creating a new airplane type",
-                                                                              required = true
-                                                                      )
-                                                                      CreateAirplaneTypeDto createAirplaneTypeDto) {
+    public ResponseEntity<ResponseAirplaneTypeDto> createAirplaneType(
+            @RequestBody @Valid
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Data for creating a new airplane type",
+                    required = true)
+            CreateAirplaneTypeDto createAirplaneTypeDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 airplaneTypeService.addAirplaneType(createAirplaneTypeDto)
         );
     }
 
-    @Operation(summary = "Update an airplane type seat quantities",
-            description = "Finds an airplane type record by its id and allows update its seats quantity. Requires authentication with JWT token and ADMIN role",
+    @Operation(summary = "Configure seat layout of an airplane type",
+            description = "Reconfigures the seat counts and column layout of an existing airplane type. Validates that total seats is a multiple of the number of seat columns. Requires authentication with JWT token and ADMIN role",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Airplane type updated successfully",
+            @ApiResponse(responseCode = "200", description = "Seat configuration updated successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseAirplaneTypeDto.class))),
             @ApiResponse(responseCode = "400", description = "Error by invalid arguments",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
@@ -121,21 +124,21 @@ public class AirplaneTypeController {
             @ApiResponse(responseCode = "403", description = "Insufficient permissions to update airplane types",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
             @ApiResponse(responseCode = "404", description = "Airplane type not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "422", description = "Invalid seat configuration (e.g. total seats not divisible by column count, duplicate column letters)",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
-    @PatchMapping("/{id}")
-    public ResponseEntity<ResponseAirplaneTypeDto> updateAirplaneType(@PathVariable
-                                                                      @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
-                                                                      Long id,
-                                                                      @Valid @RequestBody
-                                                                      @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                                                              description = "Data for updating an existing airplane type record",
-                                                                              required = true
-                                                                      )
-                                                                      UpdateAirplaneTypeDto updateAirplaneTypeDto) {
-        return ResponseEntity.ok(
-                airplaneTypeService.updateAirplaneType(id, updateAirplaneTypeDto)
-        );
+    @PatchMapping("/{id}/configure-seats")
+    public ResponseEntity<ResponseAirplaneTypeDto> configureSeats(
+            @PathVariable
+            @Parameter(description = "Airplane type numeric unique identifier", example = "10")
+            Long id,
+            @Valid @RequestBody
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "New seat layout configuration",
+                    required = true)
+            ConfigureSeatsDto configureSeatsDto) {
+        return ResponseEntity.ok(airplaneTypeService.configureSeats(id, configureSeatsDto));
     }
 
     @Operation(summary = "Update an airplane type identity",
@@ -154,15 +157,15 @@ public class AirplaneTypeController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PatchMapping("/{id}/correct-identity")
-    public ResponseEntity<ResponseAirplaneTypeDto> correctAirplaneType(@PathVariable
-                                                                       @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
-                                                                       Long id,
-                                                                       @Valid @RequestBody
-                                                                       @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                                                               description = "Data for updating an airplane type record identity",
-                                                                               required = true
-                                                                       )
-                                                                       CorrectAirplaneTypeDto correctAirplaneTypeDto) {
+    public ResponseEntity<ResponseAirplaneTypeDto> correctAirplaneType(
+            @PathVariable
+            @Parameter(description = "Airplane type numeric unique identifier", example = "10")
+            Long id,
+            @Valid @RequestBody
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Data for updating an airplane type record identity",
+                    required = true)
+            CorrectAirplaneTypeDto correctAirplaneTypeDto) {
         return ResponseEntity.ok(
                 airplaneTypeService.correctAirplaneType(id, correctAirplaneTypeDto)
         );
@@ -184,9 +187,10 @@ public class AirplaneTypeController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<ResponseAirplaneTypeDto> deactivateAirplaneType(@PathVariable
-                                                                          @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
-                                                                          Long id) {
+    public ResponseEntity<ResponseAirplaneTypeDto> deactivateAirplaneType(
+            @PathVariable
+            @Parameter(description = "Airplane type numeric unique identifier", example = "10")
+            Long id) {
         return ResponseEntity.ok(airplaneTypeService.deactivateAirplaneType(id));
     }
 
@@ -206,9 +210,10 @@ public class AirplaneTypeController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PatchMapping("/{id}/activate")
-    public ResponseEntity<ResponseAirplaneTypeDto> activateAirplaneType(@PathVariable
-                                                                        @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
-                                                                        Long id) {
+    public ResponseEntity<ResponseAirplaneTypeDto> activateAirplaneType(
+            @PathVariable
+            @Parameter(description = "Airplane type numeric unique identifier", example = "10")
+            Long id) {
         return ResponseEntity.ok(airplaneTypeService.activateAirplaneType(id));
     }
 
@@ -228,9 +233,10 @@ public class AirplaneTypeController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
     @PatchMapping("/{id}/retire")
-    public ResponseEntity<ResponseAirplaneTypeDto> retireAirplaneType(@PathVariable
-                                                                      @Parameter(description = "Airplane type numeric unique identifier ", example = "10")
-                                                                      Long id) {
+    public ResponseEntity<ResponseAirplaneTypeDto> retireAirplaneType(
+            @PathVariable
+            @Parameter(description = "Airplane type numeric unique identifier", example = "10")
+            Long id) {
         return ResponseEntity.ok(airplaneTypeService.retireAirplaneType(id));
     }
 
