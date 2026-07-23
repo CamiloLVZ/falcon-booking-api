@@ -24,7 +24,7 @@ public class ZxingQrCodeService implements QrCodeService {
         try {
             BitMatrix matrix = qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, DEFAULT_QR_SIZE, DEFAULT_QR_SIZE);
             MatrixToImageWriter.writeToStream(matrix, IMAGE_FORMAT, outputStream);
-        } catch (WriterException | IOException e) {
+        } catch (WriterException | IOException | IllegalArgumentException e) {
             throw new QrCodeGenerationException(e.getMessage());
         }
 

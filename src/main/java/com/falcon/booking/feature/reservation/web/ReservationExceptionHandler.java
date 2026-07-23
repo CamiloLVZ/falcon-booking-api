@@ -76,4 +76,20 @@ public class ReservationExceptionHandler {
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(DuplicatedPassengerException.class)
+    public ResponseEntity<Error> handleException(DuplicatedPassengerException exception){
+        Error error = new Error("duplicate-passenger", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(PassengerAlreadyReservedFlightException.class)
+    public ResponseEntity<Error> handleException(PassengerAlreadyReservedFlightException exception){
+        Error error = new Error("passenger-already-reserved-flight", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }
+
+

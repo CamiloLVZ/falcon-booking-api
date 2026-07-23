@@ -1,9 +1,6 @@
 package com.falcon.booking.persistence.repository;
 
-import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.persistence.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -116,7 +113,7 @@ class PassengerReservationRepositoryTest {
                 new ReservationEntity("ABC123", flight, "test@mail.com", Instant.now()));
 
         PassengerEntity passenger = createPassenger("1001", country);
-        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, 12, com.falcon.booking.common.enums.SeatClass.ECONOMY);
+        PassengerReservationEntity passengerReservation = new PassengerReservationEntity(passenger, reservation, 12, SeatClass.ECONOMY);
         passengerReservationRepository.save(passengerReservation);
 
         List<PassengerReservationEntity> result = passengerReservationRepository.findAllBySeatNumberAndFlight(12, flight);
@@ -138,12 +135,39 @@ class PassengerReservationRepositoryTest {
 
         PassengerEntity passenger = createPassenger("2002", country);
 
-        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationOne, 5, com.falcon.booking.common.enums.SeatClass.ECONOMY));
-        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationTwo, 6, com.falcon.booking.common.enums.SeatClass.ECONOMY));
+        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationOne, 5, SeatClass.ECONOMY));
+        passengerReservationRepository.save(new PassengerReservationEntity(passenger, reservationTwo, 6, SeatClass.ECONOMY));
 
         Page<PassengerReservationEntity> result = passengerReservationRepository.findAllByPassenger(passenger, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
+    }
+
+    @DisplayName("Should return reservations by flight, passenger and status not")
+    @Test
+    void shouldReturnReservations_findAllByFlightAndPassengerAndStatusNot() {
+        FlightEntity flight = createFlight("AV3333");
+        CountryEntity country = countryRepository.findAllByOrderByNameAsc().get(0);
+
+        ReservationEntity reservationOne = reservationRepository.save(
+                new ReservationEntity("ONE333", flight, "one@mail.com", Instant.now()));
+        ReservationEntity reservationTwo = reservationRepository.save(
+                new ReservationEntity("TWO333", flight, "two@mail.com", Instant.now()));
+
+        PassengerEntity passenger = createPassenger("3003", country);
+
+        PassengerReservationEntity pr1 = new PassengerReservationEntity(passenger, reservationOne, 5, com.falcon.booking.common.enums.SeatClass.ECONOMY);
+
+        PassengerReservationEntity pr2 = new PassengerReservationEntity(passenger, reservationTwo, 6, com.falcon.booking.common.enums.SeatClass.ECONOMY);
+        pr2.cancel();
+        passengerReservationRepository.save(pr1);
+        passengerReservationRepository.save(pr2);
+
+        List<PassengerReservationEntity> result = passengerReservationRepository.findAllByFlightAndPassengerAndStatusNot(
+                flight, passenger, com.falcon.booking.common.enums.PassengerReservationStatus.CANCELED);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getReservation().getNumber()).isEqualTo("ONE333");
     }
 }

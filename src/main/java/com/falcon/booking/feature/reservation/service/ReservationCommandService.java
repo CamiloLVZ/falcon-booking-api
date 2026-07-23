@@ -1,10 +1,13 @@
 package com.falcon.booking.feature.reservation.service;
 
+import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
 import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
 import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
 import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
+import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
 import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
@@ -48,6 +51,9 @@ public class ReservationCommandService {
     }
 
     public String createReservationFromPayment(PaymentRequestDto requestDto, FlightEntity flight) {
+
+        checkPassengersAlreadyReservedFlight(requestDto.passengers(), flight);
+
         String reservationNumber = reservationNumberGenerator.generate();
         ReservationEntity reservation = reservationRepository.save(new ReservationEntity(reservationNumber, flight, requestDto.contactEmail(), Instant.now()));
 
@@ -62,6 +68,21 @@ public class ReservationCommandService {
 
         logger.info("Created reservation number {} for flight {} via payment. Passengers: {}", reservation.getNumber(), flight.getId(), passengerReservations.size());
         return reservationNumber;
+    }
+
+    private void checkPassengersAlreadyReservedFlight(List<PaymentPassengerDto> passengers, FlightEntity flight) {
+        for(PaymentPassengerDto dto : passengers) {
+            try {
+                PassengerEntity passenger = passengerService.
+                        getPassengerEntityByIdentificationNumber(dto.getPassenger().identificationNumber(), dto.getPassenger().nationalityIsoCode());
+
+                if(!passengerReservationRepository.findAllByFlightAndPassengerAndStatusNot(flight, passenger, PassengerReservationStatus.CANCELED).isEmpty()) {
+                    throw new PassengerAlreadyReservedFlightException(passenger.getIdentification(), flight.getId());
+                }
+            }catch (PassengerNotFoundException e) {
+                continue;
+            }
+        }
     }
 
     @Transactional

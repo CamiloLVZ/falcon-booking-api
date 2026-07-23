@@ -61,8 +61,8 @@ public class SmtpEmailService implements EmailService {
             mailSender.send(mimeMessage);
             log.info("Email successfully sent to {}", request.to());
 
-        } catch (MessagingException | UnsupportedEncodingException e) {
-            log.error("Failed to send email to {} due to MessagingException: {}", request.to(), e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Failed to send email to {} due to Exception: {}", request.to(), e.getMessage(), e);
             throw new EmailSendingException("Unable to send email.", e);
         }
     }
