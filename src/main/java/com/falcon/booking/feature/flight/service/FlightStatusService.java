@@ -46,8 +46,8 @@ public class FlightStatusService {
         flight.correctStatusByTime(now);
 
         if (now.isAfter(departureDateTime)) {
-            boolean wasCompleted = flight.isCompleted();
-            return !wasCompleted;
+            flight.markAsCompleted();
+            return true;
         }
         
         if (isGateClosedRange && !flight.isGateClosed()) {
