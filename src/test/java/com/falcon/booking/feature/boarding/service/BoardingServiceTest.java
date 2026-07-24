@@ -65,7 +65,9 @@ class BoardingServiceTest {
                 emailTemplateService,
                 resourceService
         );
-        ReflectionTestUtils.setField(boardingService, "validationUrl", "https://falcon.example.com/boarding-pass/validate");
+        ReflectionTestUtils.setField(boardingService, "baseUrl", "https://falcon.example.com");
+        ReflectionTestUtils.setField(boardingService, "contextPath", "/api");
+        ReflectionTestUtils.setField(boardingService, "validationPath", "/v1/boarding-passes");
         ReflectionTestUtils.setField(boardingService, "minutesBeforeToEndBoarding", 15);
         ReflectionTestUtils.setField(boardingService, "minutesBeforeToStartBoarding", 60);
     }
