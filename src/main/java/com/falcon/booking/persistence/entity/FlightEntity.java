@@ -153,7 +153,7 @@ public class FlightEntity {
     public void markAsGateClosed(){
         if (this.isGateClosed() ) return;
 
-        if(!this.isInBoarding())
+        if(this.isCanceled() || this.isCompleted())
             throw new FlightInvalidStatusChangeException(this.status, FlightStatus.GATE_CLOSED);
 
         this.status = FlightStatus.GATE_CLOSED;
@@ -162,7 +162,7 @@ public class FlightEntity {
     public void markAsCompleted(){
         if (this.isCompleted() ) return;
 
-        if(!this.isGateClosed() && !this.isInBoarding())
+        if(this.isCanceled())
             throw new FlightInvalidStatusChangeException(this.status, FlightStatus.COMPLETED);
 
         this.status = FlightStatus.COMPLETED;
