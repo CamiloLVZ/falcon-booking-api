@@ -11,8 +11,7 @@ import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,10 +19,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class PassengerService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PassengerService.class);
 
     private final PassengerRepository passengerRepository;
     private final PassengerMapper passengerMapper;
@@ -84,7 +82,7 @@ public class PassengerService {
         }else {
 
             PassengerEntity passengerCreated = passengerRepository.save(newPassengerEntity);
-            logger.info("Passenger created with id: {}", passengerCreated.getId());
+            log.info("Passenger created with id: {}", passengerCreated.getId());
             return passengerCreated;
         }
 
@@ -121,7 +119,7 @@ public class PassengerService {
             throw new PassengerAlreadyExistsException(newPassportNumber);
         }else{
             passengerEntity.setPassportNumber(newPassportNumber);
-            logger.info("Passenger {} updated passport number to {}", passengerEntity.getId(), newPassportNumber);
+            log.info("Passenger {} updated passport number to {}", passengerEntity.getId(), newPassportNumber);
             return passengerMapper.toResponseDto(passengerEntity);
         }
     }

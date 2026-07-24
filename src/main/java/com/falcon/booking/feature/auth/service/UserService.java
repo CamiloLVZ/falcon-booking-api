@@ -7,16 +7,14 @@ import com.falcon.booking.persistence.entity.RoleEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class UserService {
-
-    private final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -53,7 +51,7 @@ public class UserService {
         UserEntity user = userRepository.save(buildUser(createUserDto));
         RoleEntity role = roleService.getRoleByName("CLIENT");
         userRoleService.addUserRole(user, role);
-        logger.debug("Client user created successfully: {}", user.getEmail());
+        log.debug("Client user created successfully: {}", user.getEmail());
         return user;
     }
 
@@ -64,7 +62,7 @@ public class UserService {
         UserEntity user = userRepository.save(buildUser(createUserDto));
         RoleEntity role = roleService.getRoleByName("ADMIN");
         userRoleService.addUserRole(user, role);
-        logger.info("Admin user created successfully: {}", user.getEmail());
+        log.info("Admin user created successfully: {}", user.getEmail());
         return user;
     }
 
@@ -72,7 +70,7 @@ public class UserService {
     public UserEntity createAdminIfNotExists(CreateUserDto dto){
         try {
             return userRepository.findByEmail(dto.email()).orElseGet(() ->{
-                    logger.info("Initializing admin user");
+                    log.info("Initializing admin user");
                     return createAdminUser(dto);
             });
         } catch (UserAlreadyExistException | DataIntegrityViolationException e) {

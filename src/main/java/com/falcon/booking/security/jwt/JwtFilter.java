@@ -5,8 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,9 +18,9 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
     private final JwtUtil jwtUtil;
 
     @Autowired
@@ -39,7 +38,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
-            logger.debug("Authorization header is missing or does not start with Bearer");
+            log.debug("Authorization header is missing or does not start with Bearer");
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,7 +49,7 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             payload = jwtUtil.extractPayload(token);
         } catch (JWTVerificationException e) {
-            logger.warn("JWT verification failed: {}", e.getMessage());
+            log.warn("JWT verification failed: {}", e.getMessage());
             filterChain.doFilter(request, response);
             return;
         }
@@ -65,7 +64,7 @@ public class JwtFilter extends OncePerRequestFilter {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
-        logger.debug("JWT authentication successful for user: {}", payload.userId());
+        log.debug("JWT authentication successful for user: {}", payload.userId());
         filterChain.doFilter(request, response);
     }
 

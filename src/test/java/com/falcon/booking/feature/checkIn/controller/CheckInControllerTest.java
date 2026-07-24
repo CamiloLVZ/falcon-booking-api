@@ -17,8 +17,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.feature.checkIn.dto.CheckInRequestDto;
+import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -52,8 +55,8 @@ class CheckInControllerTest {
 
     @BeforeEach
     void setUp() {
-        com.falcon.booking.feature.passenger.dto.ResponsePassengerDto passengerDto = new com.falcon.booking.feature.passenger.dto.ResponsePassengerDto(
-                1L, "John", "Doe", com.falcon.booking.common.enums.PassengerGender.M, "123456789", java.time.LocalDate.now(), "CO", "123456789"
+        ResponsePassengerDto passengerDto = new ResponsePassengerDto(
+                1L, "John", "Doe", PassengerGender.M, "123456789", LocalDate.now(), "CO", "123456789"
         );
         responseDto = new ResponsePassengerReservationDto(
                 10L,

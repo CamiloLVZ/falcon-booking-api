@@ -16,8 +16,7 @@ import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import com.falcon.booking.persistence.entity.ReservationEntity;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +24,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class CheckInService {
-
-    private static final Logger logger = LoggerFactory.getLogger(CheckInService.class);
 
     private final PassengerService passengerService;
     private final PassengerReservationMapper passengerReservationMapper;
@@ -66,7 +64,7 @@ public class CheckInService {
         List<PassengerReservationEntity> allReservations = passengerReservationRepository.findAllByFlight(reservationEntity.getFlight());
 
         Integer finalSeat = validateOrGenerateSeatNumber(seatNumber, reservationEntity.getFlight(), passengerReservation.getSeatClass(), allReservations);
-        logger.info("Passenger with id: {} has checked in for reservation {}", passenger.getId(), reservationEntity.getNumber());
+        log.info("Passenger with id: {} has checked in for reservation {}", passenger.getId(), reservationEntity.getNumber());
         return reservationEntity.checkInPassenger(passenger, finalSeat);
     }
 

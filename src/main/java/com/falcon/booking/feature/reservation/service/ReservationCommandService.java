@@ -15,8 +15,7 @@ import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import com.falcon.booking.persistence.entity.ReservationEntity;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.ReservationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +23,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ReservationCommandService {
-
-    private static final Logger logger = LoggerFactory.getLogger(ReservationCommandService.class);
 
     private final ReservationRepository reservationRepository;
     private final PassengerReservationRepository passengerReservationRepository;
@@ -66,7 +64,7 @@ public class ReservationCommandService {
         }
         passengerReservationRepository.saveAll(passengerReservations);
 
-        logger.info("Created reservation number {} for flight {} via payment. Passengers: {}", reservation.getNumber(), flight.getId(), passengerReservations.size());
+        log.info("Created reservation number {} for flight {} via payment. Passengers: {}", reservation.getNumber(), flight.getId(), passengerReservations.size());
         return reservationNumber;
     }
 
@@ -100,7 +98,7 @@ public class ReservationCommandService {
     public ReservationEntity cancelPassengerReservation(String reservationNumber, PassengerEntity passenger) {
         ReservationEntity reservation = reservationQueryService.getReservationEntityByNumber(reservationNumber);
         reservation.cancelPassenger(passenger);
-        logger.info("Passenger with id {} canceled in reservation {}", passenger.getId(), reservation.getNumber());
+        log.info("Passenger with id {} canceled in reservation {}", passenger.getId(), reservation.getNumber());
         return reservation;
     }
 
@@ -108,7 +106,7 @@ public class ReservationCommandService {
     public ResponseReservationDto cancelReservation(String reservationNumber) {
         ReservationEntity reservationEntity = reservationQueryService.getReservationEntityByNumber(reservationNumber);
         reservationEntity.cancel();
-        logger.info("Reservation number {} has been canceled", reservationEntity.getNumber());
+        log.info("Reservation number {} has been canceled", reservationEntity.getNumber());
         return reservationMapper.toResponseDto(reservationEntity);
     }
 }

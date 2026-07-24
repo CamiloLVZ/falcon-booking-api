@@ -8,8 +8,7 @@ import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import com.falcon.booking.persistence.repository.RouteRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +21,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class TransactionalFlightGenerationService {
 
@@ -33,8 +33,6 @@ public class TransactionalFlightGenerationService {
 
     @Value("${app.generation.batch-size}")
     int batchSize;
-
-    private static final Logger logger = LoggerFactory.getLogger(TransactionalFlightGenerationService.class);
 
     private final FlightRepository flightRepository;
     private final RouteRepository routeRepository;
@@ -60,7 +58,7 @@ public class TransactionalFlightGenerationService {
     }
 
     public int generateAllFlightsForAllRoutes() {
-        logger.info("Starting flights generation for all active routes");
+        log.info("Starting flights generation for all active routes");
         List<Long> routeIds = routeRepository.findIdsByStatus(RouteStatus.ACTIVE);
 
         List<CompletableFuture<Integer>> futuresFlightsGenerated = routeIds.stream()
@@ -84,20 +82,20 @@ public class TransactionalFlightGenerationService {
                 Throwable cause = e.getCause();
                 if (cause instanceof RouteGenerationException routeGenerationException) {
                     failedRouteIds.add(routeGenerationException.routeId());
-                    logger.error("Error generating flights for route {}. {}", routeGenerationException.routeId(), routeGenerationException.getCause().getMessage());
+                    log.error("Error generating flights for route {}. {}", routeGenerationException.routeId(), routeGenerationException.getCause().getMessage());
                 } else {
-                    logger.error("Unexpected error waiting for route generation result. {}", e.getMessage());
+                    log.error("Unexpected error waiting for route generation result. {}", e.getMessage());
                 }
             }
         }
 
         if (!failedRouteIds.isEmpty()) {
-            logger.error("Flights generation finished with errors: {} flights generated, {} failed routes",
+            log.error("Flights generation finished with errors: {} flights generated, {} failed routes",
                     totalGenerated, failedRouteIds.size());
             throw new FlightGenerationPartialFailureException(failedRouteIds);
         }
 
-        logger.info("Flights generation completed: {} flights in {} routes",
+        log.info("Flights generation completed: {} flights in {} routes",
                 totalGenerated, routeIds.size());
 
         return totalGenerated;
@@ -225,10 +223,10 @@ public class TransactionalFlightGenerationService {
 
             } catch (Exception e) {
                 errorCount++;
-                logger.error("Error generating flights for route {} at horizon date. {}", routeId, e.getMessage());
+                log.error("Error generating flights for route {} at horizon date. {}", routeId, e.getMessage());
             }
         }
-        logger.info("Daily flights generation completed: {} processed, {} skipped, {} errors", processedCount, skippedCount, errorCount);
+        log.info("Daily flights generation completed: {} processed, {} skipped, {} errors", processedCount, skippedCount, errorCount);
 
         return totalGenerated;
     }

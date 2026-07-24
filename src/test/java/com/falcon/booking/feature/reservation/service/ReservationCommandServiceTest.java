@@ -18,8 +18,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
+import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
+import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
+import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
+import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,7 +51,7 @@ class ReservationCommandServiceTest {
     @Mock
     private ReservationQueryService reservationQueryService;
     @Mock
-    private com.falcon.booking.feature.reservation.component.ReservationNumberGenerator reservationNumberGenerator;
+    private ReservationNumberGenerator reservationNumberGenerator;
 
     @InjectMocks
     private ReservationCommandService reservationCommandService;
@@ -112,22 +121,21 @@ class ReservationCommandServiceTest {
     void shouldCreateReservationFromPayment() {
         FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
 
-        // AddPassengerDto record: firstName, lastName, gender, nationalityIsoCode, dateOfBirth, passportNumber, identificationNumber
-        com.falcon.booking.feature.passenger.dto.AddPassengerDto addPassengerDto =
-                new com.falcon.booking.feature.passenger.dto.AddPassengerDto(
+        AddPassengerDto addPassengerDto =
+                new AddPassengerDto(
                         "Ana", "Perez", PassengerGender.F, "CO", LocalDate.now().minusYears(20), "P123456", "123456");
-        com.falcon.booking.feature.payment.dto.PaymentPassengerDto paymentPassengerDto =
-                new com.falcon.booking.feature.payment.dto.PaymentPassengerDto(
-                        addPassengerDto, com.falcon.booking.common.enums.SeatClass.ECONOMY);
+        PaymentPassengerDto paymentPassengerDto =
+                new PaymentPassengerDto(
+                        addPassengerDto, SeatClass.ECONOMY);
 
-        com.falcon.booking.feature.payment.dto.PaymentRequestDto requestDto =
-                new com.falcon.booking.feature.payment.dto.PaymentRequestDto(
-                        flight.getId(), "test@test.com", java.util.List.of(paymentPassengerDto));
+        PaymentRequestDto requestDto =
+                new PaymentRequestDto(
+                        flight.getId(), "test@test.com", List.of(paymentPassengerDto));
 
         PassengerEntity passenger = createPassenger("123456");
 
         when(passengerService.getPassengerEntityByIdentificationNumber("123456", "CO"))
-                .thenThrow(new com.falcon.booking.feature.passenger.exception.PassengerNotFoundException("123456"));
+                .thenThrow(new PassengerNotFoundException("123456"));
         when(reservationNumberGenerator.generate()).thenReturn("RES123");
         when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(passengerService.createOrGetPassenger(addPassengerDto)).thenReturn(passenger);
@@ -143,16 +151,16 @@ class ReservationCommandServiceTest {
     void shouldFailCreateReservation_PassengerAlreadyReserved() {
         FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
 
-        com.falcon.booking.feature.passenger.dto.AddPassengerDto addPassengerDto =
-                new com.falcon.booking.feature.passenger.dto.AddPassengerDto(
+        AddPassengerDto addPassengerDto =
+                new AddPassengerDto(
                         "Ana", "Perez", PassengerGender.F, "CO", LocalDate.now().minusYears(20), "P123456", "123456");
-        com.falcon.booking.feature.payment.dto.PaymentPassengerDto paymentPassengerDto =
-                new com.falcon.booking.feature.payment.dto.PaymentPassengerDto(
-                        addPassengerDto, com.falcon.booking.common.enums.SeatClass.ECONOMY);
+        PaymentPassengerDto paymentPassengerDto =
+                new PaymentPassengerDto(
+                        addPassengerDto, SeatClass.ECONOMY);
 
-        com.falcon.booking.feature.payment.dto.PaymentRequestDto requestDto =
-                new com.falcon.booking.feature.payment.dto.PaymentRequestDto(
-                        flight.getId(), "test@test.com", java.util.List.of(paymentPassengerDto));
+        PaymentRequestDto requestDto =
+                new PaymentRequestDto(
+                        flight.getId(), "test@test.com", List.of(paymentPassengerDto));
 
         PassengerEntity passenger = createPassenger("123456");
 
@@ -161,10 +169,10 @@ class ReservationCommandServiceTest {
         when(passengerReservationRepository.findAllByFlightAndPassengerAndStatusNot(
                 eq(flight),
                 eq(passenger),
-                eq(com.falcon.booking.common.enums.PassengerReservationStatus.CANCELED)))
-                .thenReturn(java.util.List.of(new PassengerReservationEntity()));
+                eq(PassengerReservationStatus.CANCELED)))
+                .thenReturn(List.of(new PassengerReservationEntity()));
 
         assertThatThrownBy(() -> reservationCommandService.createReservationFromPayment(requestDto, flight))
-                .isInstanceOf(com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException.class);
+                .isInstanceOf(PassengerAlreadyReservedFlightException.class);
     }
 }

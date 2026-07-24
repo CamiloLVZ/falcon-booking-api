@@ -9,8 +9,7 @@ import com.falcon.booking.feature.airplaneType.mapper.AirplaneTypeMapper;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
 import com.falcon.booking.persistence.specification.AirplaneTypeSpecifications;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -19,10 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class AirplaneTypeService {
-
-    private static final Logger logger = LoggerFactory.getLogger(AirplaneTypeService.class);
     private final AirplaneTypeRepository airplaneTypeRepository;
     private final AirplaneTypeMapper airplaneTypeMapper;
 
@@ -74,7 +72,7 @@ public class AirplaneTypeService {
         entityToSave.activate();
 
         AirplaneTypeEntity entityCreated = airplaneTypeRepository.save(entityToSave);
-        logger.info("Airplane Type created: {}", entityCreated.getFullName());
+        log.info("Airplane Type created: {}", entityCreated.getFullName());
         return airplaneTypeMapper.toResponseDto(entityCreated);
     }
 
@@ -98,7 +96,7 @@ public class AirplaneTypeService {
                 configureSeatsDto.seatColumns()
         );
 
-        logger.info("Airplane Type {} seat configuration updated", entity.getFullName());
+        log.info("Airplane Type {} seat configuration updated", entity.getFullName());
         return airplaneTypeMapper.toResponseDto(entity);
     }
 
@@ -123,7 +121,7 @@ public class AirplaneTypeService {
 
         entityToCorrect.setProducer(producerToValidate);
         entityToCorrect.setModel(modelToValidate);
-        logger.info("Airplane Type {} corrected", entityToCorrect.getFullName());
+        log.info("Airplane Type {} corrected", entityToCorrect.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToCorrect);
     }
 
@@ -133,7 +131,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToDeactivate = getAirplaneTypeEntity(id);
         entityToDeactivate.deactivate();
 
-        logger.info("Airplane Type {} changed status to INACTIVE", entityToDeactivate.getFullName());
+        log.info("Airplane Type {} changed status to INACTIVE", entityToDeactivate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToDeactivate);
     }
 
@@ -143,7 +141,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToActivate = getAirplaneTypeEntity(id);
         entityToActivate.activate();
 
-        logger.info("Airplane Type {} changed status to ACTIVE", entityToActivate.getFullName());
+        log.info("Airplane Type {} changed status to ACTIVE", entityToActivate.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToActivate);
     }
 
@@ -153,7 +151,7 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityToRetire = getAirplaneTypeEntity(id);
         entityToRetire.retire();
 
-        logger.info("Airplane Type {} changed status to RETIRED", entityToRetire.getFullName());
+        log.info("Airplane Type {} changed status to RETIRED", entityToRetire.getFullName());
         return airplaneTypeMapper.toResponseDto(entityToRetire);
     }
 

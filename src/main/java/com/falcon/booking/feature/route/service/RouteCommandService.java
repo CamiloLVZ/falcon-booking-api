@@ -14,15 +14,13 @@ import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.RouteRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class RouteCommandService {
-
-    private static final Logger logger = LoggerFactory.getLogger(RouteCommandService.class);
 
     private final RouteRepository routeRepository;
     private final RouteMapper routeMapper;
@@ -62,7 +60,7 @@ public class RouteCommandService {
         entityToSave.setDefaultAirplaneType(airplaneType);
         entityToSave.markAsDraft();
 
-        logger.info("Route {} created: {} -> {}. {}", entityToSave.getFlightNumber(), airportOrigin.getIataCode(), airportDestination.getIataCode(), airplaneType.getFullName());
+        log.info("Route {} created: {} -> {}. {}", entityToSave.getFlightNumber(), airportOrigin.getIataCode(), airportDestination.getIataCode(), airplaneType.getFullName());
         return routeMapper.toResponseDto(routeRepository.save(entityToSave));
     }
 
@@ -93,7 +91,7 @@ public class RouteCommandService {
             entityToUpdate.setDefaultAirplaneType(airplaneType);
         }
 
-        logger.info("Route number {} was updated", entityToUpdate.getFlightNumber());
+        log.info("Route number {} was updated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
     }
 
@@ -101,7 +99,7 @@ public class RouteCommandService {
     public ResponseRouteDto activateRoute(String flightNumber) {
         RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
         routeEntity.activate();
-        logger.info("Route {} activated.", routeEntity.getFlightNumber());
+        log.info("Route {} activated.", routeEntity.getFlightNumber());
         return routeMapper.toResponseDto(routeEntity);
     }
 
@@ -109,7 +107,7 @@ public class RouteCommandService {
     public ResponseRouteDto deactivateRoute(String flightNumber) {
         RouteEntity entityToUpdate = routeQueryService.getRouteEntity(flightNumber);
         entityToUpdate.deactivate();
-        logger.info("Route {} deactivated", entityToUpdate.getFlightNumber());
+        log.info("Route {} deactivated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
     }
 }
