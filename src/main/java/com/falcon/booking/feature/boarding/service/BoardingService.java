@@ -37,8 +37,14 @@ import java.util.UUID;
 @Service
 public class BoardingService {
 
-    @Value("${falcon.boarding-pass.validation-url}")
-    private String validationUrl;
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
+
+    @Value("${server.servlet.context-path:}")
+    private String contextPath;
+
+    @Value("${app.boarding-pass.validation-path:/v1/boarding-passes}")
+    private String validationPath;
 
     @Value("${app.flight.boarding.minutes-before-to-close}")
     private int minutesBeforeToEndBoarding;
@@ -151,7 +157,7 @@ public class BoardingService {
     }
 
     private String buildValidationUrl(BoardingPassEntity boardingPass){
-        return validationUrl + "/" + boardingPass.getQrToken();
+        return baseUrl + contextPath + validationPath + "/" + boardingPass.getQrToken();
     }
 
     private BoardingPassDocumentData buildDocument(PassengerReservationEntity passengerReservation, byte[] qr) {
