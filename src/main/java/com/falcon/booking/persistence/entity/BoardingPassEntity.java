@@ -1,8 +1,8 @@
 package com.falcon.booking.persistence.entity;
 
 import com.falcon.booking.common.enums.BoardingPassStatus;
-import com.falcon.booking.feature.boardingPass.exception.BoardingPassAlreadyBoardedException;
-import com.falcon.booking.feature.boardingPass.exception.BoardingPassExpiredException;
+import com.falcon.booking.feature.boarding.exception.BoardingPassAlreadyBoardedException;
+import com.falcon.booking.feature.boarding.exception.BoardingPassExpiredException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

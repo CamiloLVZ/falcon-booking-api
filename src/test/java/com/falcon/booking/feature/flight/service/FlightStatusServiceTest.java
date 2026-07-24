@@ -28,6 +28,9 @@ class FlightStatusServiceTest {
     @Mock
     private FlightRepository flightRepository;
 
+    @Mock
+    private com.falcon.booking.feature.boarding.service.BoardingService boardingService;
+
     @InjectMocks
     private FlightStatusService flightStatusService;
 
@@ -112,6 +115,19 @@ class FlightStatusServiceTest {
         boolean updated = flightStatusService.updateFlightStatus(flight, now);
         assertThat(updated).isTrue();
         assertThat(flight.isInBoarding()).isTrue();
+    }
+
+    @DisplayName("Should update flight status to gate closed")
+    @Test
+    void shouldUpdateFlightStatus_gateClosed() {
+        RouteEntity route = createRoute("AV1234", "UTC", true);
+        OffsetDateTime departure = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(5);
+        FlightEntity flight = createFlight(1L, route, departure, FlightStatus.BOARDING);
+        OffsetDateTime now = departure.minusMinutes(5);
+
+        boolean updated = flightStatusService.updateFlightStatus(flight, now);
+        assertThat(updated).isTrue();
+        assertThat(flight.isGateClosed()).isTrue();
     }
 
     @DisplayName("Should not update flight status when outside any range")

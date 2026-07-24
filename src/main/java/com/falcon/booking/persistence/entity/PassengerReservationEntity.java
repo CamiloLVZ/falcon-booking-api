@@ -2,10 +2,10 @@ package com.falcon.booking.persistence.entity;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.feature.boarding.exception.InvalidBoardingPassengerReservationException;
+import com.falcon.booking.feature.checkIn.exception.InvalidCheckInPassengerReservationStatusException;
 import com.falcon.booking.feature.flight.exception.OutOfFlightBoardingTimeException;
 import com.falcon.booking.feature.flight.exception.OutOfFlightCheckInTimeException;
-import com.falcon.booking.feature.reservation.exception.InvalidBoardingPassengerReservationException;
-import com.falcon.booking.feature.reservation.exception.InvalidCheckInPassengerReservationException;
 import com.falcon.booking.feature.reservation.exception.ReservationInvalidStatusChangeException;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -76,7 +76,7 @@ public class PassengerReservationEntity {
 
     public void checkIn(int seatNumber) {
         if(!this.isReserved()){
-            throw new InvalidCheckInPassengerReservationException(this.status);
+            throw new InvalidCheckInPassengerReservationStatusException(this.status);
         }
         if(!this.flight.isCheckInAvailable()){
             throw new OutOfFlightCheckInTimeException(this.flight.getId());
@@ -95,6 +95,14 @@ public class PassengerReservationEntity {
         this.status = PassengerReservationStatus.BOARDED;
     }
 
+    public void expire(){
+        if(this.isExpired()) return;
+        if(this.isBoarded() || this.isCanceled()){
+            throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.EXPIRED);
+        }
+        this.status = PassengerReservationStatus.EXPIRED;
+    }
+
     public boolean isReserved(){
         if (this.status==null) return false;
         return this.status.equals(PassengerReservationStatus.RESERVED);
@@ -110,6 +118,10 @@ public class PassengerReservationEntity {
     public boolean isBoarded(){
         if (this.status==null) return false;
         return this.status.equals(PassengerReservationStatus.BOARDED);
+    }
+    public boolean isExpired(){
+        if (this.status==null) return false;
+        return this.status.equals(PassengerReservationStatus.EXPIRED);
     }
 
     @Override

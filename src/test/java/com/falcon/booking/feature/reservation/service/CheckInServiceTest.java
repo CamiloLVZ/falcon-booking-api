@@ -4,12 +4,12 @@ import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.common.enums.SeatClass;
-import com.falcon.booking.feature.boardingPass.service.BoardingPassService;
+import com.falcon.booking.feature.checkIn.service.CheckInService;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
-import com.falcon.booking.feature.reservation.exception.InvalidCheckInPassengerReservationException;
-import com.falcon.booking.feature.reservation.exception.SeatNumberOutOfRangeException;
+import com.falcon.booking.feature.checkIn.exception.InvalidCheckInPassengerReservationStatusException;
+import com.falcon.booking.feature.checkIn.exception.SeatNumberOutOfRangeException;
 import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
@@ -195,7 +195,7 @@ public class CheckInServiceTest {
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
 
-        assertThrows(InvalidCheckInPassengerReservationException.class,
+        assertThrows(InvalidCheckInPassengerReservationStatusException.class,
                 () -> checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 25));
 
         verify(passengerReservationMapper, never()).toResponseDto(any(PassengerReservationEntity.class));

@@ -4,7 +4,6 @@ import com.falcon.booking.common.email.dto.EmailAttachment;
 import com.falcon.booking.common.email.dto.EmailInlineImage;
 import com.falcon.booking.common.email.dto.EmailRequest;
 import com.falcon.booking.common.email.exception.EmailSendingException;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j

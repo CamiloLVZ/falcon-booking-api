@@ -1,6 +1,10 @@
 package com.falcon.booking.feature.reservation.web;
 
 import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.boarding.exception.InvalidBoardingPassengerReservationException;
+import com.falcon.booking.feature.checkIn.exception.InvalidCheckInPassengerReservationStatusException;
+import com.falcon.booking.feature.checkIn.exception.SeatNumberAlreadyTakenException;
+import com.falcon.booking.feature.checkIn.exception.SeatNumberOutOfRangeException;
 import com.falcon.booking.feature.reservation.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +60,8 @@ public class ReservationExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
-    @ExceptionHandler(InvalidCheckInPassengerReservationException.class)
-    public ResponseEntity<Error> handleException(InvalidCheckInPassengerReservationException exception){
+    @ExceptionHandler(InvalidCheckInPassengerReservationStatusException.class)
+    public ResponseEntity<Error> handleException(InvalidCheckInPassengerReservationStatusException exception){
         Error error = new Error("invalid-status-for-check-in", exception.getMessage());
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

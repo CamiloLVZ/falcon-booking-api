@@ -1,12 +1,7 @@
 package com.falcon.booking.feature.airplaneType.web;
 
 import com.falcon.booking.common.web.Error;
-import com.falcon.booking.feature.airplaneType.exception.AirplaneNotFoundException;
-import com.falcon.booking.feature.airplaneType.exception.AirplaneTypeAlreadyExistsException;
-import com.falcon.booking.feature.airplaneType.exception.AirplaneTypeInvalidStatusChangeException;
-import com.falcon.booking.feature.airplaneType.exception.AirplaneTypeStatusInvalidException;
-import com.falcon.booking.feature.airplaneType.exception.InvalidSeatConfigurationException;
-import com.falcon.booking.feature.airplaneType.exception.InvalidSeatNumberException;
+import com.falcon.booking.feature.airplaneType.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

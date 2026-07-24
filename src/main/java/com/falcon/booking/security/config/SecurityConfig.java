@@ -45,8 +45,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/v1/flights/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/v1/flights/**").permitAll()
 
-                        //RESERVATIONS
+                        //RESERVATIONS, CHECK-IN, BOARDING
                         .requestMatchers("/v1/reservations/**").permitAll()
+                        .requestMatchers("/v1/check-in/**").permitAll()
+                        .requestMatchers("/v1/boarding-passes/**").permitAll()
 
                         //PAYMENTS
                         .requestMatchers("/v1/payments/**").permitAll()
