@@ -60,8 +60,7 @@ public class AirplaneTypeService {
         String producer = createAirplaneTypeDto.producer();
         String model = createAirplaneTypeDto.model();
 
-        boolean exists = airplaneTypeRepository.existsByProducerAndModel(producer, model);
-        if (exists) throw new AirplaneTypeAlreadyExistsException(producer, model);
+        checkAirplaneTypeDoesNotExist(producer, model);
 
         AirplaneTypeEntity entityToSave = airplaneTypeMapper.toEntity(createAirplaneTypeDto);
         entityToSave.configureSeats(
@@ -74,6 +73,11 @@ public class AirplaneTypeService {
         AirplaneTypeEntity entityCreated = airplaneTypeRepository.save(entityToSave);
         log.info("Airplane Type created: {}", entityCreated.getFullName());
         return airplaneTypeMapper.toResponseDto(entityCreated);
+    }
+
+    private void checkAirplaneTypeDoesNotExist(String producer, String model) {
+        if (airplaneTypeRepository.existsByProducerAndModel(producer, model))
+            throw new AirplaneTypeAlreadyExistsException(producer, model);
     }
 
     public List<SeatDefinition> getSeats(AirplaneTypeEntity airplaneTypeEntity) {
@@ -115,9 +119,7 @@ public class AirplaneTypeService {
 
         if (!isChanging) return airplaneTypeMapper.toResponseDto(entityToCorrect);
 
-        if (airplaneTypeRepository.existsByProducerAndModel(producerToValidate, modelToValidate)) {
-            throw new AirplaneTypeAlreadyExistsException(producerToValidate, modelToValidate);
-        }
+        checkAirplaneTypeDoesNotExist(producerToValidate, modelToValidate);
 
         entityToCorrect.setProducer(producerToValidate);
         entityToCorrect.setModel(modelToValidate);

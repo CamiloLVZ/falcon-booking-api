@@ -42,14 +42,13 @@ public class RouteCommandService {
 
     @Transactional
     public ResponseRouteDto addRoute(CreateRouteDto createRouteDto) {
-        if (routeRepository.existsByFlightNumber(createRouteDto.flightNumber()))
-            throw new RouteAlreadyExistsException(createRouteDto.flightNumber());
-        if (createRouteDto.airportOriginIataCode().equals(createRouteDto.airportDestinationIataCode()))
-            throw new RouteSameOriginAndDestinationException();
+
+        checkRouteDoesNotExist(createRouteDto);
+        checkOriginDifferentFromDestination(createRouteDto);
 
         AirplaneTypeEntity airplaneType = airplaneTypeService.getAirplaneTypeEntity(createRouteDto.idDefaultAirplaneType());
-        if (!airplaneType.isActive())
-            throw new RouteAirplaneTypeIsNotActiveException(createRouteDto.idDefaultAirplaneType());
+        checkAirplaneTypeIsActive(airplaneType);
+
 
         AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(createRouteDto.airportOriginIataCode());
         AirportEntity airportDestination = airportService.getAirportEntityByIataCode(createRouteDto.airportDestinationIataCode());
@@ -64,13 +63,26 @@ public class RouteCommandService {
         return routeMapper.toResponseDto(routeRepository.save(entityToSave));
     }
 
+    private void checkRouteDoesNotExist(CreateRouteDto createRouteDto){
+        if (routeRepository.existsByFlightNumber(createRouteDto.flightNumber()))
+            throw new RouteAlreadyExistsException(createRouteDto.flightNumber());
+    }
+
+    private void checkOriginDifferentFromDestination(CreateRouteDto createRouteDto) {
+        if (createRouteDto.airportOriginIataCode().equals(createRouteDto.airportDestinationIataCode()))
+            throw new RouteSameOriginAndDestinationException();
+    }
+
+    private void checkAirplaneTypeIsActive(AirplaneTypeEntity airplaneType){
+        if (!airplaneType.isActive())
+            throw new RouteAirplaneTypeIsNotActiveException(airplaneType.getId());
+    }
+
     @Transactional
     public ResponseRouteDto updateRoute(String flightNumber, UpdateRouteDto updateRouteDto) {
         RouteEntity entityToUpdate = routeQueryService.getRouteEntity(flightNumber);
 
-        boolean hasOnlyDraftModifications = updateRouteDto.airportDestinationIataCode() != null || updateRouteDto.airportOriginIataCode() != null;
-        if (hasOnlyDraftModifications && !entityToUpdate.isDraft())
-            throw new RouteDraftInvalidUpdateException(flightNumber);
+        checkRouteIsDraftForModifications(flightNumber, updateRouteDto, entityToUpdate);
 
         if (updateRouteDto.airportOriginIataCode() != null) {
             AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(updateRouteDto.airportOriginIataCode());
@@ -80,8 +92,8 @@ public class RouteCommandService {
             AirportEntity airportDestination = airportService.getAirportEntityByIataCode(updateRouteDto.airportDestinationIataCode());
             entityToUpdate.setAirportDestination(airportDestination);
         }
-        if (entityToUpdate.getAirportOrigin().equals(entityToUpdate.getAirportDestination()))
-            throw new RouteSameOriginAndDestinationException();
+
+        checkOriginDifferentFromDestination(entityToUpdate);
 
         if (updateRouteDto.durationMinutes() != null)
             entityToUpdate.setDurationMinutes(updateRouteDto.durationMinutes());
@@ -93,6 +105,17 @@ public class RouteCommandService {
 
         log.info("Route number {} was updated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
+    }
+
+    private void checkRouteIsDraftForModifications(String flightNumber, UpdateRouteDto updateRouteDto, RouteEntity entityToUpdate) {
+        boolean hasOnlyDraftModifications = updateRouteDto.airportDestinationIataCode() != null || updateRouteDto.airportOriginIataCode() != null;
+        if (hasOnlyDraftModifications && !entityToUpdate.isDraft())
+            throw new RouteDraftInvalidUpdateException(flightNumber);
+    }
+
+    private void checkOriginDifferentFromDestination(RouteEntity entity) {
+        if (entity.getAirportOrigin().equals(entity.getAirportDestination()))
+            throw new RouteSameOriginAndDestinationException();
     }
 
     @Transactional

@@ -57,15 +57,19 @@ public class CheckInService {
                 .orElseThrow(() ->
                         new PassengerNotFoundInReservationException(passenger.getIdentificationNumber(), passenger.getCountryNationality().getIsoCode(), reservationNumber));
 
-        if (!passengerReservation.isReserved()) {
-            throw new InvalidCheckInPassengerReservationStatusException(passengerReservation.getStatus());
-        }
+        checkPassengerReservationIsReserved(passengerReservation);
 
         List<PassengerReservationEntity> allReservations = passengerReservationRepository.findAllByFlight(reservationEntity.getFlight());
 
         Integer finalSeat = validateOrGenerateSeatNumber(seatNumber, reservationEntity.getFlight(), passengerReservation.getSeatClass(), allReservations);
         log.info("Passenger with id: {} has checked in for reservation {}", passenger.getId(), reservationEntity.getNumber());
         return reservationEntity.checkInPassenger(passenger, finalSeat);
+    }
+
+    private void checkPassengerReservationIsReserved(PassengerReservationEntity passengerReservation){
+        if (!passengerReservation.isReserved()) {
+            throw new InvalidCheckInPassengerReservationStatusException(passengerReservation.getStatus());
+        }
     }
 
     private Integer validateOrGenerateSeatNumber(Integer requestedSeatNumber, FlightEntity flight, SeatClass seatClass, List<PassengerReservationEntity> allReservations) {

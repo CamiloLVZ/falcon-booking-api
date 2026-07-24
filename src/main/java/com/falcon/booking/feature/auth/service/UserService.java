@@ -34,9 +34,14 @@ public class UserService {
                 .orElseThrow(()->new UserNotFoundException(email));
     }
 
+    private void checkUserDoesNotExistByEmail(String email) {
+        if (userRepository.findByEmail(email).isPresent())
+            throw new UserAlreadyExistException(email);
+    }
+
     public UserEntity buildUser(CreateUserDto createUserDto){
-        if(userRepository.findByEmail(createUserDto.email()).isPresent())
-            throw new UserAlreadyExistException(createUserDto.email());
+        checkUserDoesNotExistByEmail(createUserDto.email());
+
         UserEntity user = new UserEntity();
         user.setEmail(createUserDto.email());
         user.setPassword(passwordEncoder.encode(createUserDto.password()));
@@ -46,8 +51,6 @@ public class UserService {
 
     @Transactional
     public UserEntity createClientUser(CreateUserDto createUserDto){
-        if(userRepository.findByEmail(createUserDto.email()).isPresent())
-            throw new UserAlreadyExistException(createUserDto.email());
         UserEntity user = userRepository.save(buildUser(createUserDto));
         RoleEntity role = roleService.getRoleByName("CLIENT");
         userRoleService.addUserRole(user, role);
@@ -57,8 +60,6 @@ public class UserService {
 
     @Transactional
     public UserEntity createAdminUser(CreateUserDto createUserDto){
-        if(userRepository.findByEmail(createUserDto.email()).isPresent())
-            throw new UserAlreadyExistException(createUserDto.email());
         UserEntity user = userRepository.save(buildUser(createUserDto));
         RoleEntity role = roleService.getRoleByName("ADMIN");
         userRoleService.addUserRole(user, role);

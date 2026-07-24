@@ -113,7 +113,7 @@ public class FlightQueryService {
     @Transactional(readOnly = true)
     public Page<ResponseFlightDto> getAllFlightsByRouteAndDate(String flightNumber, LocalDate date, int page, int size) {
         RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
-        if (!routeEntity.isActive()) throw new RouteNotActiveException(routeEntity.getFlightNumber());
+        checkRouteIsActive(routeEntity);
 
         Map<String, OffsetDateTime> dayRange = DateTimeUtils.getDayRange(date, ZoneId.of(routeEntity.getAirportOrigin().getTimezone()));
         OffsetDateTime startDateTime = dayRange.get("start");
@@ -124,6 +124,11 @@ public class FlightQueryService {
                 .map(flightMapper::toDto);
     }
 
+    private void checkRouteIsActive(RouteEntity routeEntity) {
+        if (!routeEntity.isActive())
+            throw new RouteNotActiveException(routeEntity.getFlightNumber());
+    }
+
     @Transactional(readOnly = true)
     public FlightSeatMapDto getSeatMap(Long flightId) {
 
@@ -132,7 +137,6 @@ public class FlightQueryService {
 
         AirplaneTypeEntity airplane = flight.getAirplaneType();
 
-        // Bug fix: was calling non-existent findByReservationFlight — correct method is findAllByFlight
         Set<Integer> occupiedSeats = passengerReservationRepository
                 .findAllByFlight(flight)
                 .stream()
@@ -143,7 +147,6 @@ public class FlightQueryService {
         BigDecimal priceEconomy = pricingService.calculatePrice(flight, SeatClass.ECONOMY);
         BigDecimal priceFirstClass = pricingService.calculatePrice(flight, SeatClass.FIRST_CLASS);
 
-        // Bug fix: SeatDefinition record only accepts 3 args — status and price belong in FlightSeatDto
         List<FlightSeatDto> seats = airplane.getSeats()
                 .stream()
                 .map(seat -> new FlightSeatDto(

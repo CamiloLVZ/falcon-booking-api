@@ -44,10 +44,7 @@ public class PaymentService {
     public ResponsePaymentDto processPayment(PaymentRequestDto requestDto) {
         FlightEntity flight = flightQueryService.getFlightEntity(requestDto.flightId());
         
-        if (!flight.canBeReserved()) {
-            throw new FlightCanNotBeReservedException(flight.getId());
-        }
-
+        checkFlightCanBeReserved(flight);
         checkPassengerDuplication(requestDto.passengers());
 
         int currentFirstClass = passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED);
@@ -71,6 +68,12 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         return new ResponsePaymentDto(reservationNumber, totalAmount, PaymentStatus.APPROVED, payment.getCreatedAt());
+    }
+
+    private void checkFlightCanBeReserved(FlightEntity flight) {
+        if (!flight.canBeReserved()) {
+            throw new FlightCanNotBeReservedException(flight.getId());
+        }
     }
 
     private void checkCapacityExceed( PaymentRequestDto requestDto, FlightEntity flight, int currentFirstClass, int currentEconomy){
