@@ -35,6 +35,7 @@ public class SecurityConfig {
                         //AUTH & DOCS
                         .requestMatchers("/v1/auth/register-admin").hasRole("ADMIN")
                         .requestMatchers("/v1/auth/**").permitAll()
+                        .requestMatchers("/v1/health/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // FLIGHTS GENERATIONS

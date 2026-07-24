@@ -90,15 +90,25 @@ class FlightEntityTest {
         assertThat(flight.isGateClosed()).isTrue();
     }
 
-    @DisplayName("Should throw exception when marking as gate closed from non-boarding status")
+    @DisplayName("Should mark flight as gate closed from check-in available or scheduled status (recovery)")
+    @Test
+    void shouldMarkAsGateClosed_fromCheckInAvailable() {
+        FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE, OffsetDateTime.now().plusMinutes(5));
+
+        flight.markAsGateClosed();
+
+        assertThat(flight.isGateClosed()).isTrue();
+    }
+
+    @DisplayName("Should throw exception when marking as gate closed from canceled status")
     @Test
     void shouldThrowException_markAsGateClosed() {
-        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, OffsetDateTime.now().plusHours(1));
+        FlightEntity flight = createFlight(FlightStatus.CANCELED, OffsetDateTime.now().plusHours(1));
 
         FlightInvalidStatusChangeException exception =
                 assertThrows(FlightInvalidStatusChangeException.class, flight::markAsGateClosed);
 
-        assertThat(exception.getMessage()).contains("SCHEDULED to GATE_CLOSED");
+        assertThat(exception.getMessage()).contains("CANCELED to GATE_CLOSED");
     }
 
     @DisplayName("Should correct status to completed when now is after departure")
