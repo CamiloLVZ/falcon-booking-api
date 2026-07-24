@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.HashSet;
@@ -45,8 +46,7 @@ public class RouteQueryServiceTest {
         airplaneType.setId(1L);
         airplaneType.setProducer("Airbus");
         airplaneType.setModel("A320");
-        airplaneType.setEconomySeats(100);
-        airplaneType.setFirstClassSeats(10);
+        airplaneType.configureSeats(108, 12, "ABCDEF");
         airplaneType.setStatus(status);
         return airplaneType;
     }
@@ -99,7 +99,7 @@ public class RouteQueryServiceTest {
     @Test
     void shouldReturnDto_getRouteByFlightNumber() {
         RouteEntity route = createRouteEntity("AV1234");
-        ResponseRouteDto dto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.DRAFT);
+        ResponseRouteDto dto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         given(routeRepository.findByFlightNumber("AV1234")).willReturn(Optional.of(route));
         given(routeMapper.toResponseDto(route)).willReturn(dto);
 

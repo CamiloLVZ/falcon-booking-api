@@ -1,10 +1,10 @@
 package com.falcon.booking.feature.airplaneType.service;
 
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
+import com.falcon.booking.feature.airplaneType.dto.ConfigureSeatsDto;
 import com.falcon.booking.feature.airplaneType.dto.CorrectAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
-import com.falcon.booking.feature.airplaneType.dto.UpdateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.exception.AirplaneNotFoundException;
 import com.falcon.booking.feature.airplaneType.exception.AirplaneTypeAlreadyExistsException;
 import com.falcon.booking.feature.airplaneType.mapper.AirplaneTypeMapper;
@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,14 +41,19 @@ class AirplaneTypeServiceTest {
     @InjectMocks
     private AirplaneTypeService airplaneTypeService;
 
+    /**
+     * Builds a test entity using the domain methods (no public setters for seat fields).
+     * Uses ReflectionTestUtils only to set the auto-generated id.
+     */
     private AirplaneTypeEntity createEntity(Long id) {
         AirplaneTypeEntity entity = new AirplaneTypeEntity();
-        entity.setId(id);
         entity.setProducer("Airbus");
         entity.setModel("A320");
-        entity.setEconomySeats(100);
-        entity.setFirstClassSeats(10);
+        entity.configureSeats(108, 12, "ABCDEF");
         entity.setStatus(AirplaneTypeStatus.INACTIVE);
+        if (id != null) {
+            ReflectionTestUtils.setField(entity, "id", id);
+        }
         return entity;
     }
 
@@ -56,16 +62,18 @@ class AirplaneTypeServiceTest {
                 1L,
                 "Airbus",
                 "A320",
-                100,
-                10,
+                108,
+                12,
+                "ABCDEF",
                 AirplaneTypeStatus.ACTIVE
         );
     }
 
-    @DisplayName("Should return AirplaneTypeEntity when exists")
+    // ─── getAirplaneTypeEntity ────────────────────────────────────────────────
+
+    @DisplayName("Should return AirplaneTypeEntity when it exists")
     @Test
     void shouldReturnEntity_getAirplaneTypeEntity() {
-
         AirplaneTypeEntity entity = createEntity(1L);
         given(airplaneTypeRepository.findById(1L)).willReturn(Optional.of(entity));
 
@@ -74,20 +82,20 @@ class AirplaneTypeServiceTest {
         assertThat(result).isSameAs(entity);
     }
 
-    @DisplayName("Should throw exception when AirplaneTypeEntity not found")
+    @DisplayName("Should throw AirplaneNotFoundException when entity not found")
     @Test
     void shouldThrowException_getAirplaneTypeEntity() {
-
         given(airplaneTypeRepository.findById(1L)).willReturn(Optional.empty());
 
         assertThrows(AirplaneNotFoundException.class,
                 () -> airplaneTypeService.getAirplaneTypeEntity(1L));
     }
 
-    @DisplayName("Should return dto when getting by id")
+    // ─── getAirplaneTypeById ──────────────────────────────────────────────────
+
+    @DisplayName("Should return response dto when getting by id")
     @Test
     void shouldReturnDto_getAirplaneTypeById() {
-
         AirplaneTypeEntity entity = createEntity(1L);
         ResponseAirplaneTypeDto dto = createDto();
 
@@ -99,10 +107,11 @@ class AirplaneTypeServiceTest {
         assertThat(result).isEqualTo(dto);
     }
 
-    @DisplayName("Should return list of airplane types with filters")
+    // ─── getAirplaneTypes ─────────────────────────────────────────────────────
+
+    @DisplayName("Should return list of airplane types matching filters")
     @Test
     void shouldReturnList_getAirplaneTypes() {
-
         AirplaneTypeEntity entity = createEntity(1L);
         ResponseAirplaneTypeDto dto = createDto();
 
@@ -118,105 +127,109 @@ class AirplaneTypeServiceTest {
         assertThat(result.get(0)).isEqualTo(dto);
     }
 
-    @DisplayName("Should create airplane type when it does not exist")
+    // ─── addAirplaneType ──────────────────────────────────────────────────────
+
+    @DisplayName("Should create airplane type and activate it when it does not exist")
     @Test
     void shouldCreateAirplaneType_addAirplaneType() {
-
         CreateAirplaneTypeDto createDto =
-                new CreateAirplaneTypeDto("Airbus", "A320", 100, 10);
+                new CreateAirplaneTypeDto("Airbus", "A320", 108, 12, "ABCDEF");
 
         AirplaneTypeEntity entity = createEntity(null);
         ResponseAirplaneTypeDto responseDto = createDto();
 
-        given(airplaneTypeRepository.existsByProducerAndModel(any(String.class),any(String.class)))
-                .willReturn(false);
-        given(airplaneTypeMapper.toEntity(createDto))
-                .willReturn(entity);
-        given(airplaneTypeRepository.save(entity))
-                .willReturn(entity);
-        given(airplaneTypeMapper.toResponseDto(entity))
-                .willReturn(responseDto);
+        given(airplaneTypeRepository.existsByProducerAndModel(any(), any())).willReturn(false);
+        given(airplaneTypeMapper.toEntity(createDto)).willReturn(entity);
+        given(airplaneTypeRepository.save(entity)).willReturn(entity);
+        given(airplaneTypeMapper.toResponseDto(entity)).willReturn(responseDto);
 
-        ResponseAirplaneTypeDto result =
-                airplaneTypeService.addAirplaneType(createDto);
+        ResponseAirplaneTypeDto result = airplaneTypeService.addAirplaneType(createDto);
 
         assertThat(result).isEqualTo(responseDto);
         assertThat(entity.isActive()).isTrue();
+        assertThat(entity.getEconomySeats()).isEqualTo(108);
+        assertThat(entity.getFirstClassSeats()).isEqualTo(12);
+        assertThat(entity.getSeatColumns()).isEqualTo("ABCDEF");
     }
 
-    @DisplayName("Should throw exception when airplane type already exists")
+    @DisplayName("Should throw AirplaneTypeAlreadyExistsException when airplane type already exists")
     @Test
     void shouldThrowException_addAirplaneType() {
-
         CreateAirplaneTypeDto createDto =
-                new CreateAirplaneTypeDto("Airbus", "A320", 100, 10);
+                new CreateAirplaneTypeDto("Airbus", "A320", 108, 12, "ABCDEF");
 
-        given(airplaneTypeRepository.existsByProducerAndModel(any(String.class), any(String.class)))
-                .willReturn(true);
+        given(airplaneTypeRepository.existsByProducerAndModel(any(), any())).willReturn(true);
 
         assertThrows(AirplaneTypeAlreadyExistsException.class,
                 () -> airplaneTypeService.addAirplaneType(createDto));
     }
 
-    @DisplayName("Should update airplane type fields")
-    @Test
-    void shouldUpdateAirplaneType_updateAirplaneType() {
+    // ─── configureSeats ───────────────────────────────────────────────────────
 
+    @DisplayName("Should update seat configuration when configureSeats is called")
+    @Test
+    void shouldConfigureSeats_configureSeats() {
         AirplaneTypeEntity entity = createEntity(1L);
-        UpdateAirplaneTypeDto updateDto =
-                new UpdateAirplaneTypeDto(200, null);
+        ConfigureSeatsDto configureSeatsDto = new ConfigureSeatsDto(198, 24, "ABCDEF");
         ResponseAirplaneTypeDto responseDto = createDto();
 
         given(airplaneTypeRepository.findById(1L)).willReturn(Optional.of(entity));
         given(airplaneTypeMapper.toResponseDto(entity)).willReturn(responseDto);
 
-        ResponseAirplaneTypeDto result =
-                airplaneTypeService.updateAirplaneType(1L, updateDto);
+        ResponseAirplaneTypeDto result = airplaneTypeService.configureSeats(1L, configureSeatsDto);
 
         assertThat(result).isEqualTo(responseDto);
-        assertThat(entity.getEconomySeats()).isEqualTo(200);
+        assertThat(entity.getEconomySeats()).isEqualTo(198);
+        assertThat(entity.getFirstClassSeats()).isEqualTo(24);
+        assertThat(entity.getSeatColumns()).isEqualTo("ABCDEF");
     }
+
+    @DisplayName("Should throw AirplaneNotFoundException when configureSeats id does not exist")
+    @Test
+    void shouldThrowException_configureSeats_notFound() {
+        given(airplaneTypeRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThrows(AirplaneNotFoundException.class,
+                () -> airplaneTypeService.configureSeats(99L, new ConfigureSeatsDto(100, 10, "ABC")));
+    }
+
+    // ─── correctAirplaneType ──────────────────────────────────────────────────
 
     @DisplayName("Should not change airplane type when correcting with same data")
     @Test
     void shouldNotChange_correctAirplaneType() {
-
         AirplaneTypeEntity entity = createEntity(1L);
-        CorrectAirplaneTypeDto correctDto =
-                new CorrectAirplaneTypeDto("Airbus", "A320");
+        CorrectAirplaneTypeDto correctDto = new CorrectAirplaneTypeDto("Airbus", "A320");
         ResponseAirplaneTypeDto responseDto = createDto();
 
         given(airplaneTypeRepository.findById(1L)).willReturn(Optional.of(entity));
         given(airplaneTypeMapper.toResponseDto(entity)).willReturn(responseDto);
 
-        ResponseAirplaneTypeDto result =
-                airplaneTypeService.correctAirplaneType(1L, correctDto);
+        ResponseAirplaneTypeDto result = airplaneTypeService.correctAirplaneType(1L, correctDto);
 
         assertThat(result).isEqualTo(responseDto);
-        verify(airplaneTypeRepository,never()).save(any());
-        verify(airplaneTypeRepository,never()).existsByProducerAndModel("Airbus", "A320");
+        verify(airplaneTypeRepository, never()).save(any());
+        verify(airplaneTypeRepository, never()).existsByProducerAndModel("Airbus", "A320");
     }
 
-    @DisplayName("Should throw exception when correcting to existing airplane type")
+    @DisplayName("Should throw AirplaneTypeAlreadyExistsException when correcting to existing identity")
     @Test
     void shouldThrowException_correctAirplaneType() {
-
         AirplaneTypeEntity entity = createEntity(1L);
-        CorrectAirplaneTypeDto correctDto =
-                new CorrectAirplaneTypeDto("Boeing", "737");
+        CorrectAirplaneTypeDto correctDto = new CorrectAirplaneTypeDto("Boeing", "737");
 
         given(airplaneTypeRepository.findById(1L)).willReturn(Optional.of(entity));
-        given(airplaneTypeRepository.existsByProducerAndModel(any(String.class), any(String.class)))
-                .willReturn(true);
+        given(airplaneTypeRepository.existsByProducerAndModel(any(), any())).willReturn(true);
 
         assertThrows(AirplaneTypeAlreadyExistsException.class,
                 () -> airplaneTypeService.correctAirplaneType(1L, correctDto));
     }
 
+    // ─── Status changes ───────────────────────────────────────────────────────
+
     @DisplayName("Should deactivate airplane type")
     @Test
     void shouldDeactivateAirplaneType() {
-
         AirplaneTypeEntity entity = createEntity(1L);
         entity.activate();
         ResponseAirplaneTypeDto responseDto = createDto();
@@ -232,7 +245,6 @@ class AirplaneTypeServiceTest {
     @DisplayName("Should activate airplane type")
     @Test
     void shouldActivateAirplaneType() {
-
         AirplaneTypeEntity entity = createEntity(1L);
         ResponseAirplaneTypeDto responseDto = createDto();
 
@@ -247,7 +259,6 @@ class AirplaneTypeServiceTest {
     @DisplayName("Should retire airplane type")
     @Test
     void shouldRetireAirplaneType() {
-
         AirplaneTypeEntity entity = createEntity(1L);
         entity.deactivate();
         ResponseAirplaneTypeDto responseDto = createDto();

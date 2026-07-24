@@ -2,6 +2,8 @@ package com.falcon.booking.feature.flight.controller;
 
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
+import com.falcon.booking.feature.flight.dto.FlightSeatDto;
+import com.falcon.booking.feature.flight.dto.FlightSeatMapDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flight.exception.FlightNotFoundException;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
@@ -19,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -51,8 +54,10 @@ class FlightQueryControllerTest {
                 OffsetDateTime.parse("2026-01-01T13:00:00Z"),
                 LocalDateTime.parse("2026-01-01T08:00:00"),
                 40,
-                new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
-                status
+                new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10, "ABCDEF"),
+                status,
+                BigDecimal.valueOf(100.0),
+                BigDecimal.valueOf(200.0)
         );
     }
 
@@ -174,6 +179,42 @@ class FlightQueryControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
+    @DisplayName("Should return 200 OK and flight seat map")
+    @Test
+    void shouldReturn200_getFlightSeatMap() throws Exception {
+        FlightSeatMapDto seatMapDto = new FlightSeatMapDto(
+                "ABCDEF",
+                2,
+                10,
+                BigDecimal.valueOf(100.0),
+                BigDecimal.valueOf(200.0),
+                List.of(new FlightSeatDto(1, "1A", com.falcon.booking.common.enums.SeatClass.FIRST_CLASS, com.falcon.booking.common.enums.SeatStatus.AVAILABLE, BigDecimal.valueOf(200.0)))
+        );
+
+        given(flightQueryService.getSeatMap(1L)).willReturn(seatMapDto);
+
+        ResultActions response = mockMvc.perform(get("/v1/flights/1/seats").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.seatColumns").value("ABCDEF"))
+                .andExpect(jsonPath("$.firstClassRows").value(2))
+                .andExpect(jsonPath("$.economyRows").value(10))
+                .andExpect(jsonPath("$.priceEconomy").value(100.0))
+                .andExpect(jsonPath("$.priceFirstClass").value(200.0))
+                .andExpect(jsonPath("$.seats").isArray())
+                .andExpect(jsonPath("$.seats.size()").value(1));
+    }
+
+    @DisplayName("Should return 404 when flight does not exist for seat map")
+    @Test
+    void shouldReturn404_getFlightSeatMap() throws Exception {
+        given(flightQueryService.getSeatMap(1L)).willThrow(new FlightNotFoundException(1L));
+
+        ResultActions response = mockMvc.perform(get("/v1/flights/1/seats").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("flight-does-not-exist"));
+    }
 }
 
 

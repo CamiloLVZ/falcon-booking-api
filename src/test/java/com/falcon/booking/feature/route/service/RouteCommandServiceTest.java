@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.HashSet;
@@ -55,8 +56,7 @@ public class RouteCommandServiceTest {
         airplaneType.setId(1L);
         airplaneType.setProducer("Airbus");
         airplaneType.setModel("A320");
-        airplaneType.setEconomySeats(100);
-        airplaneType.setFirstClassSeats(10);
+        airplaneType.configureSeats(108, 12, "ABCDEF");
         airplaneType.setStatus(status);
         return airplaneType;
     }
@@ -85,11 +85,11 @@ public class RouteCommandServiceTest {
     @DisplayName("Should add route when data is valid")
     @Test
     void shouldAddRoute_addRoute() {
-        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60);
+        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         RouteEntity routeToSave = createRouteEntity("AV1234");
         routeToSave.setStatus(null);
         RouteEntity savedRoute = createRouteEntity("AV1234");
-        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.DRAFT);
+        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         AirplaneTypeEntity airplaneType = createAirplaneType(AirplaneTypeStatus.ACTIVE);
         AirportEntity origin = createAirport(1L, "BOG");
         AirportEntity destination = createAirport(2L, "MDE");
@@ -111,7 +111,7 @@ public class RouteCommandServiceTest {
     @DisplayName("Should throw exception when route already exists")
     @Test
     void shouldThrowException_addRoute() {
-        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60);
+        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         given(routeRepository.existsByFlightNumber("AV1234")).willReturn(true);
 
         assertThrows(RouteAlreadyExistsException.class, () -> routeCommandService.addRoute(createDto));
@@ -121,7 +121,7 @@ public class RouteCommandServiceTest {
     @DisplayName("Should throw exception when route has same origin and destination")
     @Test
     void shouldThrowExceptionSameOriginAndDestination_addRoute() {
-        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "BOG", 1L, 60);
+        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "BOG", 1L, 60, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         given(routeRepository.existsByFlightNumber(anyString())).willReturn(false);
 
         assertThrows(RouteSameOriginAndDestinationException.class,
@@ -131,7 +131,7 @@ public class RouteCommandServiceTest {
     @DisplayName("Should throw exception when airplane type is not active")
     @Test
     void shouldThrowExceptionAirplaneNotActive_addRoute() {
-        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60);
+        CreateRouteDto createDto = new CreateRouteDto("AV1234", "BOG", "MDE", 1L, 60, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         AirplaneTypeEntity airplaneType = createAirplaneType(AirplaneTypeStatus.INACTIVE);
 
         given(routeRepository.existsByFlightNumber("AV1234")).willReturn(false);
@@ -144,8 +144,8 @@ public class RouteCommandServiceTest {
     @Test
     void shouldUpdateRoute_updateRoute() {
         RouteEntity route = createRouteEntity("AV1234");
-        UpdateRouteDto updateDto = new UpdateRouteDto(null, null, null, 90);
-        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 90, RouteStatus.DRAFT);
+        UpdateRouteDto updateDto = new UpdateRouteDto(null, null, null, 90, null, null);
+        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 90, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(routeMapper.toResponseDto(route)).willReturn(responseDto);
 
@@ -160,7 +160,7 @@ public class RouteCommandServiceTest {
     void shouldDeactivateRoute_deactivateRoute() {
         RouteEntity route = createRouteEntity("AV1234");
         route.setStatus(RouteStatus.ACTIVE);
-        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.INACTIVE);
+        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.INACTIVE, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(routeMapper.toResponseDto(route)).willReturn(responseDto);

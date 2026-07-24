@@ -75,6 +75,13 @@ public class PassengerEntity {
         this.identificationNumber = StringNormalizer.normalize(identificationNumber);
     }
 
+    public String getFullName() {
+        return this.firstName + " " + this.lastName;
+    }
+    public String getIdentification(){
+        return this.countryNationality.getIsoCode() + "-" + this.identificationNumber;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

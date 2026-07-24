@@ -13,8 +13,7 @@ import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +21,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
+@Slf4j
 @Service
 public class FlightCommandService {
-
-    private static final Logger logger = LoggerFactory.getLogger(FlightCommandService.class);
 
     private final FlightRepository flightRepository;
     private final FlightQueryService flightQueryService;
@@ -47,21 +45,26 @@ public class FlightCommandService {
         ZoneId timezone = ZoneId.of(route.getAirportOrigin().getTimezone());
         OffsetDateTime offsetDepartureDateTime = createFlightDto.departureDateTime().atZone(timezone).toOffsetDateTime();
 
-        if (flightRepository.existsByRouteAndDepartureDateTime(route, offsetDepartureDateTime))
-            throw new FlightAlreadyExistsException(route.getFlightNumber(), offsetDepartureDateTime);
+        checkFlightDoesNotExist(route, offsetDepartureDateTime);
 
         FlightEntity entityToSave = new FlightEntity(route, route.getDefaultAirplaneType(), offsetDepartureDateTime, FlightStatus.SCHEDULED);
 
         FlightEntity entitySaved = flightRepository.save(entityToSave);
-        logger.info("Single flight generated for route {} with departure time {}", route.getFlightNumber(), offsetDepartureDateTime);
+        log.info("Single flight generated for route {} with departure time {}", route.getFlightNumber(), offsetDepartureDateTime);
         return flightMapper.toDto(entitySaved);
     }
+
+    private void checkFlightDoesNotExist(RouteEntity route, OffsetDateTime departureDateTime) {
+        if (flightRepository.existsByRouteAndDepartureDateTime(route, departureDateTime))
+            throw new FlightAlreadyExistsException(route.getFlightNumber(), departureDateTime);
+    }
+
 
     @Transactional
     public ResponseFlightDto cancelFlight(Long id) {
         FlightEntity flightEntity = flightQueryService.getFlightEntity(id);
         flightEntity.cancel();
-        logger.info("Flight {} changed status to CANCELED", id);
+        log.info("Flight {} changed status to CANCELED", id);
         return flightMapper.toDto(flightRepository.save(flightEntity));
     }
 
@@ -70,8 +73,7 @@ public class FlightCommandService {
         FlightEntity oldFlight = flightQueryService.getFlightEntity(id);
         RouteEntity route = oldFlight.getRoute();
 
-        if (!(oldFlight.isScheduled() || oldFlight.isCanceled()))
-            throw new FlightCanNotBeRescheduledException(oldFlight.getStatus());
+        checkFlightCanBeRescheduled(oldFlight);
 
         ZoneId timezone = ZoneId.of(route.getAirportOrigin().getTimezone());
         OffsetDateTime offsetDepartureDateTime = newDepartureDateTime.atZone(timezone).toOffsetDateTime();
@@ -81,20 +83,30 @@ public class FlightCommandService {
 
         oldFlight.cancel();
         FlightEntity newFlightEntity = new FlightEntity(route, route.getDefaultAirplaneType(), offsetDepartureDateTime, FlightStatus.SCHEDULED);
-        logger.info("Flight {} rescheduled. new departure: {}", id, newDepartureDateTime);
+        log.info("Flight {} rescheduled. new departure: {}", id, newDepartureDateTime);
         return flightMapper.toDto(flightRepository.save(newFlightEntity));
+    }
+
+    private void checkFlightCanBeRescheduled(FlightEntity flight){
+        if (!(flight.isScheduled() || flight.isCanceled()))
+            throw new FlightCanNotBeRescheduledException(flight.getStatus());
     }
 
     @Transactional
     public ResponseFlightDto changeAirplaneType(Long id, Long idAirplaneType) {
         FlightEntity flightToUpdate = flightQueryService.getFlightEntity(id);
 
-        if (!flightToUpdate.isScheduled())
-            throw new FlightCanNotChangeAirplaneTypeException(flightToUpdate.getStatus());
+        checkFlightCanChangeAirplaneType(flightToUpdate);
 
         AirplaneTypeEntity airplaneTypeEntity = airplaneTypeService.getAirplaneTypeEntity(idAirplaneType);
         flightToUpdate.setAirplaneType(airplaneTypeEntity);
-        logger.info("Flight {} changed airplane type to {}", id, airplaneTypeEntity.getFullName());
+        log.info("Flight {} changed airplane type to {}", id, airplaneTypeEntity.getFullName());
         return flightMapper.toDto(flightRepository.save(flightToUpdate));
     }
+
+    private void checkFlightCanChangeAirplaneType(FlightEntity flight) {
+        if (!flight.isScheduled())
+            throw new FlightCanNotChangeAirplaneTypeException(flight.getStatus());
+    }
+
 }

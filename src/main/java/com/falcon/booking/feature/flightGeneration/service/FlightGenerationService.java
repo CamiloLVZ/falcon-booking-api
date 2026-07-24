@@ -7,6 +7,7 @@ import com.falcon.booking.feature.flightGeneration.mapper.FlightGenerationMapper
 import com.falcon.booking.feature.route.exception.RouteAirplaneTypeIsNotActiveException;
 import com.falcon.booking.feature.route.exception.RouteNotActiveException;
 import com.falcon.booking.feature.route.service.RouteQueryService;
+import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
@@ -65,11 +66,12 @@ public class FlightGenerationService {
     }
 
     public ResponseFlightsGenerationDto startRouteFlightGeneration(String flightNumber) {
+
         RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
-        if(!routeEntity.isActive())
-            throw new RouteNotActiveException(routeEntity.getFlightNumber());
-        if(!routeEntity.getDefaultAirplaneType().isActive())
-            throw new RouteAirplaneTypeIsNotActiveException(routeEntity.getDefaultAirplaneType().getId());
+
+        checkRouteIsActive(routeEntity);
+        checkAirplaneTypeIsActive(routeEntity.getDefaultAirplaneType());
+
         try {
             FlightGenerationEntity generation = FlightGenerationEntity.startRouteGeneration(routeEntity.getId());
             FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);
@@ -82,6 +84,16 @@ public class FlightGenerationService {
                 throw new FlightGenerationAlreadyRunningException();
             else throw e;
         }
+    }
+
+    private void checkRouteIsActive(RouteEntity route) {
+        if (!route.isActive())
+            throw new RouteNotActiveException(route.getFlightNumber());
+    }
+
+    private void checkAirplaneTypeIsActive(AirplaneTypeEntity airplaneType) {
+        if (!airplaneType.isActive())
+            throw new RouteAirplaneTypeIsNotActiveException(airplaneType.getId());
     }
 
     public void startDailyFlightGeneration(LocalDate targetDate) {

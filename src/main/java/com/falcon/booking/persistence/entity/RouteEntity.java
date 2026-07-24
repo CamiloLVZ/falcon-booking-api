@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.*;
@@ -44,6 +45,12 @@ public class RouteEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,length = 20)
     RouteStatus status;
+
+    @Column(name = "base_price_economy", nullable = false)
+    private BigDecimal basePriceEconomy = BigDecimal.ZERO;
+
+    @Column(name = "base_price_first_class", nullable = false)
+    private BigDecimal basePriceFirstClass = BigDecimal.ZERO;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route",cascade=CascadeType.ALL ,orphanRemoval = true)
     private Set<RouteDayEntity> routeDays = new HashSet<>();

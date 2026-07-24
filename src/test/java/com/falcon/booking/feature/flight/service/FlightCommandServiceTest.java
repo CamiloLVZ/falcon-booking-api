@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -59,8 +60,7 @@ class FlightCommandServiceTest {
         type.setId(id);
         type.setProducer("Airbus");
         type.setModel("A320");
-        type.setEconomySeats(150);
-        type.setFirstClassSeats(10);
+        type.configureSeats(150, 12, "ABCDEF");
         type.setStatus(com.falcon.booking.common.enums.AirplaneTypeStatus.ACTIVE);
         return type;
     }
@@ -90,7 +90,7 @@ class FlightCommandServiceTest {
         CreateFlightDto request = new CreateFlightDto("AV1234", LocalDateTime.of(2026, 8, 1, 14, 0));
         OffsetDateTime expectedDeparture = request.departureDateTime().atZone(ZoneId.of("UTC")).toOffsetDateTime();
         FlightEntity savedEntity = createFlight(1L, route, expectedDeparture, FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedDeparture, expectedDeparture.toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedDeparture, expectedDeparture.toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         given(flightRepository.existsByRouteAndDepartureDateTime(route, expectedDeparture)).willReturn(false);
@@ -119,7 +119,7 @@ class FlightCommandServiceTest {
     void shouldCancelFlight() {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity flight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.CANCELED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.CANCELED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(flightQueryService.getFlightEntity(1L)).willReturn(flight);
         given(flightRepository.save(flight)).willReturn(flight);
@@ -139,7 +139,7 @@ class FlightCommandServiceTest {
         LocalDateTime nextDeparture = LocalDateTime.of(2026, 8, 5, 16, 0);
         OffsetDateTime newDeparture = nextDeparture.atZone(ZoneId.of("UTC")).toOffsetDateTime();
         FlightEntity savedFlight = createFlight(2L, route, newDeparture, FlightStatus.SCHEDULED);
-        ResponseFlightDto dto = new ResponseFlightDto(2L, "AV1234", "BOG", "BOG", newDeparture, newDeparture.toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(2L, "AV1234", "BOG", "BOG", newDeparture, newDeparture.toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(flightQueryService.getFlightEntity(1L)).willReturn(oldFlight);
         given(flightRepository.existsByRouteAndDepartureDateTime(route, newDeparture)).willReturn(false);
@@ -181,7 +181,7 @@ class FlightCommandServiceTest {
         RouteEntity route = createRoute("AV1234", "UTC", true);
         FlightEntity flight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
         AirplaneTypeEntity newType = createAirplaneType(2L);
-        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(flightQueryService.getFlightEntity(1L)).willReturn(flight);
         given(airplaneTypeService.getAirplaneTypeEntity(2L)).willReturn(newType);

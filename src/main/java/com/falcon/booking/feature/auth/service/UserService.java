@@ -7,16 +7,14 @@ import com.falcon.booking.persistence.entity.RoleEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class UserService {
-
-    private final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,9 +34,14 @@ public class UserService {
                 .orElseThrow(()->new UserNotFoundException(email));
     }
 
+    private void checkUserDoesNotExistByEmail(String email) {
+        if (userRepository.findByEmail(email).isPresent())
+            throw new UserAlreadyExistException(email);
+    }
+
     public UserEntity buildUser(CreateUserDto createUserDto){
-        if(userRepository.findByEmail(createUserDto.email()).isPresent())
-            throw new UserAlreadyExistException(createUserDto.email());
+        checkUserDoesNotExistByEmail(createUserDto.email());
+
         UserEntity user = new UserEntity();
         user.setEmail(createUserDto.email());
         user.setPassword(passwordEncoder.encode(createUserDto.password()));
@@ -48,23 +51,19 @@ public class UserService {
 
     @Transactional
     public UserEntity createClientUser(CreateUserDto createUserDto){
-        if(userRepository.findByEmail(createUserDto.email()).isPresent())
-            throw new UserAlreadyExistException(createUserDto.email());
         UserEntity user = userRepository.save(buildUser(createUserDto));
         RoleEntity role = roleService.getRoleByName("CLIENT");
         userRoleService.addUserRole(user, role);
-        logger.debug("Client user created successfully: {}", user.getEmail());
+        log.debug("Client user created successfully: {}", user.getEmail());
         return user;
     }
 
     @Transactional
     public UserEntity createAdminUser(CreateUserDto createUserDto){
-        if(userRepository.findByEmail(createUserDto.email()).isPresent())
-            throw new UserAlreadyExistException(createUserDto.email());
         UserEntity user = userRepository.save(buildUser(createUserDto));
         RoleEntity role = roleService.getRoleByName("ADMIN");
         userRoleService.addUserRole(user, role);
-        logger.info("Admin user created successfully: {}", user.getEmail());
+        log.info("Admin user created successfully: {}", user.getEmail());
         return user;
     }
 
@@ -72,7 +71,7 @@ public class UserService {
     public UserEntity createAdminIfNotExists(CreateUserDto dto){
         try {
             return userRepository.findByEmail(dto.email()).orElseGet(() ->{
-                    logger.info("Initializing admin user");
+                    log.info("Initializing admin user");
                     return createAdminUser(dto);
             });
         } catch (UserAlreadyExistException | DataIntegrityViolationException e) {

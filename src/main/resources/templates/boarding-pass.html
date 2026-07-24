@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8"/>
+
+    <title>Falcon Boarding Pass</title>
+
+    <style th:utext="${css}"></style>
+
+</head>
+
+<body>
+
+<div class="boarding-pass">
+
+    <header>
+
+        <div class="brand">
+
+            <img
+                    th:src="${boardingPass.logo}"
+                    alt="Falcon Airlines"/>
+
+            <div>
+
+                <h1>FALCON AIRLINES</h1>
+
+                <p>BOARDING PASS</p>
+
+            </div>
+
+        </div>
+
+        <div class="flight-number">
+
+            <span>FLIGHT</span>
+
+            <strong th:text="${boardingPass.flightNumber}"></strong>
+
+        </div>
+
+    </header>
+
+    <section class="main-content">
+
+        <div class="left-column">
+
+            <div class="route">
+
+                <span class="airport"
+                      th:text="${boardingPass.originAirport}"></span>
+
+                <span class="arrow">→</span>
+
+                <span class="airport"
+                      th:text="${boardingPass.destinationAirport}"></span>
+
+            </div>
+
+            <div class="passenger">
+
+                <span class="label">PASSENGER</span>
+
+                <span class="value"
+                      th:text="${boardingPass.passengerName}"></span>
+
+            </div>
+
+            <div class="info-grid">
+
+                <div class="info">
+
+                    <span class="label">DEPARTURE DATE</span>
+
+                    <span class="value"
+                          th:text="${boardingPass.departure.date()}"></span>
+
+                </div>
+
+                <div class="info">
+
+                    <span class="label">DEPARTURE TIME</span>
+
+                    <span class="value"
+                          th:text="${boardingPass.departure.time()}"></span>
+
+                </div>
+
+                <div class="info">
+
+                    <span class="label">BOARDING STARTS</span>
+
+                    <span class="value"
+                          th:text="${boardingPass.boardingStart.time()}"></span>
+
+                </div>
+
+                <div class="info">
+
+                    <span class="label">BOARDING ENDS</span>
+
+                    <span class="value"
+                          th:text="${boardingPass.boardingEnd.time()}"></span>
+
+                </div>
+
+                <div class="info">
+
+                    <span class="label">RESERVATION</span>
+
+                    <span class="value"
+                          th:text="${boardingPass.reservationNumber}"></span>
+
+                </div>
+
+                <div class="seat-box">
+
+                    <span class="label">SEAT</span>
+
+                    <span class="seat"
+                          th:text="${boardingPass.seat}"></span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="right-column">
+
+            <img
+                    th:src="${boardingPass.qr}"
+                    alt="QR"/>
+
+            <span class="scan-text">
+
+                Scan this QR code during boarding
+
+            </span>
+
+        </div>
+
+    </section>
+
+    <footer>
+
+        Please arrive at the boarding gate before the boarding end time.
+        Boarding closes strictly at the indicated time.
+
+    </footer>
+
+</div>
+
+</body>
+
+</html>

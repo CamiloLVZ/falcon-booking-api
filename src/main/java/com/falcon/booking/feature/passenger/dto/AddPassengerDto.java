@@ -30,4 +30,8 @@ public record AddPassengerDto(
         @Schema(description = "Passenger identification number", example = "1032456789")
         @NotBlank @Size(min = 2, max = 20)
         String identificationNumber){
+
+        public String getIdentification(){
+                return  nationalityIsoCode+":"+identificationNumber;
+        }
 }

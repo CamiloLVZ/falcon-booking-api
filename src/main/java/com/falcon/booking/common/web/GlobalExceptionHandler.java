@@ -2,11 +2,8 @@ package com.falcon.booking.common.web;
 
 import com.falcon.booking.common.exception.DateToBeforeDateFromException;
 import com.falcon.booking.common.exception.InvalidSearchCriteriaException;
-import com.falcon.booking.feature.airport.exception.AirportNotFoundException;
-import com.falcon.booking.feature.country.exception.CountryNotFoundException;
 import jakarta.validation.ConstraintViolationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -22,9 +19,8 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import java.util.List;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
-
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Error> handleValidationExceptions(MethodArgumentNotValidException exception) {
@@ -42,7 +38,7 @@ public class GlobalExceptionHandler {
             }
         }
 
-        logger.warn("Validation failed for request: [{}]", detailsBuilder.toString());
+        log.warn("Validation failed for request: [{}]", detailsBuilder.toString());
 
         Error error = new Error("invalid-arguments", detailsBuilder.toString());
         return ResponseEntity.badRequest().body(error);
@@ -51,14 +47,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Error> handleException(MissingServletRequestParameterException exception){
         Error error = new Error("required-parameter-not-found", exception.getMessage());
-        logger.warn("Request with required parameters not found: {}", error.message());
+        log.warn("Request with required parameters not found: {}", error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Error> handleException(MethodArgumentTypeMismatchException exception){
         Error error = new Error("invalid-argument-type", exception.getMessage());
-        logger.warn("Request with invalid argument type: {}", error.message());
+        log.warn("Request with invalid argument type: {}", error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -66,56 +62,42 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Error> handleValidationExceptions(ConstraintViolationException exception) {
         String firstMessage = exception.getConstraintViolations().iterator().next().getMessage();
         Error error = new Error("invalid-arguments", firstMessage);
-        logger.warn("Request with invalid arguments: {}", error.message());
+        log.warn("Request with invalid arguments: {}", error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(InvalidSearchCriteriaException.class)
     public ResponseEntity<Error> handleException(InvalidSearchCriteriaException exception){
         Error error = new Error("invalid-search-criteria", exception.getMessage());
-        logger.warn("Request with invalid search criteria: {}", error.message());
+        log.warn("Request with invalid search criteria: {}", error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(CountryNotFoundException.class)
-    public ResponseEntity<Error> handleException(CountryNotFoundException exception){
-        Error error = new Error("country-does-not-exist", exception.getMessage());
-        logger.warn(error.message());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
-    @ExceptionHandler(AirportNotFoundException.class)
-    public ResponseEntity<Error> handleException(AirportNotFoundException exception){
-        Error error = new Error("airport-does-not-exist", exception.getMessage());
-        logger.warn(error.message());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Error> handleException(HttpMessageNotReadableException exception) {
         Error error = new Error("data-format-invalid", exception.getMessage());
-        logger.warn(error.message());
+        log.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(DateToBeforeDateFromException.class)
     public ResponseEntity<Error> handleException(DateToBeforeDateFromException exception){
         Error error = new Error("date-to-before-date-from", exception.getMessage());
-        logger.warn(error.message());
+        log.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Error> handleException(NoHandlerFoundException exception) {
         Error error = new Error("endpoint-not-found", exception.getMessage());
-        logger.warn(error.message());
+        log.warn(error.message());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<Error> handleException(HttpRequestMethodNotSupportedException exception) {
         Error error = new Error("method-not-supported", exception.getMessage());
-        logger.warn(error.message());
+        log.warn(error.message());
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 }

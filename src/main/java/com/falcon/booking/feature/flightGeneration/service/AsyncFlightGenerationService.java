@@ -3,18 +3,16 @@ package com.falcon.booking.feature.flightGeneration.service;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
 import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
+@Slf4j
 @Service
 public class AsyncFlightGenerationService {
-
-    private static final Logger logger = LoggerFactory.getLogger(AsyncFlightGenerationService.class);
 
     private final FlightGenerationRepository flightGenerationRepository;
     private final TransactionalFlightGenerationService transactionalFlightGenerationService;
@@ -52,11 +50,11 @@ public class AsyncFlightGenerationService {
             }
 
             Duration duration = Duration.between(generation.getStartedAt(), generation.getFinishedAt());
-            logger.info("{} flight generation completed. {} flights generated in {} seconds.", generation.getType(), totalGenerated, duration.toSeconds());
+            log.info("{} flight generation completed. {} flights generated in {} seconds.", generation.getType(), totalGenerated, duration.toSeconds());
 
         }catch (Exception ex) {
             generation.markAsFailed();
-            logger.error("Flight generation execution failed: {}", ex.getMessage());
+            log.error("Flight generation execution failed: {}", ex.getMessage());
         }finally {
             flightGenerationRepository.save(generation);
         }

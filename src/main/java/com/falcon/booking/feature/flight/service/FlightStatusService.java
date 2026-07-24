@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.flight.service;
 
 import com.falcon.booking.common.enums.FlightStatus;
+import com.falcon.booking.feature.boarding.service.BoardingService;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +25,11 @@ public class FlightStatusService {
     int boardingMinutesBeforeToClose;
 
     private final FlightRepository flightRepository;
+    private final BoardingService boardingService;
 
-    public FlightStatusService(FlightRepository flightRepository) {
+    public FlightStatusService(FlightRepository flightRepository, BoardingService boardingService) {
         this.flightRepository = flightRepository;
+        this.boardingService = boardingService;
     }
 
     public boolean updateFlightStatus(FlightEntity flight, OffsetDateTime now) {
@@ -38,20 +41,31 @@ public class FlightStatusService {
 
         boolean isInCheckInRange = !now.isBefore(checkInStart) && !now.isAfter(checkInEnd);
         boolean isInBoardingRange = !now.isBefore(boardingStart) && !now.isAfter(boardingEnd);
+        boolean isGateClosedRange = now.isAfter(boardingEnd) && !now.isAfter(departureDateTime);
 
         flight.correctStatusByTime(now);
+
         if (now.isAfter(departureDateTime)) {
             flight.markAsCompleted();
             return true;
         }
-        if (isInCheckInRange && !flight.isCheckInAvailable()) {
-            flight.startCheckIn();
+        
+        if (isGateClosedRange && !flight.isGateClosed()) {
+            flight.markAsGateClosed();
+            boardingService.expireUnusedPassesForFlight(flight.getId());
             return true;
         }
+
         if (isInBoardingRange && !flight.isInBoarding()) {
             flight.startBoarding();
             return true;
         }
+        
+        if (isInCheckInRange && !flight.isCheckInAvailable()) {
+            flight.startCheckIn();
+            return true;
+        }
+        
         return false;
     }
 

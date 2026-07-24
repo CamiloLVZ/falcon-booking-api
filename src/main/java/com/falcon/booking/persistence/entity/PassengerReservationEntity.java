@@ -1,16 +1,18 @@
 package com.falcon.booking.persistence.entity;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.feature.boarding.exception.InvalidBoardingPassengerReservationException;
+import com.falcon.booking.feature.checkIn.exception.InvalidCheckInPassengerReservationStatusException;
 import com.falcon.booking.feature.flight.exception.OutOfFlightBoardingTimeException;
 import com.falcon.booking.feature.flight.exception.OutOfFlightCheckInTimeException;
-import com.falcon.booking.feature.reservation.exception.InvalidBoardingPassengerReservationException;
-import com.falcon.booking.feature.reservation.exception.InvalidCheckInPassengerReservationException;
 import com.falcon.booking.feature.reservation.exception.ReservationInvalidStatusChangeException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
@@ -22,11 +24,12 @@ import java.util.Objects;
 @Getter
 public class PassengerReservationEntity {
 
-    public PassengerReservationEntity(PassengerEntity passenger, ReservationEntity reservation, Integer seatNumber) {
+    public PassengerReservationEntity(PassengerEntity passenger, ReservationEntity reservation, Integer seatNumber, SeatClass seatClass) {
         this.passenger = passenger;
         this.reservation = reservation;
         this.flight = reservation.getFlight();
         this.seatNumber = seatNumber;
+        this.seatClass = seatClass;
         this.status = PassengerReservationStatus.RESERVED;
     }
 
@@ -47,12 +50,20 @@ public class PassengerReservationEntity {
     @JoinColumn(name = "id_flight", nullable = false)
     private FlightEntity flight;
 
-    @Column(name = "seat_number", nullable = false)
+    @Column(name = "seat_number")
     private Integer seatNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "seat_class", nullable = false)
+    private SeatClass seatClass;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PassengerReservationStatus status;
+
+    @Setter
+    @Column(nullable = false)
+    private BigDecimal price = BigDecimal.ZERO;
 
     public void cancel(){
         if(this.isCanceled()) return;
@@ -63,13 +74,14 @@ public class PassengerReservationEntity {
         this.status = PassengerReservationStatus.CANCELED;
     }
 
-    public void checkIn() {
+    public void checkIn(int seatNumber) {
         if(!this.isReserved()){
-            throw new InvalidCheckInPassengerReservationException(this.status);
+            throw new InvalidCheckInPassengerReservationStatusException(this.status);
         }
         if(!this.flight.isCheckInAvailable()){
             throw new OutOfFlightCheckInTimeException(this.flight.getId());
         }
+            this.seatNumber = seatNumber;
             this.status = PassengerReservationStatus.CHECKED_IN;
     }
 
@@ -81,6 +93,14 @@ public class PassengerReservationEntity {
             throw new OutOfFlightBoardingTimeException(this.flight.getId());
         }
         this.status = PassengerReservationStatus.BOARDED;
+    }
+
+    public void expire(){
+        if(this.isExpired()) return;
+        if(this.isBoarded() || this.isCanceled()){
+            throw new ReservationInvalidStatusChangeException(this.status, PassengerReservationStatus.EXPIRED);
+        }
+        this.status = PassengerReservationStatus.EXPIRED;
     }
 
     public boolean isReserved(){
@@ -98,6 +118,10 @@ public class PassengerReservationEntity {
     public boolean isBoarded(){
         if (this.status==null) return false;
         return this.status.equals(PassengerReservationStatus.BOARDED);
+    }
+    public boolean isExpired(){
+        if (this.status==null) return false;
+        return this.status.equals(PassengerReservationStatus.EXPIRED);
     }
 
     @Override
