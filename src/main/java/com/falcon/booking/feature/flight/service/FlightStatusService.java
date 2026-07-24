@@ -43,9 +43,10 @@ public class FlightStatusService {
         boolean isInBoardingRange = !now.isBefore(boardingStart) && !now.isAfter(boardingEnd);
         boolean isGateClosedRange = now.isAfter(boardingEnd) && !now.isAfter(departureDateTime);
 
+        flight.correctStatusByTime(now);
+
         if (now.isAfter(departureDateTime)) {
             boolean wasCompleted = flight.isCompleted();
-            flight.correctStatusByTime(now);
             return !wasCompleted;
         }
         
