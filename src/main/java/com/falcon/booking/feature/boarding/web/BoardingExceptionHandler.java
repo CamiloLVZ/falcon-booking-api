@@ -5,6 +5,7 @@ import com.falcon.booking.feature.boarding.exception.BoardingPassAlreadyBoardedE
 import com.falcon.booking.feature.boarding.exception.BoardingPassExpiredException;
 import com.falcon.booking.feature.boarding.exception.BoardingPassNotFoundException;
 import com.falcon.booking.feature.boarding.exception.InvalidBoardingPassengerReservationException;
+import com.falcon.booking.feature.boarding.pdf.exception.PdfGenerationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,13 @@ public class BoardingExceptionHandler {
         Error error = new Error("invalid-boarding-passenger-reservation", e.getMessage());
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(PdfGenerationException.class)
+    public ResponseEntity<Error> handleException(PdfGenerationException e) {
+        Error error = new Error("pdf-generation-error", e.getMessage());
+        logger.error(error.message());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
 }

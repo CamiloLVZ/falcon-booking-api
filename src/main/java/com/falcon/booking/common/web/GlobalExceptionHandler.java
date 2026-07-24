@@ -2,8 +2,6 @@ package com.falcon.booking.common.web;
 
 import com.falcon.booking.common.exception.DateToBeforeDateFromException;
 import com.falcon.booking.common.exception.InvalidSearchCriteriaException;
-import com.falcon.booking.feature.airport.exception.AirportNotFoundException;
-import com.falcon.booking.feature.country.exception.CountryNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,20 +73,6 @@ public class GlobalExceptionHandler {
         Error error = new Error("invalid-search-criteria", exception.getMessage());
         logger.warn("Request with invalid search criteria: {}", error.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(CountryNotFoundException.class)
-    public ResponseEntity<Error> handleException(CountryNotFoundException exception){
-        Error error = new Error("country-does-not-exist", exception.getMessage());
-        logger.warn(error.message());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
-    @ExceptionHandler(AirportNotFoundException.class)
-    public ResponseEntity<Error> handleException(AirportNotFoundException exception){
-        Error error = new Error("airport-does-not-exist", exception.getMessage());
-        logger.warn(error.message());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

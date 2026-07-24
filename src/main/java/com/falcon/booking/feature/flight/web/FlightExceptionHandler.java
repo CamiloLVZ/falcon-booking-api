@@ -4,6 +4,7 @@ import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.flight.exception.*;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
+import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationPartialFailureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -63,6 +64,20 @@ public class FlightExceptionHandler {
         Error error = new Error("flight-generation-does-not-exist", exception.getMessage());
         logger.warn(error.message());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(FlightInvalidStatusChangeException.class)
+    public ResponseEntity<Error> handleException(FlightInvalidStatusChangeException exception){
+        Error error = new Error("flight-invalid-status-change", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(FlightGenerationPartialFailureException.class)
+    public ResponseEntity<Error> handleException(FlightGenerationPartialFailureException exception){
+        Error error = new Error("flight-generation-partial-failure", exception.getMessage());
+        logger.warn(error.message());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
     @ExceptionHandler(OutOfFlightCheckInTimeException.class)
