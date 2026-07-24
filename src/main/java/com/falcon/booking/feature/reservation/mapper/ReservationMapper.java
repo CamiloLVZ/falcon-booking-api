@@ -6,7 +6,6 @@ import com.falcon.booking.persistence.entity.ReservationEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -34,10 +33,9 @@ public class ReservationMapper {
     }
 
     public List<ResponseReservationDto> toResponseDto(List<ReservationEntity> entities) {
-        List<ResponseReservationDto> dtos = new ArrayList<>();
-        for (ReservationEntity entity : entities) {
-            dtos.add(toResponseDto(entity));
-        }
-        return dtos;
+        return entities.stream()
+                .map(this::toResponseDto).
+                toList();
+
     }
 }

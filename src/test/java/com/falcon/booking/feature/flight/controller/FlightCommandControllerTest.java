@@ -53,7 +53,7 @@ class FlightCommandControllerTest {
                 OffsetDateTime.parse("2026-01-01T13:00:00Z"),
                 LocalDateTime.parse("2026-01-01T08:00:00"),
                 40,
-                new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
+                new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10, "ABCDEF"),
                 status,
                 BigDecimal.valueOf(100.0),
                 BigDecimal.valueOf(200.0)

@@ -1,0 +1,1 @@
+ALTER TABLE airplane_type ADD COLUMN seat_columns VARCHAR(10) NOT NULL DEFAULT 'ABCDEF';

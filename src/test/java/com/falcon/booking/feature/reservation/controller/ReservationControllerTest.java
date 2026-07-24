@@ -68,7 +68,7 @@ class ReservationControllerTest {
                 OffsetDateTime.parse("2026-01-01T13:00:00Z"),
                 LocalDateTime.parse("2026-01-01T08:00:00"),
                 40,
-                new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10),
+                new AirplaneTypeInFlightDto("Airbus", "A320", 100, 10, "ABCDEF"),
                 FlightStatus.SCHEDULED,
                 BigDecimal.valueOf(100.0),
                 BigDecimal.valueOf(200.0)
@@ -91,7 +91,7 @@ class ReservationControllerTest {
                 Instant.parse("2026-01-01T12:00:00Z"),
                 status,
                 flight,
-                List.of(new ResponsePassengerReservationDto(passenger, 12, SeatClass.ECONOMY, PassengerReservationStatus.RESERVED))
+                List.of(new ResponsePassengerReservationDto(null, passenger, 12, SeatClass.ECONOMY, PassengerReservationStatus.RESERVED))
         );
     }
 

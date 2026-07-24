@@ -10,13 +10,30 @@ import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.ReservationRepository;
+import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
+import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
+import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
+import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
+import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationCommandServiceTest {
@@ -30,11 +47,11 @@ class ReservationCommandServiceTest {
     @Mock
     private PassengerService passengerService;
     @Mock
-    private com.falcon.booking.feature.flight.mapper.FlightMapper flightMapper;
+    private ReservationMapper reservationMapper;
     @Mock
-    private PassengerReservationMapper passengerReservationMapper;
+    private ReservationQueryService reservationQueryService;
     @Mock
-    private com.falcon.booking.feature.reservation.component.ReservationNumberGenerator reservationNumberGenerator;
+    private ReservationNumberGenerator reservationNumberGenerator;
 
     @InjectMocks
     private ReservationCommandService reservationCommandService;
@@ -66,8 +83,7 @@ class ReservationCommandServiceTest {
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
         airplaneType.setProducer("Airbus");
         airplaneType.setModel("A320");
-        airplaneType.setEconomySeats(economySeats);
-        airplaneType.setFirstClassSeats(firstClassSeats);
+        airplaneType.configureSeats(economySeats, firstClassSeats, "ABCDEF");
         airplaneType.setStatus(AirplaneTypeStatus.ACTIVE);
 
         RouteEntity route = new RouteEntity();
@@ -100,4 +116,63 @@ class ReservationCommandServiceTest {
     }
 
 
+    @DisplayName("Should create reservation from payment successfully")
+    @Test
+    void shouldCreateReservationFromPayment() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+
+        AddPassengerDto addPassengerDto =
+                new AddPassengerDto(
+                        "Ana", "Perez", PassengerGender.F, "CO", LocalDate.now().minusYears(20), "P123456", "123456");
+        PaymentPassengerDto paymentPassengerDto =
+                new PaymentPassengerDto(
+                        addPassengerDto, SeatClass.ECONOMY);
+
+        PaymentRequestDto requestDto =
+                new PaymentRequestDto(
+                        flight.getId(), "test@test.com", List.of(paymentPassengerDto));
+
+        PassengerEntity passenger = createPassenger("123456");
+
+        when(passengerService.getPassengerEntityByIdentificationNumber("123456", "CO"))
+                .thenThrow(new PassengerNotFoundException("123456"));
+        when(reservationNumberGenerator.generate()).thenReturn("RES123");
+        when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(passengerService.createOrGetPassenger(addPassengerDto)).thenReturn(passenger);
+
+        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight);
+
+        assertThat(reservationNumber).isEqualTo("RES123");
+        verify(passengerReservationRepository).saveAll(anyList());
+    }
+
+    @DisplayName("Should fail to create reservation if passenger already reserved")
+    @Test
+    void shouldFailCreateReservation_PassengerAlreadyReserved() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+
+        AddPassengerDto addPassengerDto =
+                new AddPassengerDto(
+                        "Ana", "Perez", PassengerGender.F, "CO", LocalDate.now().minusYears(20), "P123456", "123456");
+        PaymentPassengerDto paymentPassengerDto =
+                new PaymentPassengerDto(
+                        addPassengerDto, SeatClass.ECONOMY);
+
+        PaymentRequestDto requestDto =
+                new PaymentRequestDto(
+                        flight.getId(), "test@test.com", List.of(paymentPassengerDto));
+
+        PassengerEntity passenger = createPassenger("123456");
+
+        when(passengerService.getPassengerEntityByIdentificationNumber("123456", "CO"))
+                .thenReturn(passenger);
+        when(passengerReservationRepository.findAllByFlightAndPassengerAndStatusNot(
+                eq(flight),
+                eq(passenger),
+                eq(PassengerReservationStatus.CANCELED)))
+                .thenReturn(List.of(new PassengerReservationEntity()));
+
+        assertThatThrownBy(() -> reservationCommandService.createReservationFromPayment(requestDto, flight))
+                .isInstanceOf(PassengerAlreadyReservedFlightException.class);
+    }
 }

@@ -1,0 +1,212 @@
+* {
+    box-sizing: border-box;
+}
+
+@page {
+    size: A4;
+    margin: 60pt 30pt;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11pt;
+    color: #222;
+}
+
+.boarding-pass {
+    width: 100%;
+    background: white;
+    border: 1.5pt solid #183153;
+    border-radius: 8pt;
+}
+
+header {
+    background: #183153;
+    color: white;
+    padding: 16pt 22pt;
+    border-radius: 8pt 8pt 0 0;
+}
+
+header:after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.brand {
+    float: left;
+}
+
+.brand img {
+    width: 48pt;
+    height: 48pt;
+    vertical-align: middle;
+}
+
+.brand > div {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 12pt;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 20pt;
+    letter-spacing: 1.5pt;
+}
+
+header p {
+    margin: 3pt 0 0 0;
+    font-size: 9pt;
+    color: #b0b8c5;
+}
+
+.flight-number {
+    float: right;
+    text-align: right;
+    margin-top: 2pt;
+}
+
+.flight-number span {
+    display: block;
+    font-size: 8pt;
+    letter-spacing: 1pt;
+}
+
+.flight-number strong {
+    font-size: 22pt;
+}
+
+.main-content {
+    width: 100%;
+    font-size: 0;
+}
+
+.main-content:after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.left-column {
+    width: 72%;
+    display: inline-block;
+    vertical-align: top;
+    font-size: 11pt;
+    padding: 20pt 22pt;
+}
+
+.route {
+    text-align: center;
+    margin-bottom: 18pt;
+}
+
+.airport {
+    font-size: 26pt;
+    font-weight: bold;
+    color: #183153;
+}
+
+.arrow {
+    font-size: 20pt;
+    color: #183153;
+    margin: 0 12pt;
+}
+
+.passenger {
+    margin-bottom: 16pt;
+}
+
+.label {
+    display: block;
+    font-size: 8pt;
+    letter-spacing: 1pt;
+    color: #888;
+    margin-bottom: 3pt;
+}
+
+.value {
+    font-size: 13pt;
+    font-weight: 600;
+    color: #222;
+}
+
+.info-grid {
+    width: 100%;
+}
+
+.info-grid:after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.info {
+    width: 48%;
+    float: left;
+    padding: 8pt 10pt;
+    border: 1pt solid #ddd;
+    border-radius: 6pt;
+    background: #fafafa;
+    margin-bottom: 8pt;
+}
+
+.info:nth-child(even) {
+    float: right;
+}
+
+.seat-box {
+    width: 100%;
+    background: #183153;
+    color: white;
+    text-align: center;
+    border-radius: 6pt;
+    padding: 10pt;
+    clear: both;
+}
+
+.seat-box .label {
+    color: #b0b8c5;
+}
+
+.seat {
+    display: block;
+    font-size: 28pt;
+    font-weight: bold;
+    letter-spacing: 2pt;
+}
+
+.right-column {
+    width: 28%;
+    display: inline-block;
+    vertical-align: top;
+    font-size: 11pt;
+    border-left: 1.5pt dashed #d2d2d2;
+    text-align: center;
+    padding: 20pt 14pt;
+}
+
+.right-column img {
+    width: 120pt;
+    height: 120pt;
+}
+
+.scan-text {
+    display: block;
+    margin-top: 10pt;
+    text-align: center;
+    color: #666;
+    font-size: 9pt;
+    line-height: 1.3;
+}
+
+footer {
+    background: #f5f5f5;
+    text-align: center;
+    padding: 10pt;
+    font-size: 8pt;
+    color: #777;
+    border-radius: 0 0 8pt 8pt;
+}

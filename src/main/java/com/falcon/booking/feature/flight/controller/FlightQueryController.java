@@ -3,6 +3,7 @@ package com.falcon.booking.feature.flight.controller;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
+import com.falcon.booking.feature.flight.dto.FlightSeatMapDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,6 +53,23 @@ public class FlightQueryController {
                                                            @Parameter(description = "Flight numeric unique identifier", example = "100")
                                                            Long id) {
         return ResponseEntity.ok(flightQueryService.getFlightById(id));
+    }
+
+    @Operation(summary = "Get seat map for a flight",
+            description = "Returns the complete seat map for a flight, including the aircraft layout, current dynamic prices per class, and the status (AVAILABLE or OCCUPIED) of each individual seat.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Seat map retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FlightSeatMapDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid flight identifier",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "404", description = "Flight not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/{id}/seats")
+    public ResponseEntity<FlightSeatMapDto> getFlightSeatMap(@PathVariable
+                                                             @Parameter(description = "Flight numeric unique identifier", example = "100")
+                                                             Long id) {
+        return ResponseEntity.ok(flightQueryService.getSeatMap(id));
     }
 
     @Operation(summary = "Get flights by criteria",

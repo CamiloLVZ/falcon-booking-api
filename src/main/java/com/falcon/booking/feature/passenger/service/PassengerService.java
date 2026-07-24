@@ -11,8 +11,7 @@ import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,10 +19,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class PassengerService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PassengerService.class);
 
     private final PassengerRepository passengerRepository;
     private final PassengerMapper passengerMapper;
@@ -36,32 +34,32 @@ public class PassengerService {
         this.countryService = countryService;
     }
 
-    public PassengerEntity getPassengerEntityById(Long id){
+    public PassengerEntity getPassengerEntityById(Long id) {
         return passengerRepository.findById(id).orElseThrow(
-                ()->new PassengerNotFoundException(id));
+                () -> new PassengerNotFoundException(id));
     }
 
-    public PassengerEntity getPassengerEntityByPassportNumber(String passportNumber){
+    public PassengerEntity getPassengerEntityByPassportNumber(String passportNumber) {
         String normalizedPassportNumber = StringNormalizer.normalize(passportNumber);
         return passengerRepository.findByPassportNumber(normalizedPassportNumber).orElseThrow(
-                ()->new PassengerNotFoundException(passportNumber));
+                () -> new PassengerNotFoundException(passportNumber));
     }
 
-    public PassengerEntity getPassengerEntityByIdentificationNumber(String identificationNumber, String nationalityIsoCode){
+    public PassengerEntity getPassengerEntityByIdentificationNumber(String identificationNumber, String nationalityIsoCode) {
         String normalizedIdentificationNumber = StringNormalizer.normalize(identificationNumber);
         CountryEntity country = countryService.getCountryEntityByIsoCode(nationalityIsoCode);
-        
+
         return passengerRepository.findByIdentificationNumberAndCountryNationality(normalizedIdentificationNumber, country).orElseThrow(
-                ()->new PassengerNotFoundException(identificationNumber, country.getIsoCode()));
+                () -> new PassengerNotFoundException(identificationNumber, country.getIsoCode()));
     }
 
     @Transactional
-    public ResponsePassengerDto addPassenger(AddPassengerDto addPassengerDto){
+    public ResponsePassengerDto addPassenger(AddPassengerDto addPassengerDto) {
         return passengerMapper.toResponseDto(createOrGetPassenger(addPassengerDto));
     }
 
     @Transactional
-    public PassengerEntity createOrGetPassenger(AddPassengerDto addPassengerDto){
+    public PassengerEntity createOrGetPassenger(AddPassengerDto addPassengerDto) {
         PassengerEntity newPassengerEntity = passengerMapper.toEntity(addPassengerDto);
         CountryEntity country = countryService.getCountryEntityByIsoCode(addPassengerDto.nationalityIsoCode());
         newPassengerEntity.setCountryNationality(country);
@@ -69,74 +67,79 @@ public class PassengerService {
         PassengerEntity oldPassengerEntity =
                 passengerRepository.findByIdentificationNumberAndCountryNationality(newPassengerEntity.getIdentificationNumber(), newPassengerEntity.getCountryNationality()).orElse(null);
 
-        if(newPassengerEntity.getPassportNumber()!=null){
+        if (newPassengerEntity.getPassportNumber() != null) {
             validatePassportNumber(oldPassengerEntity, newPassengerEntity);
         }
-        if(oldPassengerEntity != null){
+        if (oldPassengerEntity != null) {
             oldPassengerEntity.setFirstName(newPassengerEntity.getFirstName());
             oldPassengerEntity.setLastName(newPassengerEntity.getLastName());
             oldPassengerEntity.setGender(newPassengerEntity.getGender());
             oldPassengerEntity.setDateOfBirth(newPassengerEntity.getDateOfBirth());
-            if(newPassengerEntity.getPassportNumber()!=null)
+            if (newPassengerEntity.getPassportNumber() != null)
                 oldPassengerEntity.setPassportNumber(newPassengerEntity.getPassportNumber());
 
             return passengerRepository.save(oldPassengerEntity);
-        }else {
+        } else {
 
             PassengerEntity passengerCreated = passengerRepository.save(newPassengerEntity);
-            logger.info("Passenger created with id: {}", passengerCreated.getId());
+            log.info("Passenger created with id: {}", passengerCreated.getId());
             return passengerCreated;
         }
 
     }
 
-    private void validatePassportNumber(PassengerEntity oldPassengerEntity, PassengerEntity newPassengerEntity){
+    private void validatePassportNumber(PassengerEntity oldPassengerEntity, PassengerEntity newPassengerEntity) {
         PassengerEntity oldPassengerByPassport = passengerRepository.findByPassportNumber(newPassengerEntity.getPassportNumber()).orElse(null);
 
-        if(oldPassengerByPassport != null){
-            if(!oldPassengerByPassport.equals(oldPassengerEntity)){
+        if (oldPassengerByPassport != null) {
+            if (!oldPassengerByPassport.equals(oldPassengerEntity)) {
                 throw new PassengerAlreadyExistsException(newPassengerEntity.getPassportNumber());
             }
-        }else{
-            if(oldPassengerEntity != null){
-                if(oldPassengerEntity.getPassportNumber()==null)
+        } else {
+            if (oldPassengerEntity != null) {
+                if (oldPassengerEntity.getPassportNumber() == null)
                     return;
 
-                if(!newPassengerEntity.getPassportNumber().equals(oldPassengerEntity.getPassportNumber())){
+                if (!newPassengerEntity.getPassportNumber().equals(oldPassengerEntity.getPassportNumber())) {
                     throw new PassengerHasDifferentPassportNumberException();
                 }
             }
         }
     }
 
+    private void checkPassportNumberNotTaken(String newPassportNumber) {
+        if (passengerRepository.existsByPassportNumber(newPassportNumber)) {
+            throw new PassengerAlreadyExistsException(newPassportNumber);
+        }
+    }
+
     @Transactional
-    public ResponsePassengerDto updatePassengerPassport(String identificationNumber, String nationalityIsoCode, String newPassportNumber){
+    public ResponsePassengerDto updatePassengerPassport(String identificationNumber, String nationalityIsoCode, String newPassportNumber) {
         PassengerEntity passengerEntity = getPassengerEntityByIdentificationNumber(identificationNumber, nationalityIsoCode);
-        if(newPassportNumber.equals(passengerEntity.getPassportNumber())){
+        if (newPassportNumber.equals(passengerEntity.getPassportNumber())) {
             return passengerMapper.toResponseDto(passengerRepository.save(passengerEntity));
         }
 
-        boolean existPassengerWithPassport = passengerRepository.existsByPassportNumber(newPassportNumber);
-        if(existPassengerWithPassport){
-            throw new PassengerAlreadyExistsException(newPassportNumber);
-        }else{
-            passengerEntity.setPassportNumber(newPassportNumber);
-            logger.info("Passenger {} updated passport number to {}", passengerEntity.getId(), newPassportNumber);
-            return passengerMapper.toResponseDto(passengerEntity);
-        }
+        checkPassportNumberNotTaken(newPassportNumber);
+
+        passengerEntity.setPassportNumber(newPassportNumber);
+        log.info("Passenger {} updated passport number to {}", passengerEntity.getId(), newPassportNumber);
+        return passengerMapper.toResponseDto(passengerEntity);
+
     }
+
     @Transactional(readOnly = true)
-    public ResponsePassengerDto getPassengerById(Long id){
+    public ResponsePassengerDto getPassengerById(Long id) {
         return passengerMapper.toResponseDto(getPassengerEntityById(id));
     }
 
     @Transactional(readOnly = true)
-    public ResponsePassengerDto getPassengerByPassportNumber(String passportNumber){
+    public ResponsePassengerDto getPassengerByPassportNumber(String passportNumber) {
         return passengerMapper.toResponseDto(getPassengerEntityByPassportNumber(passportNumber));
     }
 
     @Transactional(readOnly = true)
-    public ResponsePassengerDto getPassengerByIdentificationNumber(String identificationNumber, String nationalityIsoCode){
+    public ResponsePassengerDto getPassengerByIdentificationNumber(String identificationNumber, String nationalityIsoCode) {
         return passengerMapper.toResponseDto(getPassengerEntityByIdentificationNumber(identificationNumber, nationalityIsoCode));
     }
 

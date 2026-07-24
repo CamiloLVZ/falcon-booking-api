@@ -5,7 +5,6 @@ import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDt
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -19,16 +18,12 @@ public class PassengerReservationMapper {
 
 
     public ResponsePassengerReservationDto toResponseDto(PassengerReservationEntity entity) {
-        return new ResponsePassengerReservationDto(passengerMapper.toResponseDto(entity.getPassenger()), entity.getSeatNumber(), entity.getSeatClass(), entity.getStatus());
+        return new ResponsePassengerReservationDto(entity.getId(), passengerMapper.toResponseDto(entity.getPassenger()), entity.getSeatNumber(), entity.getSeatClass(), entity.getStatus());
     }
 
     public List<ResponsePassengerReservationDto> toResponseDto(List<PassengerReservationEntity> entities) {
-        List<ResponsePassengerReservationDto> dtos = new ArrayList<>();
-        for (PassengerReservationEntity entity : entities) {
-            dtos.add(toResponseDto(entity));
-        }
-        return dtos;
+        return entities.stream()
+                .map(this::toResponseDto)
+                .toList();
     }
-
-
 }

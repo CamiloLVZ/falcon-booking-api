@@ -21,8 +21,11 @@ public interface PassengerReservationRepository extends JpaRepository<PassengerR
     
     List<PassengerReservationEntity> findAllByFlight(FlightEntity flight);
 
-    long countByFlightAndSeatClassAndStatusNot(FlightEntity flight, SeatClass seatClass, PassengerReservationStatus status);
+    List<PassengerReservationEntity> findAllByFlightIdAndStatusIn(Long flightId, List<PassengerReservationStatus> statuses);
 
+    int countByFlightAndSeatClassAndStatusNot(FlightEntity flight, SeatClass seatClass, PassengerReservationStatus status);
+
+    List<PassengerReservationEntity> findAllByFlightAndPassengerAndStatusNot(FlightEntity flight, PassengerEntity passenger, PassengerReservationStatus status);
 
     @Query(value = "SELECT pr FROM PassengerReservationEntity pr " +
             "JOIN FETCH pr.reservation r " +

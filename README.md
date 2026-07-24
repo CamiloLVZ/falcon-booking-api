@@ -15,6 +15,7 @@ The Flight Reservation System handles:
 - Seat availability and reservation logic
 - Passenger information management
 - Flight seat reservations
+- Automated Check-in with Boarding Pass generation and email delivery
 - Authentication and authorization for admin operations
 
 This project is built as a modular monolith utilizing a **Package by Feature** organization combined with a **Layered Architecture** approach for cross-cutting concerns. This structure emphasizes high cohesion, clarity, extensibility, and realistic airline business rules.
@@ -29,6 +30,7 @@ This project is built as a modular monolith utilizing a **Package by Feature** o
 - **Seat Selection Engine**: Interactive seat assignment where passengers select their specific seats during the reservation flow
 - **Dynamic Pricing**: Configurable base prices for routes that calculate specific ticket costs per class (Economy, First Class) for each flight
 - **Simulated Atomic Payments**: An atomic "pay-to-reserve" flow utilizing a simulated payment gateway to ensure reservations are only persisted upon successful payment confirmation
+- **Automated Check-In & Boarding Passes**: Seamless check-in flow that asynchronously generates PDF boarding passes with embedded QR codes for validation and automatically emails them to passengers using Spring Mail and Thymeleaf templates.
 - Hybrid backend architecture separating functional features (controllers, services, DTOs) from persistence, config, and security concerns
 - Flyway-driven database versioning for reproducible schema evolution
 - Dockerized packaging with a multi-stage build for reproducible deployment

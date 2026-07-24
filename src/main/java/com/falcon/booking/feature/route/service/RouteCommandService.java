@@ -14,15 +14,13 @@ import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.RouteRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class RouteCommandService {
-
-    private static final Logger logger = LoggerFactory.getLogger(RouteCommandService.class);
 
     private final RouteRepository routeRepository;
     private final RouteMapper routeMapper;
@@ -44,14 +42,13 @@ public class RouteCommandService {
 
     @Transactional
     public ResponseRouteDto addRoute(CreateRouteDto createRouteDto) {
-        if (routeRepository.existsByFlightNumber(createRouteDto.flightNumber()))
-            throw new RouteAlreadyExistsException(createRouteDto.flightNumber());
-        if (createRouteDto.airportOriginIataCode().equals(createRouteDto.airportDestinationIataCode()))
-            throw new RouteSameOriginAndDestinationException();
+
+        checkRouteDoesNotExist(createRouteDto);
+        checkOriginDifferentFromDestination(createRouteDto);
 
         AirplaneTypeEntity airplaneType = airplaneTypeService.getAirplaneTypeEntity(createRouteDto.idDefaultAirplaneType());
-        if (!airplaneType.isActive())
-            throw new RouteAirplaneTypeIsNotActiveException(createRouteDto.idDefaultAirplaneType());
+        checkAirplaneTypeIsActive(airplaneType);
+
 
         AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(createRouteDto.airportOriginIataCode());
         AirportEntity airportDestination = airportService.getAirportEntityByIataCode(createRouteDto.airportDestinationIataCode());
@@ -62,17 +59,30 @@ public class RouteCommandService {
         entityToSave.setDefaultAirplaneType(airplaneType);
         entityToSave.markAsDraft();
 
-        logger.info("Route {} created: {} -> {}. {}", entityToSave.getFlightNumber(), airportOrigin.getIataCode(), airportDestination.getIataCode(), airplaneType.getFullName());
+        log.info("Route {} created: {} -> {}. {}", entityToSave.getFlightNumber(), airportOrigin.getIataCode(), airportDestination.getIataCode(), airplaneType.getFullName());
         return routeMapper.toResponseDto(routeRepository.save(entityToSave));
+    }
+
+    private void checkRouteDoesNotExist(CreateRouteDto createRouteDto){
+        if (routeRepository.existsByFlightNumber(createRouteDto.flightNumber()))
+            throw new RouteAlreadyExistsException(createRouteDto.flightNumber());
+    }
+
+    private void checkOriginDifferentFromDestination(CreateRouteDto createRouteDto) {
+        if (createRouteDto.airportOriginIataCode().equals(createRouteDto.airportDestinationIataCode()))
+            throw new RouteSameOriginAndDestinationException();
+    }
+
+    private void checkAirplaneTypeIsActive(AirplaneTypeEntity airplaneType){
+        if (!airplaneType.isActive())
+            throw new RouteAirplaneTypeIsNotActiveException(airplaneType.getId());
     }
 
     @Transactional
     public ResponseRouteDto updateRoute(String flightNumber, UpdateRouteDto updateRouteDto) {
         RouteEntity entityToUpdate = routeQueryService.getRouteEntity(flightNumber);
 
-        boolean hasOnlyDraftModifications = updateRouteDto.airportDestinationIataCode() != null || updateRouteDto.airportOriginIataCode() != null;
-        if (hasOnlyDraftModifications && !entityToUpdate.isDraft())
-            throw new RouteDraftInvalidUpdateException(flightNumber);
+        checkRouteIsDraftForModifications(flightNumber, updateRouteDto, entityToUpdate);
 
         if (updateRouteDto.airportOriginIataCode() != null) {
             AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(updateRouteDto.airportOriginIataCode());
@@ -82,8 +92,8 @@ public class RouteCommandService {
             AirportEntity airportDestination = airportService.getAirportEntityByIataCode(updateRouteDto.airportDestinationIataCode());
             entityToUpdate.setAirportDestination(airportDestination);
         }
-        if (entityToUpdate.getAirportOrigin().equals(entityToUpdate.getAirportDestination()))
-            throw new RouteSameOriginAndDestinationException();
+
+        checkOriginDifferentFromDestination(entityToUpdate);
 
         if (updateRouteDto.durationMinutes() != null)
             entityToUpdate.setDurationMinutes(updateRouteDto.durationMinutes());
@@ -93,15 +103,26 @@ public class RouteCommandService {
             entityToUpdate.setDefaultAirplaneType(airplaneType);
         }
 
-        logger.info("Route number {} was updated", entityToUpdate.getFlightNumber());
+        log.info("Route number {} was updated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
+    }
+
+    private void checkRouteIsDraftForModifications(String flightNumber, UpdateRouteDto updateRouteDto, RouteEntity entityToUpdate) {
+        boolean hasOnlyDraftModifications = updateRouteDto.airportDestinationIataCode() != null || updateRouteDto.airportOriginIataCode() != null;
+        if (hasOnlyDraftModifications && !entityToUpdate.isDraft())
+            throw new RouteDraftInvalidUpdateException(flightNumber);
+    }
+
+    private void checkOriginDifferentFromDestination(RouteEntity entity) {
+        if (entity.getAirportOrigin().equals(entity.getAirportDestination()))
+            throw new RouteSameOriginAndDestinationException();
     }
 
     @Transactional
     public ResponseRouteDto activateRoute(String flightNumber) {
         RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
         routeEntity.activate();
-        logger.info("Route {} activated.", routeEntity.getFlightNumber());
+        log.info("Route {} activated.", routeEntity.getFlightNumber());
         return routeMapper.toResponseDto(routeEntity);
     }
 
@@ -109,7 +130,7 @@ public class RouteCommandService {
     public ResponseRouteDto deactivateRoute(String flightNumber) {
         RouteEntity entityToUpdate = routeQueryService.getRouteEntity(flightNumber);
         entityToUpdate.deactivate();
-        logger.info("Route {} deactivated", entityToUpdate.getFlightNumber());
+        log.info("Route {} deactivated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
     }
 }

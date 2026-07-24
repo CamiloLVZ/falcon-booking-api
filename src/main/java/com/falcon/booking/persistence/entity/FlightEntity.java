@@ -103,6 +103,11 @@ public class FlightEntity {
         return this.status.equals(FlightStatus.BOARDING);
     }
 
+    public boolean isGateClosed() {
+        if (this.status==null) return false;
+        return this.status.equals(FlightStatus.GATE_CLOSED);
+    }
+
     public boolean isCompleted() {
         if (this.status==null) return false;
         return this.status.equals(FlightStatus.COMPLETED);
@@ -145,10 +150,19 @@ public class FlightEntity {
         this.status = FlightStatus.BOARDING;
     }
 
+    public void markAsGateClosed(){
+        if (this.isGateClosed() ) return;
+
+        if(!this.isInBoarding())
+            throw new FlightInvalidStatusChangeException(this.status, FlightStatus.GATE_CLOSED);
+
+        this.status = FlightStatus.GATE_CLOSED;
+    }
+
     public void markAsCompleted(){
         if (this.isCompleted() ) return;
 
-        if(!this.isInBoarding())
+        if(!this.isGateClosed() && !this.isInBoarding())
             throw new FlightInvalidStatusChangeException(this.status, FlightStatus.COMPLETED);
 
         this.status = FlightStatus.COMPLETED;

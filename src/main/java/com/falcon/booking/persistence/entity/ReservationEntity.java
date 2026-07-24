@@ -94,8 +94,7 @@ public class ReservationEntity {
 
     public PassengerReservationEntity checkInPassenger(PassengerEntity passenger, Integer seatNumber) {
         PassengerReservationEntity passengerReservation = findPassengerReservation(passenger);
-        passengerReservation.setSeatNumber(seatNumber);
-        passengerReservation.checkIn();
+        passengerReservation.checkIn(seatNumber);
         return passengerReservation;
     }
 

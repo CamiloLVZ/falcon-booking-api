@@ -8,18 +8,15 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class FlightGenerationMapper {
 
     public List<ResponseFlightsGenerationDto> toDto(List<FlightGenerationEntity> entities){
-        List<ResponseFlightsGenerationDto> dtos = new ArrayList<>();
-        for (FlightGenerationEntity entity : entities) {
-            dtos.add(toDto(entity));
-        }
-        return dtos;
+        return entities.stream().
+                map(this::toDto).
+                toList();
     }
 
     public ResponseFlightsGenerationDto toDto(FlightGenerationEntity entity) {

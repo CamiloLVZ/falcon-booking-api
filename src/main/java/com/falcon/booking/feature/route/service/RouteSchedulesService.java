@@ -5,8 +5,7 @@ import com.falcon.booking.feature.route.dto.RouteWithSchedulesDto;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.RouteDayRepository;
 import com.falcon.booking.persistence.repository.RouteScheduleRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +14,9 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Set;
 
+@Slf4j
 @Service
 public class RouteSchedulesService {
-
-    private static final Logger logger = LoggerFactory.getLogger(RouteSchedulesService.class);
 
     private final RouteQueryService routeQueryService;
     private final RouteDayRepository routeDayRepository;
@@ -40,7 +38,7 @@ public class RouteSchedulesService {
         if(requestDto.schedules() != null) {
             setRouteSchedules(routeEntity, requestDto.schedules());
         }
-        logger.info("Route {} set operating schedules: {}, {} ", routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
+        log.info("Route {} set operating schedules: {}, {} ", routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
         return new RouteWithSchedulesDto(routeEntity.getFlightNumber(), routeEntity.getOperatingDays(), routeEntity.getOperatingSchedules());
     }
 

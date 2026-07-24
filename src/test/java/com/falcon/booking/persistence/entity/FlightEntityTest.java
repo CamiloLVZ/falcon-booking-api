@@ -80,6 +80,27 @@ class FlightEntityTest {
         assertThat(flight.isCompleted()).isTrue();
     }
 
+    @DisplayName("Should mark flight as gate closed from boarding status")
+    @Test
+    void shouldMarkAsGateClosed_markAsGateClosed() {
+        FlightEntity flight = createFlight(FlightStatus.BOARDING, OffsetDateTime.now().plusMinutes(5));
+
+        flight.markAsGateClosed();
+
+        assertThat(flight.isGateClosed()).isTrue();
+    }
+
+    @DisplayName("Should throw exception when marking as gate closed from non-boarding status")
+    @Test
+    void shouldThrowException_markAsGateClosed() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, OffsetDateTime.now().plusHours(1));
+
+        FlightInvalidStatusChangeException exception =
+                assertThrows(FlightInvalidStatusChangeException.class, flight::markAsGateClosed);
+
+        assertThat(exception.getMessage()).contains("SCHEDULED to GATE_CLOSED");
+    }
+
     @DisplayName("Should correct status to completed when now is after departure")
     @Test
     void shouldCorrectStatusByTime_correctStatusByTime() {
