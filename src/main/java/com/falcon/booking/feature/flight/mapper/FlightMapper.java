@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -36,10 +35,8 @@ public class FlightMapper {
                 flightEntity.getBasePriceEconomy(), flightEntity.getBasePriceFirstClass());
     }
     public List<ResponseFlightDto> toDto (List<FlightEntity> entities){
-        List<ResponseFlightDto> dtoList = new ArrayList<>();
-        for (FlightEntity flightEntity : entities) {
-            dtoList.add(toDto(flightEntity));
-        }
-        return dtoList;
+        return entities.stream()
+                .map(this::toDto)
+                .toList();
     }
 }

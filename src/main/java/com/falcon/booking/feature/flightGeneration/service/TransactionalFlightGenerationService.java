@@ -161,14 +161,13 @@ public class TransactionalFlightGenerationService {
     private List<FlightEntity> generateFlightsBySchedules(Set<LocalTime> routeSchedules, LocalDate date, ZoneId timeZoneId, RouteEntity route) {
         OffsetDateTime minimumDepartureTime = OffsetDateTime.now(timeZoneId).plusHours(minimumHoursBeforeDeparture);
 
-        List<OffsetDateTime> departureTimes = new ArrayList<>();
-        for (LocalTime time : routeSchedules) {
-            LocalDateTime datetime = LocalDateTime.of(date, time);
-            OffsetDateTime departureDateTime = datetime.atZone(timeZoneId).toOffsetDateTime();
-            if(departureDateTime.isAfter(minimumDepartureTime)) {
-                departureTimes.add(departureDateTime);
-            }
+        List<OffsetDateTime> departureTimes = routeSchedules.stream()
+                .map(time -> LocalDateTime.of(date, time).atZone(timeZoneId).toOffsetDateTime())
+                .filter(departureDateTime -> departureDateTime.isAfter(minimumDepartureTime))
+                .toList();
 
+        if (departureTimes.isEmpty()) {
+            return List.of();
         }
 
         List<OffsetDateTime> existingDeparturesList = flightRepository.findExistingDepartureTimes(route, departureTimes);
@@ -178,15 +177,23 @@ public class TransactionalFlightGenerationService {
         for (OffsetDateTime departureDateTime : departureTimes) {
             Instant departureInstant = departureDateTime.toInstant();
             if (!existingDepartures.contains(departureInstant)) {
-                FlightEntity flight = new FlightEntity(route, route.getDefaultAirplaneType(),
-                        departureDateTime, FlightStatus.SCHEDULED);
-                flight.setBasePriceEconomy(route.getBasePriceEconomy());
-                flight.setBasePriceFirstClass(route.getBasePriceFirstClass());
-                flightEntities.add(flight);
+                flightEntities.add(buildFlightEntity(route, departureDateTime));
                 existingDepartures.add(departureInstant);
             }
         }
         return flightEntities;
+    }
+
+    private FlightEntity buildFlightEntity(RouteEntity route, OffsetDateTime departureDateTime) {
+        FlightEntity flight = new FlightEntity(
+                route,
+                route.getDefaultAirplaneType(),
+                departureDateTime,
+                FlightStatus.SCHEDULED
+        );
+        flight.setBasePriceEconomy(route.getBasePriceEconomy());
+        flight.setBasePriceFirstClass(route.getBasePriceFirstClass());
+        return flight;
     }
 
     public int generateFlightsForRouteAtHorizon(Long routeId) {
