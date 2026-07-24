@@ -8,18 +8,22 @@ import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
 import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
+import com.falcon.booking.feature.reservation.exception.ReservationCancellationTimeExpiredException;
 import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import com.falcon.booking.persistence.entity.ReservationEntity;
+import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.ReservationRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,28 +36,37 @@ public class ReservationCommandService {
     private final PassengerService passengerService;
     private final ReservationMapper reservationMapper;
     private final ReservationQueryService reservationQueryService;
+    private final ReservationAccessService reservationAccessService;
     private final ReservationNumberGenerator reservationNumberGenerator;
+
+    @Value("${app.reservation.cancellation.minimum-hours-before-departure}")
+    private long minimumHoursBeforeDeparture;
 
     public ReservationCommandService(ReservationRepository reservationRepository,
                                      PassengerReservationRepository passengerReservationRepository,
                                      PassengerService passengerService,
                                      ReservationMapper reservationMapper,
                                      ReservationQueryService reservationQueryService,
+                                     ReservationAccessService reservationAccessService,
                                      ReservationNumberGenerator reservationNumberGenerator) {
         this.reservationRepository = reservationRepository;
         this.passengerReservationRepository = passengerReservationRepository;
         this.passengerService = passengerService;
         this.reservationMapper = reservationMapper;
         this.reservationQueryService = reservationQueryService;
+        this.reservationAccessService = reservationAccessService;
         this.reservationNumberGenerator = reservationNumberGenerator;
     }
 
-    public String createReservationFromPayment(PaymentRequestDto requestDto, FlightEntity flight) {
-
+    public String createReservationFromPayment(PaymentRequestDto requestDto, FlightEntity flight, UserEntity user) {
         checkPassengersAlreadyReservedFlight(requestDto.passengers(), flight);
 
         String reservationNumber = reservationNumberGenerator.generate();
         ReservationEntity reservation = reservationRepository.save(new ReservationEntity(reservationNumber, flight, requestDto.contactEmail(), Instant.now()));
+
+        if (user != null) {
+            reservation.setUser(user);
+        }
 
         List<PassengerReservationEntity> passengerReservations = new ArrayList<>();
         for (PaymentPassengerDto dto : requestDto.passengers()) {
@@ -69,34 +82,35 @@ public class ReservationCommandService {
     }
 
     private void checkPassengersAlreadyReservedFlight(List<PaymentPassengerDto> passengers, FlightEntity flight) {
-        for(PaymentPassengerDto dto : passengers) {
+        for (PaymentPassengerDto dto : passengers) {
             try {
                 PassengerEntity passenger = passengerService.
                         getPassengerEntityByIdentificationNumber(dto.getPassenger().identificationNumber(), dto.getPassenger().nationalityIsoCode());
 
-                if(!passengerReservationRepository.findAllByFlightAndPassengerAndStatusNot(flight, passenger, PassengerReservationStatus.CANCELED).isEmpty()) {
+                if (!passengerReservationRepository.findAllByFlightAndPassengerAndStatusNot(flight, passenger, PassengerReservationStatus.CANCELED).isEmpty()) {
                     throw new PassengerAlreadyReservedFlightException(passenger.getIdentification(), flight.getId());
                 }
-            }catch (PassengerNotFoundException e) {
+            } catch (PassengerNotFoundException e) {
                 continue;
             }
         }
     }
 
     @Transactional
-    public ResponseReservationDto cancelPassengerReservationByIdentificationNumber(String reservationNumber, String identificationNumber, String countryIsoCode) {
+    public ResponseReservationDto cancelPassengerReservationByIdentificationNumber(String reservationNumber, String contactEmail, String identificationNumber, String countryIsoCode) {
+        ReservationEntity reservation = getReservationAvailableForGuestCancellation(reservationNumber, contactEmail);
         PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
-        return reservationMapper.toResponseDto(cancelPassengerReservation(reservationNumber, passenger));
+        return reservationMapper.toResponseDto(cancelPassengerReservation(reservation, passenger));
     }
 
     @Transactional
-    public ResponseReservationDto cancelPassengerReservationByPassportNumber(String reservationNumber, String passportNumber) {
+    public ResponseReservationDto cancelPassengerReservationByPassportNumber(String reservationNumber, String contactEmail, String passportNumber) {
+        ReservationEntity reservation = getReservationAvailableForGuestCancellation(reservationNumber, contactEmail);
         PassengerEntity passenger = passengerService.getPassengerEntityByPassportNumber(passportNumber);
-        return reservationMapper.toResponseDto(cancelPassengerReservation(reservationNumber, passenger));
+        return reservationMapper.toResponseDto(cancelPassengerReservation(reservation, passenger));
     }
 
-    public ReservationEntity cancelPassengerReservation(String reservationNumber, PassengerEntity passenger) {
-        ReservationEntity reservation = reservationQueryService.getReservationEntityByNumber(reservationNumber);
+    public ReservationEntity cancelPassengerReservation(ReservationEntity reservation, PassengerEntity passenger) {
         reservation.cancelPassenger(passenger);
         log.info("Passenger with id {} canceled in reservation {}", passenger.getId(), reservation.getNumber());
         return reservation;
@@ -108,5 +122,22 @@ public class ReservationCommandService {
         reservationEntity.cancel();
         log.info("Reservation number {} has been canceled", reservationEntity.getNumber());
         return reservationMapper.toResponseDto(reservationEntity);
+    }
+
+    @Transactional
+    public ResponseReservationDto cancelReservationByContactEmail(String reservationNumber, String contactEmail) {
+        ReservationEntity reservation = getReservationAvailableForGuestCancellation(reservationNumber, contactEmail);
+        reservation.cancel();
+        log.info("Reservation number {} has been canceled by contact email verification", reservation.getNumber());
+        return reservationMapper.toResponseDto(reservation);
+    }
+
+    private ReservationEntity getReservationAvailableForGuestCancellation(String reservationNumber, String contactEmail) {
+        ReservationEntity reservation = reservationAccessService.getReservationByNumberAndContactEmail(reservationNumber, contactEmail);
+        Instant cutoff = reservation.getFlight().getDepartureDateTime().toInstant().minus(minimumHoursBeforeDeparture, ChronoUnit.HOURS);
+        if (Instant.now().isAfter(cutoff)) {
+            throw new ReservationCancellationTimeExpiredException(reservationNumber, minimumHoursBeforeDeparture);
+        }
+        return reservation;
     }
 }

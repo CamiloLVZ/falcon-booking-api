@@ -7,9 +7,12 @@ import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.falcon.booking.feature.passenger.exception.PassengerAlreadyExistsException;
 import com.falcon.booking.feature.passenger.exception.PassengerHasDifferentPassportNumberException;
 import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
+import com.falcon.booking.feature.passenger.exception.PassengerProfileAlreadyLinkedException;
+import com.falcon.booking.feature.passenger.exception.PassengerProfileNotFoundException;
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
+import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,12 +83,10 @@ public class PassengerService {
 
             return passengerRepository.save(oldPassengerEntity);
         } else {
-
             PassengerEntity passengerCreated = passengerRepository.save(newPassengerEntity);
             log.info("Passenger created with id: {}", passengerCreated.getId());
             return passengerCreated;
         }
-
     }
 
     private void validatePassportNumber(PassengerEntity oldPassengerEntity, PassengerEntity newPassengerEntity) {
@@ -125,7 +126,6 @@ public class PassengerService {
         passengerEntity.setPassportNumber(newPassportNumber);
         log.info("Passenger {} updated passport number to {}", passengerEntity.getId(), newPassportNumber);
         return passengerMapper.toResponseDto(passengerEntity);
-
     }
 
     @Transactional(readOnly = true)
@@ -155,5 +155,44 @@ public class PassengerService {
         Sort sort = Sort.by(Sort.Order.asc("firstName"), Sort.Order.asc("lastName"));
         return passengerRepository.findDistinctByPassengerReservationsFlightId(flightId, PageRequest.of(page, size, sort))
                 .map(passengerMapper::toResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponsePassengerDto getMyProfile(UserEntity user) {
+        PassengerEntity passenger = passengerRepository.findByUser(user)
+                .orElseThrow(PassengerProfileNotFoundException::new);
+        return passengerMapper.toResponseDto(passenger);
+    }
+
+    @Transactional
+    public ResponsePassengerDto createMyProfile(UserEntity user, AddPassengerDto dto) {
+        if (passengerRepository.existsByUser(user)) {
+            throw new PassengerProfileAlreadyLinkedException();
+        }
+        PassengerEntity passenger = createOrGetPassenger(dto);
+        passenger.setUser(user);
+        log.info("Passenger profile linked to user id: {}", user.getId());
+        return passengerMapper.toResponseDto(passengerRepository.save(passenger));
+    }
+
+    @Transactional
+    public ResponsePassengerDto updateMyProfile(UserEntity user, AddPassengerDto dto) {
+        PassengerEntity passenger = passengerRepository.findByUser(user)
+                .orElseThrow(PassengerProfileNotFoundException::new);
+
+        CountryEntity country = countryService.getCountryEntityByIsoCode(dto.nationalityIsoCode());
+        passenger.setFirstName(dto.firstName());
+        passenger.setLastName(dto.lastName());
+        passenger.setGender(dto.gender());
+        passenger.setDateOfBirth(dto.dateOfBirth());
+        passenger.setCountryNationality(country);
+        if (dto.identificationNumber() != null) {
+            passenger.setIdentificationNumber(dto.identificationNumber());
+        }
+        if (dto.passportNumber() != null) {
+            passenger.setPassportNumber(dto.passportNumber());
+        }
+        log.info("Passenger profile updated for user id: {}", user.getId());
+        return passengerMapper.toResponseDto(passengerRepository.save(passenger));
     }
 }

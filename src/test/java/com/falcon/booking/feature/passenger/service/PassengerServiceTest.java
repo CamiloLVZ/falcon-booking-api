@@ -10,6 +10,9 @@ import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
+import com.falcon.booking.feature.passenger.exception.PassengerProfileAlreadyLinkedException;
+import com.falcon.booking.feature.passenger.exception.PassengerProfileNotFoundException;
+import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -316,5 +320,117 @@ public class PassengerServiceTest {
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).identificationNumber()).isEqualTo("10001");
+    }
+
+    @DisplayName("Should return my profile when user has linked passenger")
+    @Test
+    void shouldReturnMyProfile_getMyProfile() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        CountryEntity country = createCountry("CO");
+        PassengerEntity passengerEntity = createPassenger("10001", "AB1234", country);
+        ResponsePassengerDto responseDto = new ResponsePassengerDto(1L, "JUAN", "PEREZ",
+                PassengerGender.M, "CO", LocalDate.of(1990, 1, 10), "AB1234", "10001");
+
+        given(passengerRepository.findByUser(user)).willReturn(Optional.of(passengerEntity));
+        given(passengerMapper.toResponseDto(passengerEntity)).willReturn(responseDto);
+
+        ResponsePassengerDto result = passengerService.getMyProfile(user);
+
+        assertThat(result).isEqualTo(responseDto);
+        verify(passengerRepository).findByUser(user);
+    }
+
+    @DisplayName("Should throw exception when getting my profile without linked passenger")
+    @Test
+    void shouldThrowException_getMyProfile_notFound() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        given(passengerRepository.findByUser(user)).willReturn(Optional.empty());
+
+        assertThrows(PassengerProfileNotFoundException.class,
+                () -> passengerService.getMyProfile(user));
+    }
+
+    @DisplayName("Should create and link passenger profile")
+    @Test
+    void shouldCreateMyProfile() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        CountryEntity country = createCountry("CO");
+        AddPassengerDto addDto = createAddDto("AB1234");
+        PassengerEntity mappedEntity = createPassenger("10001", "AB1234", null);
+        PassengerEntity savedEntity = createPassenger("10001", "AB1234", country);
+        savedEntity.setUser(user);
+        ResponsePassengerDto responseDto = new ResponsePassengerDto(1L, "JUAN", "PEREZ",
+                PassengerGender.M, "CO", LocalDate.of(1990, 1, 10), "AB1234", "10001");
+
+        given(passengerRepository.existsByUser(user)).willReturn(false);
+        given(passengerMapper.toEntity(addDto)).willReturn(mappedEntity);
+        given(countryService.getCountryEntityByIsoCode("CO")).willReturn(country);
+        given(passengerRepository.findByIdentificationNumberAndCountryNationality("10001", country))
+                .willReturn(Optional.empty());
+        given(passengerRepository.findByPassportNumber("AB1234")).willReturn(Optional.empty());
+        given(passengerRepository.save(any(PassengerEntity.class))).willReturn(savedEntity);
+        given(passengerMapper.toResponseDto(savedEntity)).willReturn(responseDto);
+
+        ResponsePassengerDto result = passengerService.createMyProfile(user, addDto);
+
+        assertThat(result).isEqualTo(responseDto);
+        verify(passengerRepository).existsByUser(user);
+        verify(passengerRepository, times(2)).save(any(PassengerEntity.class));
+    }
+
+    @DisplayName("Should throw exception when creating profile that already exists")
+    @Test
+    void shouldThrowException_createMyProfile_alreadyLinked() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        AddPassengerDto addDto = createAddDto("AB1234");
+
+        given(passengerRepository.existsByUser(user)).willReturn(true);
+
+        assertThrows(PassengerProfileAlreadyLinkedException.class,
+                () -> passengerService.createMyProfile(user, addDto));
+        verify(passengerRepository, never()).save(any());
+    }
+
+    @DisplayName("Should update existing passenger profile")
+    @Test
+    void shouldUpdateMyProfile() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        CountryEntity country = createCountry("CO");
+        PassengerEntity existingPassenger = createPassenger("10001", "AB1234", country);
+        AddPassengerDto updateDto = new AddPassengerDto(
+                "Juan", "Perez", PassengerGender.M, "CO",
+                LocalDate.of(1990, 1, 10), "AB1234", "10001");
+        PassengerEntity savedEntity = createPassenger("10001", "AB1234", country);
+        ResponsePassengerDto responseDto = new ResponsePassengerDto(1L, "JUAN", "PEREZ",
+                PassengerGender.M, "CO", LocalDate.of(1990, 1, 10), "AB1234", "10001");
+
+        given(passengerRepository.findByUser(user)).willReturn(Optional.of(existingPassenger));
+        given(countryService.getCountryEntityByIsoCode("CO")).willReturn(country);
+        given(passengerRepository.save(existingPassenger)).willReturn(savedEntity);
+        given(passengerMapper.toResponseDto(savedEntity)).willReturn(responseDto);
+
+        ResponsePassengerDto result = passengerService.updateMyProfile(user, updateDto);
+
+        assertThat(result).isEqualTo(responseDto);
+        verify(passengerRepository).findByUser(user);
+        verify(passengerRepository).save(existingPassenger);
+    }
+
+    @DisplayName("Should throw exception when updating profile without linked passenger")
+    @Test
+    void shouldThrowException_updateMyProfile_notFound() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        AddPassengerDto updateDto = createAddDto("AB1234");
+
+        given(passengerRepository.findByUser(user)).willReturn(Optional.empty());
+
+        assertThrows(PassengerProfileNotFoundException.class,
+                () -> passengerService.updateMyProfile(user, updateDto));
     }
 }

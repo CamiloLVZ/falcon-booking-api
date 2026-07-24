@@ -89,10 +89,10 @@ class PaymentServiceTest {
         when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(5);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(50);
-        when(reservationCommandService.createReservationFromPayment(requestDto, flight)).thenReturn("RES123");
+        when(reservationCommandService.createReservationFromPayment(requestDto, flight, null)).thenReturn("RES123");
         when(paymentRepository.save(any(PaymentEntity.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        ResponsePaymentDto response = paymentService.processPayment(requestDto);
+        ResponsePaymentDto response = paymentService.processPayment(requestDto, null);
 
         assertThat(response).isNotNull();
         assertThat(response.reservationNumber()).isEqualTo("RES123");
@@ -109,7 +109,7 @@ class PaymentServiceTest {
 
         when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
 
-        assertThatThrownBy(() -> paymentService.processPayment(requestDto))
+        assertThatThrownBy(() -> paymentService.processPayment(requestDto, null))
                 .isInstanceOf(FlightCanNotBeReservedException.class);
     }
 
@@ -125,7 +125,7 @@ class PaymentServiceTest {
         // All 20 first-class seats already taken
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(20);
 
-        assertThatThrownBy(() -> paymentService.processPayment(requestDto))
+        assertThatThrownBy(() -> paymentService.processPayment(requestDto, null))
                 .isInstanceOf(FlightCapacityExceededException.class);
     }
 
@@ -142,7 +142,7 @@ class PaymentServiceTest {
         // All 100 economy seats already taken
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(100);
 
-        assertThatThrownBy(() -> paymentService.processPayment(requestDto))
+        assertThatThrownBy(() -> paymentService.processPayment(requestDto, null))
                 .isInstanceOf(FlightCapacityExceededException.class);
     }
 
@@ -158,7 +158,31 @@ class PaymentServiceTest {
 
         when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
 
-        assertThatThrownBy(() -> paymentService.processPayment(requestDto))
+        assertThatThrownBy(() -> paymentService.processPayment(requestDto, null))
                 .isInstanceOf(DuplicatedPassengerException.class);
+    }
+
+    @DisplayName("Should process payment with authenticated user")
+    @Test
+    void shouldProcessPayment_withAuthenticatedUser() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 100, 20);
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        AddPassengerDto p1 = createAddPassengerDto("1001");
+        PaymentPassengerDto pp1 = new PaymentPassengerDto(p1, SeatClass.ECONOMY);
+        PaymentRequestDto requestDto = new PaymentRequestDto(flight.getId(), "test@test.com", List.of(pp1));
+
+        when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
+        when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(5);
+        when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(50);
+        when(reservationCommandService.createReservationFromPayment(requestDto, flight, user)).thenReturn("RES123");
+        when(paymentRepository.save(any(PaymentEntity.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        ResponsePaymentDto response = paymentService.processPayment(requestDto, user);
+
+        assertThat(response).isNotNull();
+        assertThat(response.reservationNumber()).isEqualTo("RES123");
+        assertThat(response.status()).isEqualTo(PaymentStatus.APPROVED);
+        verify(reservationCommandService).createReservationFromPayment(requestDto, flight, user);
     }
 }

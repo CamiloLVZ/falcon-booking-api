@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.checkIn.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -10,6 +11,11 @@ public record CheckInRequestDto(
         @Schema(description = "Reservation unique number", example = "ABC123")
         @NotBlank(message = "Reservation number is required")
         String reservationNumber,
+
+        @Schema(description = "Contact email associated with the reservation", example = "contact@example.com")
+        @NotBlank(message = "Contact email is required")
+        @Email(message = "Contact email must be valid")
+        String contactEmail,
         
         @Schema(description = "Passenger identification number", example = "1032456789")
         @NotBlank(message = "Identification number is required")

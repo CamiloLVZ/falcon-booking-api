@@ -14,6 +14,7 @@ import com.falcon.booking.feature.reservation.exception.FlightCapacityExceededEx
 import com.falcon.booking.feature.reservation.service.ReservationCommandService;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PaymentEntity;
+import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
@@ -41,14 +42,14 @@ public class PaymentService {
     }
 
     @Transactional
-    public ResponsePaymentDto processPayment(PaymentRequestDto requestDto) {
+    public ResponsePaymentDto processPayment(PaymentRequestDto requestDto, UserEntity user) {
         FlightEntity flight = flightQueryService.getFlightEntity(requestDto.flightId());
-        
+
         checkFlightCanBeReserved(flight);
         checkPassengerDuplication(requestDto.passengers());
 
         int currentFirstClass = passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED);
-        int currentEconomy = passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, com.falcon.booking.common.enums.PassengerReservationStatus.CANCELED);
+        int currentEconomy = passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED);
 
         checkCapacityExceed(requestDto, flight, currentFirstClass, currentEconomy);
 
@@ -62,7 +63,7 @@ public class PaymentService {
             totalAmount = totalAmount.add(price);
         }
 
-        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight);
+        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight, user);
 
         PaymentEntity payment = new PaymentEntity(reservationNumber, totalAmount, PaymentStatus.APPROVED, Instant.now());
         paymentRepository.save(payment);
@@ -76,7 +77,7 @@ public class PaymentService {
         }
     }
 
-    private void checkCapacityExceed( PaymentRequestDto requestDto, FlightEntity flight, int currentFirstClass, int currentEconomy){
+    private void checkCapacityExceed(PaymentRequestDto requestDto, FlightEntity flight, int currentFirstClass, int currentEconomy){
         long firstClassRequested = requestDto.passengers().stream()
                 .filter(p -> p.getSeatClass() == SeatClass.FIRST_CLASS)
                 .count();
@@ -92,7 +93,6 @@ public class PaymentService {
     }
 
     private void checkPassengerDuplication(List<PaymentPassengerDto> passengers) {
-
         Set<String> identifications = new HashSet<>();
 
         passengers.stream()
@@ -100,7 +100,8 @@ public class PaymentService {
                 .map(AddPassengerDto::getIdentification)
                 .filter(id -> !identifications.add(id))
                 .findFirst()
-                .ifPresent(id -> {throw new DuplicatedPassengerException(id);
+                .ifPresent(id -> {
+                    throw new DuplicatedPassengerException(id);
                 });
     }
 }

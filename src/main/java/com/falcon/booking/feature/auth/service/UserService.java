@@ -34,6 +34,11 @@ public class UserService {
                 .orElseThrow(()->new UserNotFoundException(email));
     }
 
+    public UserEntity getUserById(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(()->new UserNotFoundException(String.valueOf(id)));
+    }
+
     private void checkUserDoesNotExistByEmail(String email) {
         if (userRepository.findByEmail(email).isPresent())
             throw new UserAlreadyExistException(email);

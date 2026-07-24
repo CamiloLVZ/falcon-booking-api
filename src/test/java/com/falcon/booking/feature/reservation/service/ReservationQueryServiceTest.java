@@ -4,8 +4,13 @@ import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.ReservationStatus;
 import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.feature.flight.service.FlightQueryService;
+import com.falcon.booking.feature.passenger.service.PassengerService;
+import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
+import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.*;
+import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.ReservationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
+import com.falcon.booking.persistence.entity.UserEntity;
+
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -22,6 +29,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -30,6 +39,14 @@ class ReservationQueryServiceTest {
 
     @Mock
     private ReservationRepository reservationRepository;
+    @Mock
+    private PassengerReservationRepository passengerReservationRepository;
+    @Mock
+    private FlightQueryService flightQueryService;
+    @Mock
+    private PassengerService passengerService;
+    @Mock
+    private ReservationMapper reservationMapper;
 
     @InjectMocks
     private ReservationQueryService reservationQueryService;
@@ -119,5 +136,50 @@ class ReservationQueryServiceTest {
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @DisplayName("Should return my reservations without status filter")
+    @Test
+    void shouldReturnMyReservations_getMyReservations() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("reservationDatetime").descending());
+        Page<ReservationEntity> reservationPage = new PageImpl<>(List.of(reservation), pageable, 1);
+        ResponseReservationDto dto = new ResponseReservationDto("ABC123", "mail@test.com",
+                Instant.now(), ReservationStatus.RESERVED, null, List.of());
+
+        given(reservationRepository.findAllByUser(user, pageable)).willReturn(reservationPage);
+        given(reservationMapper.toResponseDto(reservation)).willReturn(dto);
+
+        Page<ResponseReservationDto> result = reservationQueryService.getMyReservations(user, null, 0, 10);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).number()).isEqualTo("ABC123");
+        verify(reservationRepository).findAllByUser(user, pageable);
+    }
+
+    @DisplayName("Should return my reservations filtered by status")
+    @Test
+    void shouldReturnMyReservations_getMyReservations_withStatus() {
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("reservationDatetime").descending());
+        Page<ReservationEntity> reservationPage = new PageImpl<>(List.of(reservation), pageable, 1);
+        ResponseReservationDto dto = new ResponseReservationDto("ABC123", "mail@test.com",
+                Instant.now(), ReservationStatus.RESERVED, null, List.of());
+
+        given(reservationRepository.findAllByUserAndStatus(user, ReservationStatus.RESERVED, pageable))
+                .willReturn(reservationPage);
+        given(reservationMapper.toResponseDto(reservation)).willReturn(dto);
+
+        Page<ResponseReservationDto> result = reservationQueryService.getMyReservations(user, ReservationStatus.RESERVED, 0, 10);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).status()).isEqualTo(ReservationStatus.RESERVED);
+        verify(reservationRepository).findAllByUserAndStatus(user, ReservationStatus.RESERVED, pageable);
     }
 }
