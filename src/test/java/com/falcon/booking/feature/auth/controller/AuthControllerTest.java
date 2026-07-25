@@ -3,6 +3,9 @@ package com.falcon.booking.feature.auth.controller;
 import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.dto.LoginRequestDto;
 import com.falcon.booking.feature.auth.dto.LoginResponseDto;
+import com.falcon.booking.feature.auth.dto.PasswordResetRequestDto;
+import com.falcon.booking.feature.auth.dto.ResetPasswordDto;
+import com.falcon.booking.feature.auth.exception.InvalidPasswordResetTokenException;
 import com.falcon.booking.feature.auth.exception.UserAlreadyExistException;
 import com.falcon.booking.security.jwt.JwtFilter;
 import com.falcon.booking.security.service.AuthService;
@@ -152,6 +155,38 @@ public class AuthControllerTest {
                         """));
 
         response.andExpect(status().isCreated());
+    }
+
+    @Test
+    void shouldReturn204_requestPasswordReset() throws Exception {
+        doNothing().when(authService).requestPasswordReset(new PasswordResetRequestDto("client@test.com"));
+
+        mockMvc.perform(post("/v1/auth/password-reset/request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"client@test.com\"}"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturn204_resetPassword() throws Exception {
+        doNothing().when(authService).resetPassword(new ResetPasswordDto("123456", "password123"));
+
+        mockMvc.perform(post("/v1/auth/password-reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"123456\",\"password\":\"password123\"}"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturn400_resetPasswordWithInvalidToken() throws Exception {
+        willThrow(new InvalidPasswordResetTokenException())
+                .given(authService).resetPassword(new ResetPasswordDto("123456", "password123"));
+
+        mockMvc.perform(post("/v1/auth/password-reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"123456\",\"password\":\"password123\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("invalid-password-reset-token"));
     }
 }
 

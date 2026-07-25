@@ -12,6 +12,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Slf4j
 @Service
 public class UserService {
@@ -27,6 +29,10 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
         this.userRoleService = userRoleService;
+    }
+
+    public Optional<UserEntity> findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public UserEntity getUserByEmail(String email){
