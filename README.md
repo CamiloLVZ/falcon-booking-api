@@ -16,7 +16,7 @@ The Flight Reservation System handles:
 - Passenger information management
 - Flight seat reservations
 - Automated Check-in with Boarding Pass generation and email delivery
-- Authentication and authorization for admin operations 
+- Authentication and authorization for admin operations
 - Password reset using expiring six-digit codes sent via email
 
 This project is built as a modular monolith utilizing a **Package by Feature** organization combined with a **Layered Architecture** approach for cross-cutting concerns. This structure emphasizes high cohesion, clarity, extensibility, and realistic airline business rules.
@@ -101,9 +101,23 @@ The following diagram represents the core data model of the Falcon Booking Syste
 Set the following variables before starting the application or container:
 
 ```bash
+# Database
 DB_URL=jdbc:postgresql://localhost:5432/falcon_booking
 DB_USER=your_db_user
 DB_PASSWORD=your_db_password
+
+# Base URL for external links (boarding pass validation, email links)
+APP_BASE_URL=http://localhost:8080
+
+# CORS - frontend origins allowed to access the API
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+
+# Email (SMTP)
+MAIL_USERNAME=your_email@example.com
+MAIL_PASSWORD=your_app_password
+
+# Email (Resend API - used in production)
+RESEND_API_KEY=your_resend_api_key
 ```
 
 ### Business Configuration
@@ -111,6 +125,11 @@ DB_PASSWORD=your_db_password
 Part of the business behavior is intentionally configured through
 [`application.properties`](/src/main/resources/application.properties)
 instead of being hardcoded. This makes the system easier to adapt to different operational rules without changing source code.
+
+#### Base URL
+
+- `app.base-url`
+  Base URL used to build absolute links (boarding pass validation, email links). Set to the public API domain in production.
 
 #### Authentication and Admin Bootstrap
 
@@ -164,6 +183,11 @@ docker run --rm -p 8080:8080 \
   -e DB_URL=jdbc:postgresql://host.docker.internal:5432/falcon_booking \
   -e DB_USER=your_db_user \
   -e DB_PASSWORD=your_db_password \
+  -e APP_BASE_URL=http://localhost:8080 \
+  -e CORS_ALLOWED_ORIGINS=http://localhost:3000 \
+  -e MAIL_USERNAME=your_email@example.com \
+  -e MAIL_PASSWORD=your_app_password \
+  -e RESEND_API_KEY=your_resend_api_key \
   falcon-booking-api
 ```
 
@@ -224,10 +248,15 @@ On Windows:
 
 Interactive API documentation is available through Swagger UI.
 
-### Live Swagger
-[Open Swagger UI](https://falcon-booking-api.onrender.com/api/swagger-ui/index.html)
+### Live Demo
 
-Note: the application is deployed on a free-tier service, so the first request may take a couple of minutes while the instance wakes up.
+The application is deployed and publicly accessible:
+
+| Service | URL |
+|---|---|
+| **Frontend** | [www.falconbooking.org](https://www.falconbooking.org) / [falconbooking.org](https://falconbooking.org) |
+| **Backend API** | [api.falconbooking.org](https://api.falconbooking.org) |
+| **Swagger UI** | [api.falconbooking.org/api/swagger-ui/index.html](https://api.falconbooking.org/api/swagger-ui/index.html) |
 
 ### Preview
 ![Swagger UI Preview](docs/swagger-preview.png)
