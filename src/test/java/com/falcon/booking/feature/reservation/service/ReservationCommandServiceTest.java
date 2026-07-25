@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.ReservationStatus;
 import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
@@ -26,6 +27,9 @@ import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
 import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
 import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
 import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
+import com.falcon.booking.feature.reservation.exception.ReservationCancellationTimeExpiredException;
+import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -34,6 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationCommandServiceTest {
@@ -50,6 +56,8 @@ class ReservationCommandServiceTest {
     private ReservationMapper reservationMapper;
     @Mock
     private ReservationQueryService reservationQueryService;
+    @Mock
+    private ReservationAccessService reservationAccessService;
     @Mock
     private ReservationNumberGenerator reservationNumberGenerator;
 
@@ -140,7 +148,7 @@ class ReservationCommandServiceTest {
         when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(passengerService.createOrGetPassenger(addPassengerDto)).thenReturn(passenger);
 
-        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight);
+        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight, null);
 
         assertThat(reservationNumber).isEqualTo("RES123");
         verify(passengerReservationRepository).saveAll(anyList());
@@ -172,7 +180,41 @@ class ReservationCommandServiceTest {
                 eq(PassengerReservationStatus.CANCELED)))
                 .thenReturn(List.of(new PassengerReservationEntity()));
 
-        assertThatThrownBy(() -> reservationCommandService.createReservationFromPayment(requestDto, flight))
+        assertThatThrownBy(() -> reservationCommandService.createReservationFromPayment(requestDto, flight, null))
                 .isInstanceOf(PassengerAlreadyReservedFlightException.class);
+    }
+
+    @DisplayName("Should cancel my reservation successfully")
+    @Test
+    void shouldCancelReservationByContactEmail() {
+        ReflectionTestUtils.setField(reservationCommandService, "minimumHoursBeforeDeparture", 24L);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        flight.setDepartureDateTime(OffsetDateTime.now().plusDays(2));
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
+        ResponseReservationDto dto = new ResponseReservationDto("ABC123", "mail@test.com",
+                Instant.now(), ReservationStatus.CANCELED, null, List.of());
+
+        when(reservationAccessService.getReservationByNumberAndContactEmail("ABC123", "mail@test.com")).thenReturn(reservation);
+        when(reservationMapper.toResponseDto(reservation)).thenReturn(dto);
+
+        ResponseReservationDto result = reservationCommandService.cancelReservationByContactEmail("ABC123", "mail@test.com");
+
+        assertThat(result).isEqualTo(dto);
+        assertThat(result.status()).isEqualTo(ReservationStatus.CANCELED);
+        verify(reservationAccessService).getReservationByNumberAndContactEmail("ABC123", "mail@test.com");
+    }
+
+    @DisplayName("Should throw exception when canceling my reservation within minimum hours")
+    @Test
+    void shouldThrowException_cancelReservationByContactEmail_timeExpired() {
+        ReflectionTestUtils.setField(reservationCommandService, "minimumHoursBeforeDeparture", 24L);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        flight.setDepartureDateTime(OffsetDateTime.now().plusHours(12));
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
+
+        when(reservationAccessService.getReservationByNumberAndContactEmail("ABC123", "mail@test.com")).thenReturn(reservation);
+
+        assertThatThrownBy(() -> reservationCommandService.cancelReservationByContactEmail("ABC123", "mail@test.com"))
+                .isInstanceOf(ReservationCancellationTimeExpiredException.class);
     }
 }

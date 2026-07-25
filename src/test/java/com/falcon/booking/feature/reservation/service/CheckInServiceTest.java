@@ -43,6 +43,8 @@ public class CheckInServiceTest {
     @Mock
     private ReservationQueryService reservationQueryService;
     @Mock
+    private ReservationAccessService reservationAccessService;
+    @Mock
     private PassengerReservationRepository passengerReservationRepository;
     @Mock
     private FlightQueryService flightQueryService;
@@ -98,12 +100,13 @@ public class CheckInServiceTest {
         given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
         given(passengerReservationMapper.toResponseDto(any(PassengerReservationEntity.class))).willReturn(response);
 
-        ResponsePassengerReservationDto result = checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 25);
+        ResponsePassengerReservationDto result = checkInService.checkInByIdentificationNumber("ABC123", "contact@test.com", "123", "CO", 25);
 
         assertThat(result).isEqualTo(response);
         assertThat(reservation.getPassengerReservations().get(0).getStatus()).isEqualTo(PassengerReservationStatus.CHECKED_IN);
         assertThat(reservation.getPassengerReservations().get(0).getSeatNumber()).isEqualTo(25);
         verify(passengerService).getPassengerEntityByIdentificationNumber("123", "CO");
+        verify(reservationAccessService).getReservationByNumberAndContactEmail("ABC123", "contact@test.com");
         verify(reservationQueryService).getReservationEntityByNumber("ABC123");
         verify(passengerReservationMapper).toResponseDto(reservation.getPassengerReservations().get(0));
     }
@@ -122,7 +125,7 @@ public class CheckInServiceTest {
         given(passengerReservationRepository.findAllByFlight(flight)).willReturn(List.of());
         given(passengerReservationMapper.toResponseDto(any(PassengerReservationEntity.class))).willReturn(response);
 
-        ResponsePassengerReservationDto result = checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 5);
+        ResponsePassengerReservationDto result = checkInService.checkInByIdentificationNumber("ABC123", "contact@test.com", "123", "CO", 5);
 
         assertThat(result).isEqualTo(response);
         assertThat(reservation.getPassengerReservations().get(0).getSeatNumber()).isEqualTo(5);
@@ -141,7 +144,7 @@ public class CheckInServiceTest {
 
         // Seat 5 is a first class seat (range 1-20), not valid for economy (range 21-120)
         assertThrows(SeatNumberOutOfRangeException.class,
-                () -> checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 5));
+                () -> checkInService.checkInByIdentificationNumber("ABC123", "contact@test.com", "123", "CO", 5));
     }
 
     @DisplayName("Should check in passenger without providing seat, assigning random economy one")
@@ -196,7 +199,7 @@ public class CheckInServiceTest {
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
 
         assertThrows(InvalidCheckInPassengerReservationStatusException.class,
-                () -> checkInService.checkInByIdentificationNumber("ABC123", "123", "CO", 25));
+                () -> checkInService.checkInByIdentificationNumber("ABC123", "contact@test.com", "123", "CO", 25));
 
         verify(passengerReservationMapper, never()).toResponseDto(any(PassengerReservationEntity.class));
     }

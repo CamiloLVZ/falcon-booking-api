@@ -3,7 +3,10 @@ package com.falcon.booking.security.service;
 import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.dto.LoginRequestDto;
 import com.falcon.booking.feature.auth.dto.LoginResponseDto;
+import com.falcon.booking.feature.auth.dto.PasswordResetRequestDto;
+import com.falcon.booking.feature.auth.dto.ResetPasswordDto;
 import com.falcon.booking.feature.auth.service.UserService;
+import com.falcon.booking.feature.auth.service.PasswordResetService;
 import com.falcon.booking.security.jwt.JwtPayload;
 import com.falcon.booking.security.jwt.JwtUtil;
 import com.falcon.booking.security.model.CustomUserDetails;
@@ -21,12 +24,14 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final PasswordResetService passwordResetService;
 
     @Autowired
-    public AuthService(AuthenticationManager authenticationManager, UserService userService, JwtUtil jwtUtil) {
+    public AuthService(AuthenticationManager authenticationManager, UserService userService, JwtUtil jwtUtil, PasswordResetService passwordResetService) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.passwordResetService = passwordResetService;
     }
 
     public LoginResponseDto login(LoginRequestDto request) {
@@ -49,5 +54,13 @@ public class AuthService {
     @Transactional
     public void registerAdmin(CreateUserDto request) {
         userService.createAdminUser(request);
+    }
+
+    public void requestPasswordReset(PasswordResetRequestDto request) {
+        passwordResetService.requestPasswordReset(request.email());
+    }
+
+    public void resetPassword(ResetPasswordDto request) {
+        passwordResetService.resetPassword(request.code(), request.password());
     }
 }

@@ -3,7 +3,10 @@ package com.falcon.booking.security.service;
 import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.dto.LoginRequestDto;
 import com.falcon.booking.feature.auth.dto.LoginResponseDto;
+import com.falcon.booking.feature.auth.dto.PasswordResetRequestDto;
+import com.falcon.booking.feature.auth.dto.ResetPasswordDto;
 import com.falcon.booking.feature.auth.service.UserService;
+import com.falcon.booking.feature.auth.service.PasswordResetService;
 import com.falcon.booking.security.jwt.JwtPayload;
 import com.falcon.booking.security.jwt.JwtUtil;
 import com.falcon.booking.security.model.CustomUserDetails;
@@ -36,6 +39,8 @@ public class AuthServiceTest {
 
     @Mock
     private JwtUtil jwtUtil;
+    @Mock
+    private PasswordResetService passwordResetService;
 
     @Mock
     private Authentication authentication;
@@ -85,5 +90,23 @@ public class AuthServiceTest {
         authService.registerAdmin(request);
 
         verify(userService).createAdminUser(request);
+    }
+
+    @Test
+    void shouldRequestPasswordReset() {
+        PasswordResetRequestDto request = new PasswordResetRequestDto("client@test.com");
+
+        authService.requestPasswordReset(request);
+
+        verify(passwordResetService).requestPasswordReset("client@test.com");
+    }
+
+    @Test
+    void shouldResetPassword() {
+        ResetPasswordDto request = new ResetPasswordDto("123456", "password123");
+
+        authService.resetPassword(request);
+
+        verify(passwordResetService).resetPassword("123456", "password123");
     }
 }

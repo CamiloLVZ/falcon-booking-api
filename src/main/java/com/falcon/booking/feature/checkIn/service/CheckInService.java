@@ -10,6 +10,7 @@ import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDt
 import com.falcon.booking.feature.reservation.exception.FlightCapacityExceededException;
 import com.falcon.booking.feature.reservation.exception.PassengerNotFoundInReservationException;
 import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
+import com.falcon.booking.feature.reservation.service.ReservationAccessService;
 import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
@@ -31,19 +32,23 @@ public class CheckInService {
     private final PassengerService passengerService;
     private final PassengerReservationMapper passengerReservationMapper;
     private final ReservationQueryService reservationQueryService;
+    private final ReservationAccessService reservationAccessService;
     private final PassengerReservationRepository passengerReservationRepository;
     public CheckInService(PassengerService passengerService,
                           PassengerReservationMapper passengerReservationMapper,
                           ReservationQueryService reservationQueryService,
+                          ReservationAccessService reservationAccessService,
                           PassengerReservationRepository passengerReservationRepository) {
         this.passengerService = passengerService;
         this.passengerReservationMapper = passengerReservationMapper;
         this.reservationQueryService = reservationQueryService;
+        this.reservationAccessService = reservationAccessService;
         this.passengerReservationRepository = passengerReservationRepository;
     }
 
     @Transactional
-    public ResponsePassengerReservationDto checkInByIdentificationNumber(String reservationNumber, String identificationNumber, String countryIsoCode, Integer seatNumber) {
+    public ResponsePassengerReservationDto checkInByIdentificationNumber(String reservationNumber, String contactEmail, String identificationNumber, String countryIsoCode, Integer seatNumber) {
+        reservationAccessService.getReservationByNumberAndContactEmail(reservationNumber, contactEmail);
         PassengerEntity passenger = passengerService.getPassengerEntityByIdentificationNumber(identificationNumber, countryIsoCode);
         return passengerReservationMapper.toResponseDto(checkIn(reservationNumber, passenger, seatNumber));
     }

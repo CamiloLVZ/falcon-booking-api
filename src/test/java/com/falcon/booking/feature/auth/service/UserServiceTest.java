@@ -74,6 +74,30 @@ public class UserServiceTest {
         verify(userRepository).findByEmail("ghost@test.com");
     }
 
+    @DisplayName("Should return user when user exists by id")
+    @Test
+    void shouldReturnUser_getUserById() {
+        UserEntity user = createUser(1L, "client@test.com");
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+
+        UserEntity result = userService.getUserById(1L);
+
+        assertThat(result).isEqualTo(user);
+        verify(userRepository).findById(1L);
+    }
+
+    @DisplayName("Should throw exception when user does not exist by id")
+    @Test
+    void shouldThrowException_getUserById() {
+        given(userRepository.findById(99L)).willReturn(Optional.empty());
+
+        UserNotFoundException ex = assertThrows(UserNotFoundException.class,
+                () -> userService.getUserById(99L));
+
+        assertThat(ex.getMessage()).contains("99");
+        verify(userRepository).findById(99L);
+    }
+
     @DisplayName("Should return built user when email is available")
     @Test
     void shouldReturnBuiltUser_buildUser() {

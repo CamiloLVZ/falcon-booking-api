@@ -34,6 +34,9 @@ public class UserEntity {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     protected Set<UserRoleEntity> userRoles = new HashSet<>();
 
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    private PassengerEntity passengerProfile;
+
     public Set<RoleEntity> getRoles(){
 
         return Optional.ofNullable(userRoles)

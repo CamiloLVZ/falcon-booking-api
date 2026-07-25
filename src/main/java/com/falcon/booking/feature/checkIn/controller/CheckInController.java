@@ -36,7 +36,7 @@ public class CheckInController {
     }
 
     @Operation(summary = "Check in passenger",
-            description = "Marks a passenger reservation as checked in using passenger identification and country ISO code.")
+            description = "Marks a passenger reservation as checked in using the reservation number, contact email, passenger identification and country ISO code.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Passenger checked in successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponsePassengerReservationDto.class))),
@@ -49,7 +49,7 @@ public class CheckInController {
     })
     @PostMapping
     public ResponseEntity<ResponsePassengerReservationDto> checkInPassenger(@Valid @RequestBody CheckInRequestDto request){
-        ResponsePassengerReservationDto response = checkInService.checkInByIdentificationNumber(request.reservationNumber(), request.identificationNumber(), request.countryIsoCode(), request.seatNumber());
+        ResponsePassengerReservationDto response = checkInService.checkInByIdentificationNumber(request.reservationNumber(), request.contactEmail(), request.identificationNumber(), request.countryIsoCode(), request.seatNumber());
         boardingService.issue(response.id());
         return ResponseEntity.ok(response);
     }

@@ -6,6 +6,7 @@ import com.falcon.booking.feature.auth.exception.RoleAlreadyExistsException;
 import com.falcon.booking.feature.auth.exception.RoleNotFoundException;
 import com.falcon.booking.feature.auth.exception.UserAlreadyExistException;
 import com.falcon.booking.feature.auth.exception.UserNotFoundException;
+import com.falcon.booking.feature.auth.exception.InvalidPasswordResetTokenException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,5 +66,12 @@ public class SecurityExceptionHandler {
         Error error = new Error("access-denied", exception.getMessage());
         log.debug(error.message());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<Error> handleException(InvalidPasswordResetTokenException exception) {
+        Error error = new Error("invalid-password-reset-token", exception.getMessage());
+        log.debug(error.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }
