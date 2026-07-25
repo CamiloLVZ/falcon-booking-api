@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
-@Service
+@Service("smtpEmailService")
 public class SmtpEmailService implements EmailService {
 
     @Value("${spring.mail.username}")
