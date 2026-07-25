@@ -25,4 +25,34 @@ public class AsyncConfig {
 
         return executor;
     }
+
+    @Bean(name = "emailExecutor")
+    public Executor emailExecutor() {
+
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(20);
+        executor.setThreadNamePrefix("email-");
+
+        executor.initialize();
+
+        return executor;
+    }
+
+    @Bean(name = "boardingExecutor")
+    public Executor boardingExecutor() {
+
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(20);
+        executor.setThreadNamePrefix("boarding-");
+
+        executor.initialize();
+
+        return executor;
+    }
 }

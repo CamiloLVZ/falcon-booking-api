@@ -75,7 +75,7 @@ public class BoardingService {
         this.logoBytes = resourceService.loadAsBytes(LOGO_PATH);
     }
 
-    @Async
+    @Async("boardingExecutor")
     @Transactional
     public void issue(Long passengerReservationId) {
         try {
