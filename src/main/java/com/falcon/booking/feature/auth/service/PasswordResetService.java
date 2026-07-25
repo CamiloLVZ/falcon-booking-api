@@ -7,6 +7,7 @@ import com.falcon.booking.persistence.entity.PasswordResetTokenEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PasswordResetTokenRepository;
 import com.falcon.booking.persistence.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,8 @@ public class PasswordResetService {
 
     public PasswordResetService(PasswordResetTokenRepository passwordResetTokenRepository,
                                 PasswordEncoder passwordEncoder,
-                                EmailService emailService, UserRepository userRepository) {
+                                @Qualifier("resendEmailService")EmailService emailService,
+                                UserRepository userRepository) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
