@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -45,6 +47,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/v1/flights/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/v1/flights/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/v1/flights/**").permitAll()
+
+                        // MY PROFILE
+                        .requestMatchers("/v1/passengers/me/**").hasAnyRole("CLIENT", "ADMIN")
+
+                        // MY RESERVATIONS
+                        .requestMatchers(HttpMethod.GET, "/v1/reservations/me").hasAnyRole("CLIENT", "ADMIN")
 
                         //RESERVATIONS, CHECK-IN, BOARDING
                         .requestMatchers("/v1/reservations/**").permitAll()

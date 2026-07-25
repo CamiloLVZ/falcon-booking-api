@@ -59,6 +59,10 @@ public class PassengerEntity {
     @OneToMany(mappedBy = "passenger")
     private List<PassengerReservationEntity> passengerReservations;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_user")
+    private UserEntity user;
+
     public void setFirstName(String firstName) {
         this.firstName = StringNormalizer.normalize(firstName);
     }

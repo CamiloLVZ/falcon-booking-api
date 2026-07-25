@@ -6,6 +6,7 @@ import com.falcon.booking.feature.reservation.exception.PassengerNotFoundInReser
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -42,6 +43,11 @@ public class ReservationEntity {
 
     @Column(name = "reservation_datetime", nullable = false)
     private Instant reservationDatetime;
+
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_user")
+    private UserEntity user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -69,10 +69,10 @@ class CheckInControllerTest {
 
     @Test
     void checkInPassenger_ShouldReturn200AndIssueBoardingPass() throws Exception {
-        when(checkInService.checkInByIdentificationNumber(anyString(), anyString(), anyString(), any()))
+        when(checkInService.checkInByIdentificationNumber(anyString(), anyString(), anyString(), anyString(), any()))
                 .thenReturn(responseDto);
 
-        CheckInRequestDto request = new CheckInRequestDto("ABC1234", "123456789", "CO", 15);
+        CheckInRequestDto request = new CheckInRequestDto("ABC1234", "contact@test.com", "123456789", "CO", 15);
 
         mockMvc.perform(post("/v1/check-in")
                         .content(objectMapper.writeValueAsString(request))
@@ -82,23 +82,23 @@ class CheckInControllerTest {
                 .andExpect(jsonPath("$.seatNumber").value(15))
                 .andExpect(jsonPath("$.status").value("CHECKED_IN"));
 
-        verify(checkInService, times(1)).checkInByIdentificationNumber("ABC1234", "123456789", "CO", 15);
+        verify(checkInService, times(1)).checkInByIdentificationNumber("ABC1234", "contact@test.com", "123456789", "CO", 15);
         verify(boardingService, times(1)).issue(10L);
     }
 
     @Test
     void checkInPassenger_WithoutSeatNumber_ShouldReturn200AndIssueBoardingPass() throws Exception {
-        when(checkInService.checkInByIdentificationNumber(anyString(), anyString(), anyString(), isNull()))
+        when(checkInService.checkInByIdentificationNumber(anyString(), anyString(), anyString(), anyString(), isNull()))
                 .thenReturn(responseDto);
 
-        CheckInRequestDto request = new CheckInRequestDto("ABC1234", "123456789", "CO", null);
+        CheckInRequestDto request = new CheckInRequestDto("ABC1234", "contact@test.com", "123456789", "CO", null);
 
         mockMvc.perform(post("/v1/check-in")
                         .content(objectMapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        verify(checkInService, times(1)).checkInByIdentificationNumber("ABC1234", "123456789", "CO", null);
+        verify(checkInService, times(1)).checkInByIdentificationNumber("ABC1234", "contact@test.com", "123456789", "CO", null);
         verify(boardingService, times(1)).issue(10L);
     }
 }

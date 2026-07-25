@@ -16,7 +16,8 @@ The Flight Reservation System handles:
 - Passenger information management
 - Flight seat reservations
 - Automated Check-in with Boarding Pass generation and email delivery
-- Authentication and authorization for admin operations
+- Authentication and authorization for admin operations 
+- Password reset using expiring six-digit codes sent via email
 
 This project is built as a modular monolith utilizing a **Package by Feature** organization combined with a **Layered Architecture** approach for cross-cutting concerns. This structure emphasizes high cohesion, clarity, extensibility, and realistic airline business rules.
 

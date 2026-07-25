@@ -39,7 +39,7 @@ public class BoardingController {
             @ApiResponse(responseCode = "401", description = "Unauthorized",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
     })
-    @GetMapping("/validate/{qrToken}")
+    @GetMapping("/{qrToken}")
     public ResponseEntity<BoardingPassValidationResponseDto> validateBoardingPass(@PathVariable @Parameter(description = "UUID QR token") UUID qrToken) {
         BoardingPassValidationResponseDto response = boardingService.validate(qrToken);
         return ResponseEntity.ok(response);

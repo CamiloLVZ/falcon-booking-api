@@ -4,6 +4,8 @@ import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.auth.dto.CreateUserDto;
 import com.falcon.booking.feature.auth.dto.LoginRequestDto;
 import com.falcon.booking.feature.auth.dto.LoginResponseDto;
+import com.falcon.booking.feature.auth.dto.PasswordResetRequestDto;
+import com.falcon.booking.feature.auth.dto.ResetPasswordDto;
 import com.falcon.booking.security.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -87,5 +89,27 @@ public class AuthController {
                                               CreateUserDto requestDto) {
         authService.registerAdmin(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @Operation(summary = "Request a password reset",
+            description = "Sends a six-digit password reset code when the email belongs to an account.")
+    @ApiResponse(responseCode = "204", description = "Password reset request processed")
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(@RequestBody @Valid PasswordResetRequestDto request) {
+        authService.requestPasswordReset(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Reset a password",
+            description = "Sets a new password using a valid, unused and non-expired six-digit password reset code.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Password reset successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or password reset code",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @PostMapping("/password-reset")
+    public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordDto request) {
+        authService.resetPassword(request);
+        return ResponseEntity.noContent().build();
     }
 }

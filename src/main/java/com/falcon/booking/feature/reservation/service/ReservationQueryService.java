@@ -11,6 +11,7 @@ import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
 import com.falcon.booking.persistence.entity.PassengerReservationEntity;
 import com.falcon.booking.persistence.entity.ReservationEntity;
+import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.ReservationRepository;
 import org.springframework.data.domain.Page;
@@ -73,5 +74,14 @@ public class ReservationQueryService {
         FlightEntity flight = flightQueryService.getFlightEntity(flightId);
         Pageable pageable = PageRequest.of(page, size, Sort.by("reservationDatetime").ascending());
         return getAllReservationEntitiesActiveByFlight(flight, pageable).map(reservationMapper::toResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponseReservationDto> getMyReservations(UserEntity user, ReservationStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("reservationDatetime").descending());
+        if (status != null) {
+            return reservationRepository.findAllByUserAndStatus(user, status, pageable).map(reservationMapper::toResponseDto);
+        }
+        return reservationRepository.findAllByUser(user, pageable).map(reservationMapper::toResponseDto);
     }
 }

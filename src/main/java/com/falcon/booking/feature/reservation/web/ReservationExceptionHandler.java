@@ -33,6 +33,13 @@ public class ReservationExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(InvalidReservationAccessException.class)
+    public ResponseEntity<Error> handleException(InvalidReservationAccessException exception){
+        Error error = new Error("invalid-reservation-access", exception.getMessage());
+        log.warn(error.message());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(PassengerNotFoundInReservationException.class)
     public ResponseEntity<Error> handleException(PassengerNotFoundInReservationException exception){
         Error error = new Error("passenger-not-found-in-reservation", exception.getMessage());
@@ -74,6 +81,11 @@ public class ReservationExceptionHandler {
         log.warn(error.message());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    @ExceptionHandler(ReservationCancellationTimeExpiredException.class)
+    public ResponseEntity<Error> handleException(ReservationCancellationTimeExpiredException exception){
+        Error error = new Error("reservation-cancellation-time-expired", exception.getMessage());
+        log.warn(error.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }
-
-

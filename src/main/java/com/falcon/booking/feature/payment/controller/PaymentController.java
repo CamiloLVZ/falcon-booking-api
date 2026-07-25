@@ -1,11 +1,14 @@
 package com.falcon.booking.feature.payment.controller;
 
 import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.auth.service.UserService;
 import com.falcon.booking.feature.payment.dto.FlightPriceQuoteDto;
 import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
 import com.falcon.booking.feature.payment.dto.ResponsePaymentDto;
 import com.falcon.booking.feature.payment.service.PaymentService;
 import com.falcon.booking.feature.payment.service.PricingService;
+import com.falcon.booking.persistence.entity.UserEntity;
+import com.falcon.booking.security.jwt.JwtPayload;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,10 +32,12 @@ public class PaymentController {
 
     private final PricingService pricingService;
     private final PaymentService paymentService;
+    private final UserService userService;
 
-    public PaymentController(PricingService pricingService, PaymentService paymentService) {
+    public PaymentController(PricingService pricingService, PaymentService paymentService, UserService userService) {
         this.pricingService = pricingService;
         this.paymentService = paymentService;
+        this.userService = userService;
     }
 
     @Operation(summary = "Get flight price quote",
@@ -54,7 +60,7 @@ public class PaymentController {
     }
 
     @Operation(summary = "Process payment and create reservation",
-            description = "Processes a payment for one or more flights and creates a reservation with associated passengers. Requires authentication with JWT token",
+            description = "Processes a payment for one or more flights and creates a reservation with associated passengers. If authenticated as a CLIENT, the reservation is automatically linked to the account.",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Payment processed successfully and reservation created",
@@ -74,7 +80,19 @@ public class PaymentController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Payment request containing flight selections and passenger information",
                     required = true)
-            @RequestBody PaymentRequestDto requestDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.processPayment(requestDto));
+            @RequestBody PaymentRequestDto requestDto,
+            Authentication authentication) {
+        UserEntity user = resolveUserOrNull(authentication);
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.processPayment(requestDto, user));
+    }
+
+    private UserEntity resolveUserOrNull(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        if (!(authentication.getPrincipal() instanceof JwtPayload payload)) {
+            return null;
+        }
+        return userService.getUserById(payload.userId());
     }
 }
