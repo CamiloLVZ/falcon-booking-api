@@ -20,6 +20,7 @@ import com.falcon.booking.persistence.repository.BoardingPassRepository;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -64,7 +65,14 @@ public class BoardingService {
     private final EmailTemplateService emailTemplateService;
     private final byte[] logoBytes;
 
-    public BoardingService(PassengerReservationRepository passengerReservationRepository, BoardingPassRepository boardingPassRepository, BoardingPassViewAssembler boardingPassViewAssembler, BoardingPassPdfService boardingPassPdfService, QrCodeService qrCodeService, EmailService emailService, EmailTemplateService emailTemplateService, ResourceService resourceService) {
+    public BoardingService(PassengerReservationRepository passengerReservationRepository,
+                           BoardingPassRepository boardingPassRepository,
+                           BoardingPassViewAssembler boardingPassViewAssembler,
+                           BoardingPassPdfService boardingPassPdfService,
+                           QrCodeService qrCodeService,
+                           @Qualifier("resendEmailService") EmailService emailService,
+                           EmailTemplateService emailTemplateService,
+                           ResourceService resourceService) {
         this.passengerReservationRepository = passengerReservationRepository;
         this.boardingPassRepository = boardingPassRepository;
         this.boardingPassViewAssembler = boardingPassViewAssembler;
@@ -75,7 +83,7 @@ public class BoardingService {
         this.logoBytes = resourceService.loadAsBytes(LOGO_PATH);
     }
 
-    @Async
+    @Async("boardingExecutor")
     @Transactional
     public void issue(Long passengerReservationId) {
         try {

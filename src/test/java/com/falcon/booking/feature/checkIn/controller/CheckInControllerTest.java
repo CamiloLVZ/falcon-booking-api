@@ -3,7 +3,6 @@ package com.falcon.booking.feature.checkIn.controller;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.boarding.service.BoardingService;
-import com.falcon.booking.feature.checkIn.controller.CheckInController;
 import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.checkIn.service.CheckInService;
 import com.falcon.booking.security.jwt.JwtFilter;
@@ -13,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.falcon.booking.common.enums.PassengerGender;
@@ -36,16 +35,16 @@ class CheckInControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private CheckInService checkInService;
 
-    @MockBean
+    @MockitoBean
     private BoardingService boardingService;
 
-    @MockBean
+    @MockitoBean
     private JwtUtil jwtUtil;
 
-    @MockBean
+    @MockitoBean
     private JwtFilter jwtFilter;
     
     @Autowired
