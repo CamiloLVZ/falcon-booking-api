@@ -14,13 +14,14 @@ on:
 permissions:
   contents: read
   packages: write
+  pull-requests: write
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  test:
+  quality:
     name: Run Tests
     runs-on: ubuntu-latest
 
@@ -38,12 +39,30 @@ jobs:
       - name: Grant execute permission to Maven Wrapper
         run: chmod +x mvnw
 
-      - name: Run unit tests
-        run: ./mvnw test
+      - name: Run tests and generate JaCoCo report
+        run: ./mvnw clean verify
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: SonarQube Scan
+        run: >
+          ./mvnw sonar:sonar
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }} 
+
+      - name: SonarCloud Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker:
     name: Build and Publish Docker Image
-    needs: test
+    needs: quality
     runs-on: ubuntu-latest
 
     steps:
