@@ -30,7 +30,7 @@ public class FlightGenerationService {
     private final AsyncFlightGenerationService asyncFlightGenerationService;
     private final RouteQueryService routeQueryService;
 
-    private final String SINGLE_RUNNING_GENERATION_CONSTRAINT = "idx_flight_generation_only_one_running";
+    static final String SINGLE_RUNNING_GENERATION_CONSTRAINT = "idx_flight_generation_only_one_running";
 
     @Autowired
     public FlightGenerationService(FlightGenerationRepository flightGenerationRepository, FlightGenerationMapper flightGenerationMapper, AsyncFlightGenerationService asyncFlightGenerationService, RouteQueryService routeQueryService) {

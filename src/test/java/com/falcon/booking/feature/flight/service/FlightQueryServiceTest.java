@@ -126,8 +126,8 @@ class FlightQueryServiceTest {
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
-        Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by("departureDateTime").ascending()), 1);
-        given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by("departureDateTime").ascending())))).willReturn(flightPage);
+        Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by(FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME).ascending()), 1);
+        given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME).ascending())))).willReturn(flightPage);
         given(flightMapper.toDto(expectedFlight)).willReturn(dto);
 
         Page<ResponseFlightDto> result = flightQueryService.getAllFlights("AV1234", FlightStatus.SCHEDULED, LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), 0, 10);
@@ -153,7 +153,7 @@ class FlightQueryServiceTest {
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
-        Pageable pageable = PageRequest.of(0, 10, Sort.by("departureDateTime").ascending());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME).ascending());
         Page<FlightEntity> flightPage = new PageImpl<>(List.of(flight), pageable, 1);
         given(flightRepository.findAllByRouteAndDepartureDateTimeBetween(eq(route), any(OffsetDateTime.class), any(OffsetDateTime.class), eq(pageable))).willReturn(flightPage);
         given(flightMapper.toDto(flight)).willReturn(dto);
@@ -170,8 +170,8 @@ class FlightQueryServiceTest {
         FlightEntity expectedFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
         ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
 
-        Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "departureDateTime")), 1);
-        given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "departureDateTime"))))).willReturn(flightPage);
+        Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME)), 1);
+        given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME))))).willReturn(flightPage);
         given(flightMapper.toDto(expectedFlight)).willReturn(dto);
 
         Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, 0, 10);

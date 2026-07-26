@@ -45,7 +45,7 @@ public class FlightQueryService {
     private final PassengerReservationRepository passengerReservationRepository;
     private final PricingService pricingService;
 
-    private final String SORT_FIELD_DEPARTURE_DATE_TIME= "departureDateTime";
+    static final String SORT_FIELD_DEPARTURE_DATE_TIME = "departureDateTime";
 
     public FlightQueryService(FlightRepository flightRepository,
                               RouteQueryService routeQueryService,
