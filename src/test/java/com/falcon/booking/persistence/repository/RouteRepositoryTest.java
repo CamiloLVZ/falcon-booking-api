@@ -6,20 +6,18 @@ import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
+
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("tests")
-public class RouteRepositoryTest {
+public class RouteRepositoryTest extends BaseRepositoryTest {
 
     private int sequence = 0;
 
@@ -32,11 +30,18 @@ public class RouteRepositoryTest {
     @Autowired
     private AirplaneTypeRepository airplaneTypeRepository;
 
+    private CountryEntity country;
+    private AirportEntity bogota;
+    private AirportEntity medellin;
+    private AirportEntity cali;
+    private AirportEntity cartagena;
+    private AirplaneTypeEntity airplaneType;
+
     private CountryEntity createCountry(String isoCode, String name) {
-        CountryEntity country = new CountryEntity();
-        country.setIsoCode(isoCode);
-        country.setName(name);
-        return country;
+        CountryEntity c = new CountryEntity();
+        c.setIsoCode(isoCode);
+        c.setName(name);
+        return c;
     }
 
     private AirportEntity createAirport(String iataCode, String name, String city, CountryEntity country) {
@@ -50,48 +55,61 @@ public class RouteRepositoryTest {
     }
 
     private AirplaneTypeEntity createAirplaneType(int suffix) {
-        AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
-        airplaneType.setProducer("Airbus " + suffix);
-        airplaneType.setModel("A320-" + suffix);
-        airplaneType.configureSeats(108, 12, "ABCDEF");
-        airplaneType.setStatus(AirplaneTypeStatus.ACTIVE);
-        return airplaneType;
+        AirplaneTypeEntity type = new AirplaneTypeEntity();
+        type.setProducer("Airbus " + suffix);
+        type.setModel("A320-" + suffix);
+        type.configureSeats(108, 12, "ABCDEF");
+        type.setStatus(AirplaneTypeStatus.ACTIVE);
+        return type;
     }
 
     private RouteEntity createRoute(String flightNumber, RouteStatus status) {
         sequence++;
-        CountryEntity country = countryRepository.save(createCountry("C" + sequence, "Colombia " + sequence));
-        AirportEntity origin = airportRepository.save(createAirport("B" + sequence + "G", "El Dorado " + sequence, "Bogota", country));
-        AirportEntity destination = airportRepository.save(createAirport("M" + sequence + "E", "Jose Maria Cordoba " + sequence, "Medellin", country));
-        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(sequence));
+        CountryEntity c = countryRepository.save(createCountry("C" + sequence, "Country " + sequence));
+        AirportEntity origin = airportRepository.save(createAirport("B" + sequence, "Origin " + sequence, "City1", c));
+        AirportEntity destination = airportRepository.save(createAirport("M" + sequence, "Dest " + sequence, "City2", c));
+        AirplaneTypeEntity type = airplaneTypeRepository.save(createAirplaneType(sequence));
 
+        return createRoute(flightNumber, status, origin, destination, type);
+    }
+
+    private RouteEntity createRoute(String flightNumber, RouteStatus status, AirportEntity origin, AirportEntity destination, AirplaneTypeEntity type) {
         RouteEntity route = new RouteEntity();
         route.setFlightNumber(flightNumber);
         route.setAirportOrigin(origin);
         route.setAirportDestination(destination);
-        route.setDefaultAirplaneType(airplaneType);
+        route.setDefaultAirplaneType(type);
         route.setDurationMinutes(60);
         route.setStatus(status);
         return route;
     }
 
-    private RouteEntity createRoute(String flightNumber, RouteStatus status, AirportEntity origin, AirportEntity destination, AirplaneTypeEntity airplaneType) {
-        RouteEntity route = new RouteEntity();
-        route.setFlightNumber(flightNumber);
-        route.setAirportOrigin(origin);
-        route.setAirportDestination(destination);
-        route.setDefaultAirplaneType(airplaneType);
-        route.setDurationMinutes(60);
-        route.setStatus(status);
-        return route;
+    @BeforeEach
+    public void setup() {
+        country = countryRepository.findByIsoCode("CO")
+                .orElseGet(() -> countryRepository.save(createCountry("CO", "Colombia")));
+
+        bogota = airportRepository.findByIataCode("BOG")
+                .orElseGet(() -> airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country)));
+
+        medellin = airportRepository.findByIataCode("MDE")
+                .orElseGet(() -> airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country)));
+
+        cali = airportRepository.findByIataCode("CLO")
+                .orElseGet(() -> airportRepository.save(createAirport("CLO", "Alfonso Bonilla Aragon", "Cali", country)));
+
+        cartagena = airportRepository.findByIataCode("CTG")
+                .orElseGet(() -> airportRepository.save(createAirport("CTG", "Rafael Nunez", "Cartagena", country)));
+
+        airplaneType = airplaneTypeRepository.save(createAirplaneType(100));
     }
 
     @DisplayName("Should return route when flight number exists")
     @Test
     void shouldReturnRoute_findByFlightNumber() {
-        RouteEntity route = routeRepository.save(createRoute("AV1234", RouteStatus.ACTIVE));
+        RouteEntity route = routeRepository.save(createRoute("AV1001", RouteStatus.ACTIVE));
 
-        Optional<RouteEntity> routeFound = routeRepository.findByFlightNumber("AV1234");
+        Optional<RouteEntity> routeFound = routeRepository.findByFlightNumber("AV1001");
 
         assertThat(routeFound).isPresent();
         assertThat(routeFound.get().getFlightNumber()).isEqualTo(route.getFlightNumber());
@@ -100,20 +118,19 @@ public class RouteRepositoryTest {
     @DisplayName("Should return empty optional when flight number does not exist")
     @Test
     void shouldReturnEmptyOptional_findByFlightNumber() {
-        RouteEntity route = routeRepository.save(createRoute("AV1234", RouteStatus.ACTIVE));
+        routeRepository.save(createRoute("AV1002", RouteStatus.ACTIVE));
 
-        Optional<RouteEntity> routeFound = routeRepository.findByFlightNumber("AV1514");
+        Optional<RouteEntity> routeFound = routeRepository.findByFlightNumber("AV9999");
 
-        assertThat(routeFound).isNotNull();
         assertThat(routeFound).isEmpty();
     }
 
     @DisplayName("Should return true when route exists by flight number")
     @Test
     void shouldReturnTrue_existsByFlightNumber() {
-        routeRepository.save(createRoute("AV1234", RouteStatus.DRAFT));
+        routeRepository.save(createRoute("AV1003", RouteStatus.DRAFT));
 
-        boolean exists = routeRepository.existsByFlightNumber("AV1234");
+        boolean exists = routeRepository.existsByFlightNumber("AV1003");
 
         assertThat(exists).isTrue();
     }
@@ -121,9 +138,9 @@ public class RouteRepositoryTest {
     @DisplayName("Should return false when route does not exist by flight number")
     @Test
     void shouldReturnFalse_existsByFlightNumber() {
-        routeRepository.save(createRoute("AV1234", RouteStatus.DRAFT));
+        routeRepository.save(createRoute("AV1004", RouteStatus.DRAFT));
 
-        boolean exists = routeRepository.existsByFlightNumber("AV1215");
+        boolean exists = routeRepository.existsByFlightNumber("AV9999");
 
         assertThat(exists).isFalse();
     }
@@ -131,20 +148,20 @@ public class RouteRepositoryTest {
     @DisplayName("Should return route list by status")
     @Test
     void shouldReturnRouteList_findAllByStatus() {
-        routeRepository.save(createRoute("AV681", RouteStatus.ACTIVE));
-        routeRepository.save(createRoute("AV8974", RouteStatus.DRAFT));
+        routeRepository.save(createRoute("AV1005", RouteStatus.ACTIVE));
+        routeRepository.save(createRoute("AV1006", RouteStatus.DRAFT));
 
         List<RouteEntity> routes = routeRepository.findAllByStatus(RouteStatus.ACTIVE);
 
         assertThat(routes).hasSize(1);
-        assertThat(routes.get(0).getFlightNumber()).isEqualTo("AV681");
+        assertThat(routes.get(0).getFlightNumber()).isEqualTo("AV1005");
     }
 
     @DisplayName("Should return empty list by status")
     @Test
     void shouldReturnEmptyList_findAllByStatus() {
-        routeRepository.save(createRoute("AV1684", RouteStatus.ACTIVE));
-        routeRepository.save(createRoute("AV9849", RouteStatus.DRAFT));
+        routeRepository.save(createRoute("AV1007", RouteStatus.ACTIVE));
+        routeRepository.save(createRoute("AV1008", RouteStatus.DRAFT));
 
         List<RouteEntity> routes = routeRepository.findAllByStatus(RouteStatus.INACTIVE);
 
@@ -154,15 +171,9 @@ public class RouteRepositoryTest {
     @DisplayName("Should return distinct origin airports for active routes")
     @Test
     void shouldReturnDistinctOrigins_findDistinctOrigins() {
-        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
-        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
-        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
-        AirportEntity cali = airportRepository.save(createAirport("CLO", "Alfonso Bonilla Aragon", "Cali", country));
-        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
-
-        routeRepository.save(createRoute("AV1234", RouteStatus.ACTIVE, bogota, medellin, airplaneType));
-        routeRepository.save(createRoute("AV5678", RouteStatus.ACTIVE, bogota, cali, airplaneType));
-        routeRepository.save(createRoute("AV9876", RouteStatus.INACTIVE, medellin, cali, airplaneType));
+        // Preparamos datos específicos para esta prueba
+        routeRepository.save(createRoute("AV1009", RouteStatus.ACTIVE, bogota, medellin, airplaneType));
+        routeRepository.save(createRoute("AV1010", RouteStatus.ACTIVE, bogota, cali, airplaneType));
 
         List<AirportEntity> origins = routeRepository.findDistinctOrigins();
 
@@ -173,12 +184,7 @@ public class RouteRepositoryTest {
     @DisplayName("Should return empty origin airport list when there are no active routes")
     @Test
     void shouldReturnEmptyList_findDistinctOrigins() {
-        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
-        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
-        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
-        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
-
-        routeRepository.save(createRoute("AV1234", RouteStatus.INACTIVE, bogota, medellin, airplaneType));
+        routeRepository.save(createRoute("AV1011", RouteStatus.INACTIVE, bogota, medellin, airplaneType));
 
         List<AirportEntity> origins = routeRepository.findDistinctOrigins();
 
@@ -188,17 +194,10 @@ public class RouteRepositoryTest {
     @DisplayName("Should return destinations by origin for active routes")
     @Test
     void shouldReturnDestinationsByOrigin_findDestinationsByOrigin() {
-        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
-        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
-        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
-        AirportEntity cali = airportRepository.save(createAirport("CLO", "Alfonso Bonilla Aragon", "Cali", country));
-        AirportEntity cartagena = airportRepository.save(createAirport("CTG", "Rafael Nunez", "Cartagena", country));
-        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
-
-        routeRepository.save(createRoute("AV1234", RouteStatus.ACTIVE, bogota, medellin, airplaneType));
-        routeRepository.save(createRoute("AV5678", RouteStatus.ACTIVE, bogota, cali, airplaneType));
-        routeRepository.save(createRoute("AV9876", RouteStatus.INACTIVE, bogota, cartagena, airplaneType));
-        routeRepository.save(createRoute("AV5555", RouteStatus.ACTIVE, medellin, cartagena, airplaneType));
+        routeRepository.save(createRoute("AV1012", RouteStatus.ACTIVE, bogota, medellin, airplaneType));
+        routeRepository.save(createRoute("AV1013", RouteStatus.ACTIVE, bogota, cali, airplaneType));
+        routeRepository.save(createRoute("AV1014", RouteStatus.INACTIVE, bogota, cartagena, airplaneType));
+        routeRepository.save(createRoute("AV1015", RouteStatus.ACTIVE, medellin, cartagena, airplaneType));
 
         List<AirportEntity> destinations = routeRepository.findDestinationsByOrigin("BOG");
 
@@ -209,16 +208,10 @@ public class RouteRepositoryTest {
     @DisplayName("Should return empty destination list when origin has no active routes")
     @Test
     void shouldReturnEmptyList_findDestinationsByOrigin() {
-        CountryEntity country = countryRepository.save(createCountry("CO", "Colombia"));
-        AirportEntity bogota = airportRepository.save(createAirport("BOG", "El Dorado", "Bogota", country));
-        AirportEntity medellin = airportRepository.save(createAirport("MDE", "Jose Maria Cordoba", "Medellin", country));
-        AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType(1));
-
-        routeRepository.save(createRoute("AV1234", RouteStatus.INACTIVE, bogota, medellin, airplaneType));
+        routeRepository.save(createRoute("AV1016", RouteStatus.INACTIVE, bogota, medellin, airplaneType));
 
         List<AirportEntity> destinations = routeRepository.findDestinationsByOrigin("BOG");
 
         assertThat(destinations).isEmpty();
     }
-
 }

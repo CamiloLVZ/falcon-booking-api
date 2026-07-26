@@ -7,16 +7,13 @@ import com.falcon.booking.persistence.entity.UserRoleId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
+
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("tests")
-public class UserRoleRepositoryTest {
+public class UserRoleRepositoryTest extends BaseRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
@@ -38,11 +35,11 @@ public class UserRoleRepositoryTest {
     @DisplayName("Should return true when user has role")
     @Test
     void shouldReturnTrue_existsByEmailAndRoleName() {
-        RoleEntity role = roleRepository.save(new RoleEntity("MANAGER"));
-        UserEntity user = userRepository.save(createUser("manager@test.com"));
+        RoleEntity role = roleRepository.save(new RoleEntity("MANAGER1"));
+        UserEntity user = userRepository.save(createUser("manager1@test.com"));
         userRoleRepository.save(new UserRoleEntity(user, role));
 
-        boolean exists = userRoleRepository.ExistsByEmailAndRoleName("manager@test.com", "MANAGER");
+        boolean exists = userRoleRepository.ExistsByEmailAndRoleName("manager1@test.com", "MANAGER1");
 
         assertThat(exists).isTrue();
     }
@@ -50,11 +47,11 @@ public class UserRoleRepositoryTest {
     @DisplayName("Should return false when user does not have role")
     @Test
     void shouldReturnFalse_existsByEmailAndRoleName() {
-        RoleEntity role = roleRepository.save(new RoleEntity("MANAGER"));
-        UserEntity user = userRepository.save(createUser("manager@test.com"));
+        RoleEntity role = roleRepository.save(new RoleEntity("MANAGER2"));
+        UserEntity user = userRepository.save(createUser("manager2@test.com"));
         userRoleRepository.save(new UserRoleEntity(user, role));
 
-        boolean exists = userRoleRepository.ExistsByEmailAndRoleName("manager@test.com", "ADMIN");
+        boolean exists = userRoleRepository.ExistsByEmailAndRoleName("manager2@test.com", "ADMIN");
 
         assertThat(exists).isFalse();
     }
@@ -62,8 +59,8 @@ public class UserRoleRepositoryTest {
     @DisplayName("Should return user role relation by user and role")
     @Test
     void shouldReturnUserRole_findByUserAndRole() {
-        RoleEntity role = roleRepository.save(new RoleEntity("SUPPORT"));
-        UserEntity user = userRepository.save(createUser("support@test.com"));
+        RoleEntity role = roleRepository.save(new RoleEntity("SUPPORT1"));
+        UserEntity user = userRepository.save(createUser("support1@test.com"));
         UserRoleEntity saved = userRoleRepository.save(new UserRoleEntity(user, role));
 
         Optional<UserRoleEntity> relationFound = userRoleRepository.findByUserAndRole(user, role);
@@ -75,8 +72,8 @@ public class UserRoleRepositoryTest {
     @DisplayName("Should return user role relation by composite id")
     @Test
     void shouldReturnUserRole_findById() {
-        RoleEntity role = roleRepository.save(new RoleEntity("AGENT"));
-        UserEntity user = userRepository.save(createUser("agent@test.com"));
+        RoleEntity role = roleRepository.save(new RoleEntity("AGENT1"));
+        UserEntity user = userRepository.save(createUser("agent1@test.com"));
         UserRoleEntity saved = userRoleRepository.save(new UserRoleEntity(user, role));
 
         Optional<UserRoleEntity> relationFound = userRoleRepository.findById(new UserRoleId(user.getId(), role.getId()));

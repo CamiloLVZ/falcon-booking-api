@@ -1,21 +1,17 @@
 package com.falcon.booking.persistence.repository;
 
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.persistence.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
+
 
 import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("tests")
-public class RouteScheduleRepositoryTest {
+public class RouteScheduleRepositoryTest extends BaseRepositoryTest {
 
     @Autowired
     private RouteScheduleRepository routeScheduleRepository;
@@ -28,34 +24,43 @@ public class RouteScheduleRepositoryTest {
     @Autowired
     private AirplaneTypeRepository airplaneTypeRepository;
 
-    private RouteEntity createRoute() {
-        CountryEntity country = new CountryEntity();
-        country.setIsoCode("CO");
-        country.setName("Colombia");
-        country = countryRepository.save(country);
+    private CountryEntity createCountry(){
+        CountryEntity countryEntity = new CountryEntity();
+        countryEntity.setIsoCode("CO");
+        countryEntity.setName("Colombia");
+        return countryEntity;
+    }
 
-        AirportEntity origin = new AirportEntity();
-        origin.setIataCode("BOG");
-        origin.setName("El Dorado");
-        origin.setCity("Bogota");
-        origin.setCountry(country);
-        origin.setTimezone("America/Bogota");
-        origin = airportRepository.save(origin);
+    private AirportEntity createAirport(String iataCode, String name, String city, CountryEntity country, String timeZone){
+        AirportEntity airport = new AirportEntity();
+        airport.setIataCode(iataCode);
+        airport.setName(name);
+        airport.setCity(city);
+        airport.setCountry(country);
+        airport.setTimezone(timeZone);
+        return airport;
+    }
 
-        AirportEntity destination = new AirportEntity();
-        destination.setIataCode("MDE");
-        destination.setName("Jose Maria Cordoba");
-        destination.setCity("Medellin");
-        destination.setCountry(country);
-        destination.setTimezone("America/Bogota");
-        destination = airportRepository.save(destination);
-
+    private AirplaneTypeEntity createAirplaneType(String producer, String model){
         AirplaneTypeEntity airplaneType = new AirplaneTypeEntity();
-        airplaneType.setProducer("Airbus");
-        airplaneType.setModel("A320");
+        airplaneType.setProducer(model);
+        airplaneType.setModel(producer);
         airplaneType.configureSeats(108, 12, "ABCDEF");
         airplaneType.setStatus(AirplaneTypeStatus.ACTIVE);
-        airplaneType = airplaneTypeRepository.save(airplaneType);
+        return  airplaneType;
+    }
+
+    private RouteEntity createRoute() {
+        CountryEntity country = countryRepository.findByIsoCode("CO")
+                .orElseGet(()->countryRepository.save(createCountry()));
+
+        AirportEntity origin = airportRepository.findByIataCode("BOG")
+                .orElseGet(()->airportRepository.save(createAirport("BOG", "El Dorado","Bogota", country,"America/Bogota")));
+
+        AirportEntity destination = airportRepository.findByIataCode("MDE")
+                .orElseGet(()->airportRepository.save(createAirport("MDE", "Jose Maria Cordoba","Medellin", country,"America/Bogota")));
+
+     AirplaneTypeEntity airplaneType = airplaneTypeRepository.save(createAirplaneType("AIRBUS", "A320"));
 
         RouteEntity route = new RouteEntity();
         route.setFlightNumber("AV1234");
@@ -63,7 +68,7 @@ public class RouteScheduleRepositoryTest {
         route.setAirportDestination(destination);
         route.setDefaultAirplaneType(airplaneType);
         route.setDurationMinutes(60);
-        route.setStatus(RouteStatus.DRAFT);
+        route.markAsDraft();
         return routeRepository.save(route);
     }
 

@@ -7,20 +7,19 @@ import com.falcon.booking.persistence.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.test.context.ActiveProfiles;
+
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("tests")
-class FlightRepositoryTest {
+class FlightRepositoryTest extends BaseRepositoryTest {
 
     private int sequence = 0;
 
@@ -142,7 +141,7 @@ class FlightRepositoryTest {
     @Test
     void shouldReturnDepartureTimes_findExistingDepartureTimes() {
         RouteEntity route = createRoute("AV1234");
-        OffsetDateTime departure1 = OffsetDateTime.now().plusDays(2).withNano(0);
+        OffsetDateTime departure1 = OffsetDateTime.now().plusDays(2).withNano(0).atZoneSameInstant(ZoneId.of("Z")).toOffsetDateTime();
         OffsetDateTime departure2 = departure1.plusHours(2);
         OffsetDateTime departure3 = departure1.plusHours(4);
 
