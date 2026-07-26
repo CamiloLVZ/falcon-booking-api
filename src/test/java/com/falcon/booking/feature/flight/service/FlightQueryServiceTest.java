@@ -1,10 +1,6 @@
 package com.falcon.booking.feature.flight.service;
 
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.common.enums.SeatClass;
-import com.falcon.booking.common.enums.SeatStatus;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.airport.service.AirportService;
 import com.falcon.booking.feature.flight.dto.FlightSeatMapDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;

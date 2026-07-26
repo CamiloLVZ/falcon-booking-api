@@ -1,34 +1,28 @@
 package com.falcon.booking.feature.reservation.service;
 
-import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
 import com.falcon.booking.feature.passenger.service.PassengerService;
-import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
+import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
+import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
+import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
+import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
+import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
+import com.falcon.booking.feature.reservation.exception.ReservationCancellationTimeExpiredException;
+import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.ReservationRepository;
-import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.enums.ReservationStatus;
-import com.falcon.booking.common.enums.SeatClass;
-import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
-import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
-import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
-import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
-import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
-import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
-import com.falcon.booking.feature.reservation.exception.ReservationCancellationTimeExpiredException;
-import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -37,9 +31,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import org.springframework.test.util.ReflectionTestUtils;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationCommandServiceTest {

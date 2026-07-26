@@ -1,10 +1,6 @@
 package com.falcon.booking.feature.payment.service;
 
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.enums.PaymentStatus;
-import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.flight.exception.FlightCanNotBeReservedException;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
@@ -32,7 +28,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {

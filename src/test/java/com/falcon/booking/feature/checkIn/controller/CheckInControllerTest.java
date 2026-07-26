@@ -1,12 +1,16 @@
 package com.falcon.booking.feature.checkIn.controller;
 
+import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.common.enums.SeatClass;
 import com.falcon.booking.feature.boarding.service.BoardingService;
-import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
+import com.falcon.booking.feature.checkIn.dto.CheckInRequestDto;
 import com.falcon.booking.feature.checkIn.service.CheckInService;
+import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
+import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.security.jwt.JwtFilter;
 import com.falcon.booking.security.jwt.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.feature.checkIn.dto.CheckInRequestDto;
-import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
