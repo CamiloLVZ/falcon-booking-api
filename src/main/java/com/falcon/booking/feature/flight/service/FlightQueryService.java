@@ -45,6 +45,8 @@ public class FlightQueryService {
     private final PassengerReservationRepository passengerReservationRepository;
     private final PricingService pricingService;
 
+    private final String SORT_FIELD_DEPARTURE_DATE_TIME= "departureDateTime";
+
     public FlightQueryService(FlightRepository flightRepository,
                               RouteQueryService routeQueryService,
                               AirportService airportService,
@@ -82,7 +84,7 @@ public class FlightQueryService {
         spec = spec.and(FlightSpecifications.hasDateStart(offsetDateTimeFrom));
         spec = spec.and(FlightSpecifications.hasDateEnd(offsetDateTimeTo));
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("departureDateTime").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(SORT_FIELD_DEPARTURE_DATE_TIME).ascending());
         return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);
     }
 
@@ -92,7 +94,7 @@ public class FlightQueryService {
         spec = spec.and(FlightSpecifications.hasFlightNumber(flightNumber));
         spec = spec.and(FlightSpecifications.hasStatus(flightStatus));
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "departureDateTime"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, SORT_FIELD_DEPARTURE_DATE_TIME));
         return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);
     }
 
@@ -119,7 +121,7 @@ public class FlightQueryService {
         OffsetDateTime startDateTime = dayRange.get("start");
         OffsetDateTime endDateTime = dayRange.get("end");
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("departureDateTime").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(SORT_FIELD_DEPARTURE_DATE_TIME).ascending());
         return flightRepository.findAllByRouteAndDepartureDateTimeBetween(routeEntity, startDateTime, endDateTime, pageable)
                 .map(flightMapper::toDto);
     }

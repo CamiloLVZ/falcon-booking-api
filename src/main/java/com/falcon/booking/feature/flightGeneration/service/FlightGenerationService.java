@@ -30,6 +30,8 @@ public class FlightGenerationService {
     private final AsyncFlightGenerationService asyncFlightGenerationService;
     private final RouteQueryService routeQueryService;
 
+    private final String SINGLE_RUNNING_GENERATION_CONSTRAINT = "idx_flight_generation_only_one_running";
+
     @Autowired
     public FlightGenerationService(FlightGenerationRepository flightGenerationRepository, FlightGenerationMapper flightGenerationMapper, AsyncFlightGenerationService asyncFlightGenerationService, RouteQueryService routeQueryService) {
         this.flightGenerationRepository = flightGenerationRepository;
@@ -59,7 +61,7 @@ public class FlightGenerationService {
 
         } catch (DataIntegrityViolationException e) {
             String constraint = extractConstraintName(e).orElse("");
-            if ("idx_flight_generation_only_one_running".equals(constraint))
+            if (SINGLE_RUNNING_GENERATION_CONSTRAINT.equals(constraint))
                 throw new FlightGenerationAlreadyRunningException();
             else throw e;
         }
@@ -80,7 +82,7 @@ public class FlightGenerationService {
 
         } catch (DataIntegrityViolationException e) {
             String constraint = extractConstraintName(e).orElse("");
-            if ("idx_flight_generation_only_one_running".equals(constraint))
+            if (SINGLE_RUNNING_GENERATION_CONSTRAINT.equals(constraint))
                 throw new FlightGenerationAlreadyRunningException();
             else throw e;
         }
@@ -105,7 +107,7 @@ public class FlightGenerationService {
 
         } catch (DataIntegrityViolationException e) {
             String constraint = extractConstraintName(e).orElse("");
-            if ("idx_flight_generation_only_one_running".equals(constraint))
+            if (SINGLE_RUNNING_GENERATION_CONSTRAINT.equals(constraint))
                 throw new FlightGenerationAlreadyRunningException();
             else throw e;
         }
