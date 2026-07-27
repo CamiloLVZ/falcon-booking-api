@@ -384,7 +384,7 @@ class TransactionalFlightGenerationServiceTest {
 
         @Test
         void shouldReturnZeroWhenRouteDoesNotOperateThatDay() {
-            DayOfWeek differentDay = horizonDay == DayOfWeek.MONDAY ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
+            DayOfWeek differentDay = horizonDay.equals(DayOfWeek.MONDAY) ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
             RouteEntity route = createRoute(Set.of(differentDay), Set.of(LocalTime.of(8, 0), LocalTime.of(14, 0)));
 
             given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
@@ -441,7 +441,7 @@ class TransactionalFlightGenerationServiceTest {
             RouteEntity routeThatOperates = createRoute(Set.of(horizonDay), Set.of(LocalTime.of(8, 0)));
             routeThatOperates.setId(1L);
 
-            DayOfWeek differentDay = horizonDay == DayOfWeek.MONDAY ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
+            DayOfWeek differentDay = horizonDay.equals(DayOfWeek.MONDAY) ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
             RouteEntity routeThatDoesNotOperate = createRoute(Set.of(differentDay), Set.of(LocalTime.of(8, 0)));
             routeThatDoesNotOperate.setId(2L);
 
