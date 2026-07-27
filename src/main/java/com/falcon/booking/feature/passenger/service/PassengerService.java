@@ -61,7 +61,6 @@ public class PassengerService {
         return passengerMapper.toResponseDto(createOrGetPassenger(addPassengerDto));
     }
 
-    @Transactional
     public PassengerEntity createOrGetPassenger(AddPassengerDto addPassengerDto) {
         PassengerEntity newPassengerEntity = passengerMapper.toEntity(addPassengerDto);
         CountryEntity country = countryService.getCountryEntityByIsoCode(addPassengerDto.nationalityIsoCode());
