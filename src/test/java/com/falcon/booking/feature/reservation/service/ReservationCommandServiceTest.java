@@ -1,45 +1,39 @@
 package com.falcon.booking.feature.reservation.service;
 
-import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.PassengerGender;
-import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
+import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
+import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
 import com.falcon.booking.feature.passenger.service.PassengerService;
-import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
+import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
+import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
+import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
+import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
+import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
+import com.falcon.booking.feature.reservation.exception.ReservationCancellationTimeExpiredException;
+import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.ReservationRepository;
-import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.enums.ReservationStatus;
-import com.falcon.booking.common.enums.SeatClass;
-import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
-import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
-import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
-import com.falcon.booking.feature.payment.dto.PaymentRequestDto;
-import com.falcon.booking.feature.reservation.component.ReservationNumberGenerator;
-import com.falcon.booking.feature.reservation.exception.PassengerAlreadyReservedFlightException;
-import com.falcon.booking.feature.reservation.exception.ReservationCancellationTimeExpiredException;
-import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import org.springframework.test.util.ReflectionTestUtils;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationCommandServiceTest {
@@ -216,5 +210,100 @@ class ReservationCommandServiceTest {
 
         assertThatThrownBy(() -> reservationCommandService.cancelReservationByContactEmail("ABC123", "mail@test.com"))
                 .isInstanceOf(ReservationCancellationTimeExpiredException.class);
+    }
+
+    @DisplayName("Should create reservation from payment with user")
+    @Test
+    void shouldCreateReservationFromPayment_withUser() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+
+        AddPassengerDto addPassengerDto =
+                new AddPassengerDto(
+                        "Ana", "Perez", PassengerGender.F, "CO", LocalDate.now().minusYears(20), "P123456", "123456");
+        PaymentPassengerDto paymentPassengerDto =
+                new PaymentPassengerDto(addPassengerDto, SeatClass.ECONOMY);
+        PaymentRequestDto requestDto =
+                new PaymentRequestDto(flight.getId(), "test@test.com", List.of(paymentPassengerDto));
+
+        PassengerEntity passenger = createPassenger("123456");
+
+        when(passengerService.getPassengerEntityByIdentificationNumber("123456", "CO"))
+                .thenThrow(new PassengerNotFoundException("123456"));
+        when(reservationNumberGenerator.generate()).thenReturn("RES456");
+        when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(passengerService.createOrGetPassenger(addPassengerDto)).thenReturn(passenger);
+
+        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight, user);
+
+        assertThat(reservationNumber).isEqualTo("RES456");
+        verify(passengerReservationRepository).saveAll(anyList());
+    }
+
+    private ReservationEntity createReservationWithPassenger(String reservationNumber, FlightEntity flight, PassengerEntity passenger) {
+        ReservationEntity reservation = new ReservationEntity(reservationNumber, flight, "mail@test.com", Instant.now());
+        PassengerReservationEntity pr = new PassengerReservationEntity(passenger, reservation, null, SeatClass.ECONOMY);
+        ReflectionTestUtils.setField(reservation, "passengerReservations", new ArrayList<>(List.of(pr)));
+        return reservation;
+    }
+
+    @DisplayName("Should cancel passenger reservation by identification number")
+    @Test
+    void shouldCancelPassengerReservationByIdentificationNumber() {
+        ReflectionTestUtils.setField(reservationCommandService, "minimumHoursBeforeDeparture", 24L);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        flight.setDepartureDateTime(OffsetDateTime.now().plusDays(2));
+        PassengerEntity passenger = createPassenger("123456");
+        ReservationEntity reservation = createReservationWithPassenger("ABC123", flight, passenger);
+        ResponseReservationDto dto = new ResponseReservationDto("ABC123", "mail@test.com",
+                Instant.now(), ReservationStatus.CANCELED, null, List.of());
+
+        when(reservationAccessService.getReservationByNumberAndContactEmail("ABC123", "mail@test.com")).thenReturn(reservation);
+        when(passengerService.getPassengerEntityByIdentificationNumber("123456", "CO")).thenReturn(passenger);
+        when(reservationMapper.toResponseDto(reservation)).thenReturn(dto);
+
+        ResponseReservationDto result = reservationCommandService.cancelPassengerReservationByIdentificationNumber("ABC123", "mail@test.com", "123456", "CO");
+
+        assertThat(result).isEqualTo(dto);
+        assertThat(result.status()).isEqualTo(ReservationStatus.CANCELED);
+    }
+
+    @DisplayName("Should cancel passenger reservation by passport number")
+    @Test
+    void shouldCancelPassengerReservationByPassportNumber() {
+        ReflectionTestUtils.setField(reservationCommandService, "minimumHoursBeforeDeparture", 24L);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        flight.setDepartureDateTime(OffsetDateTime.now().plusDays(2));
+        PassengerEntity passenger = createPassenger("123456");
+        ReservationEntity reservation = createReservationWithPassenger("ABC123", flight, passenger);
+        ResponseReservationDto dto = new ResponseReservationDto("ABC123", "mail@test.com",
+                Instant.now(), ReservationStatus.CANCELED, null, List.of());
+
+        when(reservationAccessService.getReservationByNumberAndContactEmail("ABC123", "mail@test.com")).thenReturn(reservation);
+        when(passengerService.getPassengerEntityByPassportNumber("P123456")).thenReturn(passenger);
+        when(reservationMapper.toResponseDto(reservation)).thenReturn(dto);
+
+        ResponseReservationDto result = reservationCommandService.cancelPassengerReservationByPassportNumber("ABC123", "mail@test.com", "P123456");
+
+        assertThat(result).isEqualTo(dto);
+        assertThat(result.status()).isEqualTo(ReservationStatus.CANCELED);
+    }
+
+    @DisplayName("Should cancel entire reservation")
+    @Test
+    void shouldCancelReservation() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
+        ResponseReservationDto dto = new ResponseReservationDto("ABC123", "mail@test.com",
+                Instant.now(), ReservationStatus.CANCELED, null, List.of());
+
+        when(reservationQueryService.getReservationEntityByNumber("ABC123")).thenReturn(reservation);
+        when(reservationMapper.toResponseDto(reservation)).thenReturn(dto);
+
+        ResponseReservationDto result = reservationCommandService.cancelReservation("ABC123");
+
+        assertThat(result).isEqualTo(dto);
+        assertThat(result.status()).isEqualTo(ReservationStatus.CANCELED);
     }
 }

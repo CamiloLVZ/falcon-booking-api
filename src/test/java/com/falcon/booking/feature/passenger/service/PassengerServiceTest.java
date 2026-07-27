@@ -4,14 +4,10 @@ import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
-import com.falcon.booking.feature.passenger.exception.PassengerAlreadyExistsException;
-import com.falcon.booking.feature.passenger.exception.PassengerHasDifferentPassportNumberException;
-import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
+import com.falcon.booking.feature.passenger.exception.*;
 import com.falcon.booking.feature.passenger.mapper.PassengerMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
-import com.falcon.booking.feature.passenger.exception.PassengerProfileAlreadyLinkedException;
-import com.falcon.booking.feature.passenger.exception.PassengerProfileNotFoundException;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PassengerRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -33,9 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PassengerServiceTest {

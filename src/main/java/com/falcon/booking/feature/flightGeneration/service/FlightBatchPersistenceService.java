@@ -22,7 +22,7 @@ public class FlightBatchPersistenceService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    protected void saveBatch(List<FlightEntity> batch){
+    public void saveBatch(List<FlightEntity> batch){
         flightRepository.saveAll(batch);
         entityManager.flush();
         entityManager.clear();

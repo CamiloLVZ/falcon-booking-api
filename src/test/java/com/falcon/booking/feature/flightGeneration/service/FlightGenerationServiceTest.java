@@ -14,6 +14,7 @@ import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
 import com.falcon.booking.persistence.repository.FlightRepository;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,16 +36,7 @@ import static org.mockito.Mockito.verify;
 public class FlightGenerationServiceTest {
 
     @Mock
-    private FlightRepository flightRepository;
-
-    @Mock
     private RouteQueryService routeQueryService;
-
-    @Mock
-    private AirplaneTypeService airplaneTypeService;
-
-    @Mock
-    private FlightMapper flightMapper;
 
     @Mock
     private AsyncFlightGenerationService asyncFlightGenerationService;
@@ -114,7 +106,7 @@ public class FlightGenerationServiceTest {
     @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
     @Test
     void shouldThrowExceptionWhenGenerationAlreadyRunning_GlobalGeneration() {
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+        var constraintException = new ConstraintViolationException("duplicate", null, FlightGenerationService.SINGLE_RUNNING_GENERATION_CONSTRAINT);
         var dataException = new DataIntegrityViolationException("duplicate", constraintException);
         given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
 
@@ -157,7 +149,7 @@ public class FlightGenerationServiceTest {
 
         RouteEntity route = createRoute("AV1234", "UTC", true);
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+        var constraintException = new ConstraintViolationException("duplicate", null, FlightGenerationService.SINGLE_RUNNING_GENERATION_CONSTRAINT);
         var dataException = new DataIntegrityViolationException("duplicate", constraintException);
         given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
 
@@ -184,7 +176,7 @@ public class FlightGenerationServiceTest {
     @DisplayName("Should throw FlightGenerationAlreadyRunningException when a generation is already running")
     @Test
     void shouldThrowExceptionWhenGenerationAlreadyRunning_DailyGeneration() {
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("duplicate", null, "idx_flight_generation_only_one_running");
+        var constraintException = new ConstraintViolationException("duplicate", null, FlightGenerationService.SINGLE_RUNNING_GENERATION_CONSTRAINT);
         var dataException = new DataIntegrityViolationException("duplicate", constraintException);
         given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
 
@@ -198,7 +190,7 @@ public class FlightGenerationServiceTest {
     @Test
     void shouldNotTranslateOtherConstraintsException() {
 
-        var constraintException = new org.hibernate.exception.ConstraintViolationException("check violation", null, "chk_route_required_for_route_flight_generation");
+        var constraintException = new ConstraintViolationException("check violation", null, "chk_route_required_for_route_flight_generation");
         var dataException = new DataIntegrityViolationException("error", constraintException);
         given(flightGenerationRepository.save(any())).willThrow(dataException);
 
