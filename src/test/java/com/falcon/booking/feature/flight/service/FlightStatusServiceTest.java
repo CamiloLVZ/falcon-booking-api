@@ -2,6 +2,7 @@ package com.falcon.booking.feature.flight.service;
 
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.feature.reservation.service.ReservationCommandService;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.FlightEntity;
@@ -20,7 +21,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class FlightStatusServiceTest {
@@ -30,6 +33,9 @@ class FlightStatusServiceTest {
 
     @Mock
     private com.falcon.booking.feature.boarding.service.BoardingService boardingService;
+
+    @Mock
+    private ReservationCommandService reservationCommandService;
 
     @InjectMocks
     private FlightStatusService flightStatusService;
@@ -143,7 +149,7 @@ class FlightStatusServiceTest {
         assertThat(flight.getStatus()).isEqualTo(FlightStatus.SCHEDULED);
     }
 
-    @DisplayName("Should count updated flights when status changes")
+    @DisplayName("Should count updated flights and complete reservations when status changes")
     @Test
     void shouldUpdateFlightsStatus_countUpdatedFlights() {
         RouteEntity route = createRoute("AV1234", "UTC", true);
@@ -153,5 +159,17 @@ class FlightStatusServiceTest {
 
         int count = flightStatusService.updateFlightsStatus();
         assertThat(count).isEqualTo(1);
+        verify(reservationCommandService).completeReservationsForFlight(flight);
+    }
+
+    @DisplayName("Should not complete reservations when no flights to update")
+    @Test
+    void shouldNotCompleteReservations_whenNoFlights() {
+        given(flightRepository.findAllByStatusNotAndStatusNot(FlightStatus.CANCELED, FlightStatus.COMPLETED)).willReturn(List.of());
+
+        flightStatusService.updateFlightsStatus();
+
+        verify(reservationCommandService, org.mockito.Mockito.never())
+                .completeReservationsForFlight(any());
     }
 }

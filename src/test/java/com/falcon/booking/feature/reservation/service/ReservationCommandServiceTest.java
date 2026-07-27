@@ -26,12 +26,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -288,6 +290,51 @@ class ReservationCommandServiceTest {
 
         assertThat(result).isEqualTo(dto);
         assertThat(result.status()).isEqualTo(ReservationStatus.CANCELED);
+    }
+
+    @DisplayName("Should complete RESERVED reservations for a completed flight")
+    @Test
+    void shouldCompleteReservationsForFlight() {
+        FlightEntity flight = createFlight(FlightStatus.COMPLETED, 108, 12);
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "test@test.com", Instant.now());
+
+        given(reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED))
+                .willReturn(List.of(reservation));
+
+        int count = reservationCommandService.completeReservationsForFlight(flight);
+
+        assertThat(count).isEqualTo(1);
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.COMPLETED);
+    }
+
+    @DisplayName("Should complete multiple RESERVED reservations for the same flight")
+    @Test
+    void shouldCompleteMultipleReservationsForFlight() {
+        FlightEntity flight = createFlight(FlightStatus.COMPLETED, 108, 12);
+        ReservationEntity res1 = new ReservationEntity("ABC1", flight, "a@test.com", Instant.now());
+        ReservationEntity res2 = new ReservationEntity("ABC2", flight, "b@test.com", Instant.now());
+
+        given(reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED))
+                .willReturn(List.of(res1, res2));
+
+        int count = reservationCommandService.completeReservationsForFlight(flight);
+
+        assertThat(count).isEqualTo(2);
+        assertThat(res1.getStatus()).isEqualTo(ReservationStatus.COMPLETED);
+        assertThat(res2.getStatus()).isEqualTo(ReservationStatus.COMPLETED);
+    }
+
+    @DisplayName("Should return zero when no RESERVED reservations for the flight")
+    @Test
+    void shouldReturnZero_whenNoReservedReservations() {
+        FlightEntity flight = createFlight(FlightStatus.COMPLETED, 108, 12);
+
+        given(reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED))
+                .willReturn(List.of());
+
+        int count = reservationCommandService.completeReservationsForFlight(flight);
+
+        assertThat(count).isZero();
     }
 
     @DisplayName("Should cancel entire reservation")

@@ -74,6 +74,10 @@ public class ReservationEntity {
 
     }
 
+    public void markAsCompleted() {
+        this.status = ReservationStatus.COMPLETED;
+    }
+
     public void cancel(){
         for (PassengerReservationEntity passengerReservation : this.passengerReservations) {
             passengerReservation.cancel();
