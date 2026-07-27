@@ -1,5 +1,6 @@
 package com.falcon.booking.feature.flightGeneration.service;
 
+import com.falcon.booking.common.batch.BatchAccumulator;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.RouteStatus;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationPartialFailureException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -104,58 +106,50 @@ public class TransactionalFlightGenerationService {
     private int generateFlightsForRouteInRange(RouteEntity route, LocalDate startDate, LocalDate endDate) {
 
         ZoneId timeZoneId = ZoneId.of(route.getAirportOrigin().getTimezone());
-
-        Set<DayOfWeek> routeDays = route.getOperatingDays();
-        Set<LocalTime> routeSchedules = route.getOperatingSchedules();
-
         OffsetDateTime minDeparture = OffsetDateTime.now(timeZoneId).plusHours(minimumHoursBeforeDeparture);
 
+        Set<Instant> existingDepartures = loadExistingDepartures(route, startDate, endDate, timeZoneId);
+
+        BatchAccumulator<FlightEntity> accumulator = new BatchAccumulator<FlightEntity>(batchSize, flightBatchPersistenceService::saveBatch);
+
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            if (!route.getOperatingDays().contains(date.getDayOfWeek())) {
+                continue;
+            }
+            for (LocalTime time : route.getOperatingSchedules()) {
+                createFlightIfNeeded(route, date, time, timeZoneId, minDeparture, existingDepartures)
+                        .ifPresent(accumulator::add);
+            }
+        }
+
+        return accumulator.flushAndGetTotal();
+    }
+
+    private Optional<FlightEntity> createFlightIfNeeded(RouteEntity route, LocalDate date, LocalTime time,
+                                                        ZoneId timeZoneId, OffsetDateTime minDeparture,
+                                                        Set<Instant> existingDepartures) {
+
+        OffsetDateTime departure = date.atTime(time).atZone(timeZoneId).toOffsetDateTime();
+        Instant departureInstant = departure.toInstant();
+
+        if (departure.isBefore(minDeparture) || existingDepartures.contains(departureInstant)) {
+            return Optional.empty();
+        }
+
+        existingDepartures.add(departureInstant);
+        return Optional.of(buildFlightEntity(route, departure));
+    }
+
+
+
+    private Set<Instant> loadExistingDepartures(RouteEntity route, LocalDate startDate, LocalDate endDate, ZoneId timeZoneId) {
         OffsetDateTime startDateTime = startDate.atStartOfDay().atZone(timeZoneId).toOffsetDateTime();
         OffsetDateTime endDateTime = endDate.plusDays(1).atStartOfDay().atZone(timeZoneId).toOffsetDateTime();
 
-        List<OffsetDateTime> existingDeparturesList = flightRepository.findExistingDepartureTimesInRange(route.getId(), startDateTime, endDateTime);
-        Set<Instant> existingDepartures = toInstantSet(existingDeparturesList);
-
-        List<FlightEntity> batch = new ArrayList<>(batchSize);
-
-        int totalGenerated = 0;
-        LocalDate dateIterator = startDate;
-
-        while (!dateIterator.isAfter(endDate)) {
-            if (routeDays.contains(dateIterator.getDayOfWeek())) {
-
-                for (LocalTime time : routeSchedules) {
-                    OffsetDateTime departure = dateIterator.atTime(time).atZone(timeZoneId).toOffsetDateTime();
-                    Instant departureInstant = departure.toInstant();
-
-                    if (departure.isBefore(minDeparture))
-                        continue;
-
-                    if (existingDepartures.contains(departureInstant))
-                        continue;
-
-                    FlightEntity flight = new FlightEntity(route, route.getDefaultAirplaneType(), departure, FlightStatus.SCHEDULED);
-                    flight.setBasePriceEconomy(route.getBasePriceEconomy());
-                    flight.setBasePriceFirstClass(route.getBasePriceFirstClass());
-                    batch.add(flight);
-                    existingDepartures.add(departureInstant);
-
-                    if (batch.size() >= batchSize) {
-                        flightBatchPersistenceService.saveBatch(batch);
-                        totalGenerated += batch.size();
-                        batch.clear();
-                    }
-                }
-            }
-            dateIterator = dateIterator.plusDays(1);
-        }
-
-        if (!batch.isEmpty()) {
-            flightBatchPersistenceService.saveBatch(batch);
-            totalGenerated += batch.size();
-        }
-
-        return totalGenerated;
+        return flightRepository.findExistingDepartureTimesInRange(route.getId(), startDateTime, endDateTime)
+                .stream()
+                .map(OffsetDateTime::toInstant)
+                .collect(Collectors.toSet());
     }
 
     private List<FlightEntity> generateFlightsBySchedules(Set<LocalTime> routeSchedules, LocalDate date, ZoneId timeZoneId, RouteEntity route) {
@@ -170,8 +164,7 @@ public class TransactionalFlightGenerationService {
             return List.of();
         }
 
-        List<OffsetDateTime> existingDeparturesList = flightRepository.findExistingDepartureTimes(route, departureTimes);
-        Set<Instant> existingDepartures = toInstantSet(existingDeparturesList);
+        Set<Instant> existingDepartures = loadExistingDepartures(route, date, date, timeZoneId);
 
         List<FlightEntity> flightEntities = new ArrayList<>();
         for (OffsetDateTime departureDateTime : departureTimes) {
@@ -257,11 +250,6 @@ public class TransactionalFlightGenerationService {
         return flights.size();
     }
 
-    private Set<Instant> toInstantSet(List<OffsetDateTime> departures) {
-        return departures.stream()
-                .map(OffsetDateTime::toInstant)
-                .collect(Collectors.toSet());
-    }
 
     private static class RouteGenerationException extends RuntimeException {
         private final Long routeId;
