@@ -174,7 +174,7 @@ class FlightQueryServiceTest {
         given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME))))).willReturn(flightPage);
         given(flightMapper.toDto(expectedFlight)).willReturn(dto);
 
-        Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, 0, 10);
+        Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, null, null, 0, 10);
         assertThat(result.getContent()).containsExactly(dto);
         assertThat(result.getTotalElements()).isEqualTo(1);
     }

@@ -23,6 +23,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Tag(name = "Flight Queries", description = "Operations related to flight querying")
@@ -107,7 +109,7 @@ public class FlightQueryController {
 
 
     @Operation(summary = "Get all flights paginated",
-            description = "Returns a paginated list of all flights ordered from newest to oldest, optionally filtered by flight number and status.")
+            description = "Returns a paginated list of all flights ordered from newest to oldest, optionally filtered by flight number, status, and date range.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Paginated flights retrieved successfully, even if content is empty",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
@@ -122,6 +124,12 @@ public class FlightQueryController {
             @RequestParam(required = false)
             @Parameter(description = "Flight status", example = "SCHEDULED")
             FlightStatus status,
+            @RequestParam(required = false)
+            @Parameter(description = "Initial date for filtering flights (inclusive)", example = "2026-02-01")
+            LocalDate dateFrom,
+            @RequestParam(required = false)
+            @Parameter(description = "Final date for filtering flights (inclusive)", example = "2026-02-28")
+            LocalDate dateTo,
             @RequestParam @Min(1) @NotNull
             @Parameter(description = "Number of flight records to be returned per page", example = "10", required = true)
             int size,
@@ -129,7 +137,7 @@ public class FlightQueryController {
             @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
             int page
     ) {
-        Page<ResponseFlightDto> flights = flightQueryService.getAllFlightsPaginated(flightNumber, status, page, size);
+        Page<ResponseFlightDto> flights = flightQueryService.getAllFlightsPaginated(flightNumber, status, dateFrom, dateTo, page, size);
         return ResponseEntity.ok(PagedResponse.from(flights));
     }
 

@@ -3,6 +3,7 @@ package com.falcon.booking.feature.airport.controller;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
 import com.falcon.booking.feature.airport.dto.AirportDto;
+import com.falcon.booking.feature.airport.dto.CreateAirportDto;
 import com.falcon.booking.feature.airport.service.AirportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,16 +13,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Airports", description = "Airport retrieval operations")
+@Tag(name = "Airports", description = "Airport retrieval and creation operations")
 @RestController
 @RequestMapping("/v1/airports")
 @Validated
@@ -51,8 +54,8 @@ public class AirportController {
     })
     @GetMapping("/{iataCode}")
     public ResponseEntity<AirportDto> getAirport(@PathVariable @Size(min = 3, max = 3, message = "Iata Code must be a String with 3 characters")
-                                                 @Parameter(description = "Airport unique three character IATA code", example = "BOG")
-                                                 String iataCode) {
+                                                  @Parameter(description = "Airport unique three character IATA code", example = "BOG")
+                                                  String iataCode) {
         return ResponseEntity.ok(airportService.getAirportByIataCode(iataCode));
     }
 
@@ -71,14 +74,37 @@ public class AirportController {
     })
     @GetMapping
     public ResponseEntity<PagedResponse<AirportDto>> getAirports(@RequestParam @Min(1) @NotNull
-                                                            @Parameter(description = "Number of airport records to be returned per page", example = "10", required = true)
-                                                            int size,
-                                                                 @RequestParam @Min(0) @NotNull
-                                                            @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
-                                                            int page) {
+                                                             @Parameter(description = "Number of airport records to be returned per page", example = "10", required = true)
+                                                             int size,
+                                                                  @RequestParam @Min(0) @NotNull
+                                                             @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+                                                             int page) {
         Page<AirportDto> airportPage = airportService.getAllAirports(page, size);
         return ResponseEntity.ok(PagedResponse.from(airportPage));
     }
 
+    @Operation(summary = "Create a new airport", description = "Creates a new airport record. Validates that the timezone ID is valid. Requires ADMIN role.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Airport created successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AirportDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body or invalid timezone",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "409", description = "Airport with this IATA code already exists",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @PostMapping
+    public ResponseEntity<AirportDto> createAirport(@Valid @RequestBody
+                                                     @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                                             description = "Airport creation data",
+                                                             required = true)
+                                                     CreateAirportDto dto) {
+        AirportDto created = airportService.createAirport(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
 
 }
