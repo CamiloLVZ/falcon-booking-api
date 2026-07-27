@@ -73,7 +73,7 @@ public class RouteCommandService {
             throw new RouteSameOriginAndDestinationException();
     }
 
-    private void checkAirplaneTypeIsActive(AirplaneTypeEntity airplaneType){
+    private void checkAirplaneTypeIsActive(AirplaneTypeEntity airplaneType) {
         if (!airplaneType.isActive())
             throw new RouteAirplaneTypeIsNotActiveException(airplaneType.getId());
     }
@@ -81,13 +81,13 @@ public class RouteCommandService {
     @Transactional
     public ResponseRouteDto updateRoute(String flightNumber, UpdateRouteDto updateRouteDto) {
         RouteEntity entityToUpdate = routeQueryService.getRouteEntity(flightNumber);
-
-        checkRouteIsDraftForModifications(flightNumber, updateRouteDto, entityToUpdate);
+        checkRouteIsDraftForModifications(updateRouteDto, entityToUpdate);
 
         if (updateRouteDto.airportOriginIataCode() != null) {
             AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(updateRouteDto.airportOriginIataCode());
             entityToUpdate.setAirportOrigin(airportOrigin);
         }
+
         if (updateRouteDto.airportDestinationIataCode() != null) {
             AirportEntity airportDestination = airportService.getAirportEntityByIataCode(updateRouteDto.airportDestinationIataCode());
             entityToUpdate.setAirportDestination(airportDestination);
@@ -103,14 +103,22 @@ public class RouteCommandService {
             entityToUpdate.setDefaultAirplaneType(airplaneType);
         }
 
+        if (updateRouteDto.basePriceEconomy() != null)
+            entityToUpdate.setBasePriceEconomy(updateRouteDto.basePriceEconomy());
+
+        if (updateRouteDto.basePriceFirstClass() != null)
+            entityToUpdate.setBasePriceFirstClass(updateRouteDto.basePriceFirstClass());
+
         log.info("Route number {} was updated", entityToUpdate.getFlightNumber());
         return routeMapper.toResponseDto(entityToUpdate);
     }
 
-    private void checkRouteIsDraftForModifications(String flightNumber, UpdateRouteDto updateRouteDto, RouteEntity entityToUpdate) {
-        boolean hasOnlyDraftModifications = updateRouteDto.airportDestinationIataCode() != null || updateRouteDto.airportOriginIataCode() != null;
-        if (hasOnlyDraftModifications && !entityToUpdate.isDraft())
-            throw new RouteDraftInvalidUpdateException(flightNumber);
+    private void checkRouteIsDraftForModifications(UpdateRouteDto updateRouteDto, RouteEntity entityToUpdate) {
+        boolean hasDraftModifications =
+                updateRouteDto.airportOriginIataCode() != null && !updateRouteDto.airportOriginIataCode().equals(entityToUpdate.getAirportOrigin().getIataCode())
+                        || updateRouteDto.airportDestinationIataCode() != null && !updateRouteDto.airportDestinationIataCode().equals(entityToUpdate.getAirportDestination().getIataCode());
+        if (hasDraftModifications && !entityToUpdate.isDraft())
+            throw new RouteDraftInvalidUpdateException(entityToUpdate.getFlightNumber());
     }
 
     private void checkOriginDifferentFromDestination(RouteEntity entity) {
