@@ -56,7 +56,8 @@ public class AuthServiceTest {
                 5L,
                 "client@test.com",
                 "encoded-password",
-                List.of(new SimpleGrantedAuthority("ROLE_CLIENT")));
+                List.of(new SimpleGrantedAuthority("ROLE_CLIENT")),
+                true);
 
         given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn(authentication);

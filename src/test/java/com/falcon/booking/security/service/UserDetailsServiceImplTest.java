@@ -40,6 +40,7 @@ public class UserDetailsServiceImplTest {
         user.setId(10L);
         user.setEmail("admin@test.com");
         user.setPassword("encoded-password");
+        user.setDisabled(false);
 
         UserRoleEntity userRole = new UserRoleEntity();
         setField(userRole, "user", user);
