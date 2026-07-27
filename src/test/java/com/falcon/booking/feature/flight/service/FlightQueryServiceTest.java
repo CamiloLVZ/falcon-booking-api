@@ -256,7 +256,7 @@ class FlightQueryServiceTest {
         given(pricingService.calculatePrice(flight, SeatClass.FIRST_CLASS)).willReturn(BigDecimal.ZERO);
 
         FlightSeatMapDto result = flightQueryService.getSeatMap(11L);
-
+        assertThat(result.seats()).isNotEmpty();
         assertThat(result.seats()).allMatch(s -> s.status() == SeatStatus.AVAILABLE);
     }
 
