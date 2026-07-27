@@ -4,7 +4,6 @@ import com.falcon.booking.common.email.dto.EmailAttachment;
 import com.falcon.booking.common.email.dto.EmailInlineImage;
 import com.falcon.booking.common.email.dto.EmailRequest;
 import com.falcon.booking.common.email.exception.EmailSendingException;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

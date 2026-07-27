@@ -1,3 +1,9 @@
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-green)
+![Build](https://img.shields.io/github/actions/workflow/status/CamiloLVZ/falcon-booking-api/backend-ci.yml?branch=main)
+![Sonar Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=CamiloLVZ_falcon-booking-api&metric=alert_status)
+![Coverage](https://sonarcloud.io/api/project_badges/measure?project=CamiloLVZ_falcon-booking-api&metric=coverage)
+
 # Falcon Airlines - Flight Reservation System (Backend)
 
 Backend application for the flight management system of Falcon Airlines, a fictional airline company. The system manages routes, flights, seat availability, reservations, and admin operations. It is designed as a portfolio-ready backend focused on maintainability, modularity, and real-world operational flows.
@@ -71,7 +77,12 @@ Key business entities:
 - Flyway
 - Docker
 - OpenAPI / Swagger UI
-- JUnit 5 + Mockito
+- JUnit 5
+- Mockito
+- Testcontainers
+- JaCoCo
+- SonarCloud
+- GitHub Actions
 
 ---
 
@@ -89,6 +100,28 @@ The following diagram represents the core data model of the Falcon Booking Syste
 
 ---
 
+## Quality Assurance
+
+The project includes an automated quality pipeline focused on code correctness, maintainability, and long-term reliability.
+
+- **Unit Tests** using JUnit 5 and Mockito
+- **Integration Tests** using Testcontainers with PostgreSQL to validate production-like behavior
+- **JaCoCo** for code coverage reporting
+- **SonarCloud** for static analysis of bugs, vulnerabilities, code smells, and maintainability
+
+---
+
+## CI/CD
+
+The project uses **GitHub Actions** to automate the delivery pipeline.
+
+- Executes unit and integration tests on every push and pull request
+- Generates JaCoCo coverage reports
+- Runs SonarCloud static analysis
+- Builds and publishes the Docker image to GitHub Container Registry on pushes to `main`
+- Triggers automatic deployment through a Render Deploy Hook
+
+---
 ## How to Run
 
 ### Prerequisites
@@ -143,6 +176,8 @@ instead of being hardcoded. This makes the system easier to adapt to different o
   Logical issuer name embedded in generated JWT tokens.
 - `app.jwt.expiration-ms`
   Token lifetime in milliseconds.
+- `app.password-reset.token-expiration-minutes`
+  Time until password reset tokens expire
 
 #### Flight Generation Rules
 
@@ -165,6 +200,8 @@ instead of being hardcoded. This makes the system easier to adapt to different o
   Number of minutes before departure when boarding starts.
 - `app.flight.boarding.minutes-before-to-close`
   Number of minutes before departure when boarding closes.
+- `app.reservation.cancellation.minimum-hours-before-departure`
+  Minimum number of hours before departure when reservation cancellation is permitted.
 
 These properties are useful to show recruiters that core business rules were designed to be configurable and environment-driven, rather than hidden inside service implementations.
 
@@ -230,18 +267,29 @@ OpenAPI JSON should be available at:
 http://localhost:8080/api/v3/api-docs
 ```
 
-### Run Tests
+### Run All Tests
 
 ```bash
-./mvnw test
+./mvnw verify
 ```
 
 On Windows:
 
 ```powershell
-.\mvnw.cmd test
+.\mvnw.cmd verify
 ```
 
+This command executes:
+
+- Unit tests
+- Integration tests (Testcontainers)
+- JaCoCo coverage report generation
+
+
+The coverage report is generated at:
+```md
+target/site/jacoco/index.html
+```
 ---
 
 ## API Documentation

@@ -9,6 +9,7 @@ import com.falcon.booking.feature.route.dto.ResponseRouteDto;
 import com.falcon.booking.feature.route.dto.UpdateRouteDto;
 import com.falcon.booking.feature.route.exception.RouteAirplaneTypeIsNotActiveException;
 import com.falcon.booking.feature.route.exception.RouteAlreadyExistsException;
+import com.falcon.booking.feature.route.exception.RouteDraftInvalidUpdateException;
 import com.falcon.booking.feature.route.exception.RouteSameOriginAndDestinationException;
 import com.falcon.booking.feature.route.mapper.RouteMapper;
 import com.falcon.booking.persistence.entity.*;
@@ -31,8 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class RouteCommandServiceTest {
@@ -169,5 +169,79 @@ public class RouteCommandServiceTest {
 
         assertThat(result).isEqualTo(responseDto);
         assertThat(route.isInactive()).isTrue();
+    }
+
+    @DisplayName("Should activate route")
+    @Test
+    void shouldActivateRoute_activateRoute() {
+        RouteEntity route = createRouteEntity("AV1234");
+        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.ACTIVE, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeMapper.toResponseDto(route)).willReturn(responseDto);
+
+        ResponseRouteDto result = routeCommandService.activateRoute("AV1234");
+
+        assertThat(result).isEqualTo(responseDto);
+        assertThat(route.isActive()).isTrue();
+    }
+
+    @DisplayName("Should update route with optional fields")
+    @Test
+    void shouldUpdateRoute_updateRoute_withOptionalFields() {
+        RouteEntity route = createRouteEntity("AV1234");
+        route.setStatus(RouteStatus.DRAFT);
+        AirportEntity newOrigin = new AirportEntity();
+        newOrigin.setIataCode("CTG");
+        newOrigin.setTimezone("America/Bogota");
+        AirportEntity newDestination = new AirportEntity();
+        newDestination.setIataCode("BAQ");
+        newDestination.setTimezone("America/Bogota");
+        AirplaneTypeEntity newAirplaneType = createAirplaneType(AirplaneTypeStatus.ACTIVE);
+        newAirplaneType.setId(2L);
+
+        UpdateRouteDto updateDto = new UpdateRouteDto("CTG", "BAQ", 2L, 90, null, null);
+        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 90, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+        given(airportService.getAirportEntityByIataCode("CTG")).willReturn(newOrigin);
+        given(airportService.getAirportEntityByIataCode("BAQ")).willReturn(newDestination);
+        given(airplaneTypeService.getAirplaneTypeEntity(2L)).willReturn(newAirplaneType);
+        given(routeMapper.toResponseDto(route)).willReturn(responseDto);
+
+        ResponseRouteDto result = routeCommandService.updateRoute("AV1234", updateDto);
+
+        assertThat(result).isEqualTo(responseDto);
+        assertThat(route.getDurationMinutes()).isEqualTo(90);
+        assertThat(route.getAirportOrigin().getIataCode()).isEqualTo("CTG");
+        assertThat(route.getAirportDestination().getIataCode()).isEqualTo("BAQ");
+        assertThat(route.getDefaultAirplaneType().getId()).isEqualTo(2L);
+    }
+
+    @DisplayName("Should throw exception when updating non-draft route with destination changes")
+    @Test
+    void shouldThrowException_updateRoute_nonDraftWithDestinationChanges() {
+        RouteEntity route = createRouteEntity("AV1234");
+        route.setStatus(RouteStatus.ACTIVE);
+        UpdateRouteDto updateDto = new UpdateRouteDto("CTG", null, null, null, null, null);
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+
+        assertThrows(RouteDraftInvalidUpdateException.class, () ->
+                routeCommandService.updateRoute("AV1234", updateDto));
+    }
+
+    @DisplayName("Should throw exception when updating route with same origin and destination")
+    @Test
+    void shouldThrowException_updateRoute_sameOriginAndDestination() {
+        RouteEntity route = createRouteEntity("AV1234");
+        route.getAirportOrigin().setIataCode("BOG");
+        route.getAirportDestination().setIataCode("BOG");
+        UpdateRouteDto updateDto = new UpdateRouteDto(null, null, null, 90, null, null);
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+
+        assertThrows(RouteSameOriginAndDestinationException.class, () ->
+                routeCommandService.updateRoute("AV1234", updateDto));
     }
 }

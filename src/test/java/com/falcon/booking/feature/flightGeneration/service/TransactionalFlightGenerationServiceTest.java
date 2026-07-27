@@ -356,7 +356,7 @@ class TransactionalFlightGenerationServiceTest {
             RouteEntity route = createRoute(Set.of(horizonDay), Set.of(LocalTime.of(8, 0), LocalTime.of(14, 0)));
 
             given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
-            given(flightRepository.findExistingDepartureTimes(any(), anyList())).willReturn(Collections.emptyList());
+            given(flightRepository.findExistingDepartureTimesInRange(anyLong(), any(), any())).willReturn(Collections.emptyList());
             willDoNothing().given(flightBatchPersistenceService).saveBatch(anyList());
 
             int generated = service.generateFlightsForRouteAtHorizon(routeId);
@@ -374,7 +374,7 @@ class TransactionalFlightGenerationServiceTest {
             OffsetDateTime existingDeparture = generatedDeparture.withOffsetSameInstant(ZoneOffset.UTC);
 
             given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
-            given(flightRepository.findExistingDepartureTimes(any(), anyList())).willReturn(List.of(existingDeparture));
+            given(flightRepository.findExistingDepartureTimesInRange(anyLong(), any(), any())).willReturn(List.of(existingDeparture));
 
             int generated = service.generateFlightsForRouteAtHorizon(routeId);
 
@@ -384,7 +384,7 @@ class TransactionalFlightGenerationServiceTest {
 
         @Test
         void shouldReturnZeroWhenRouteDoesNotOperateThatDay() {
-            DayOfWeek differentDay = horizonDay == DayOfWeek.MONDAY ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
+            DayOfWeek differentDay = horizonDay.equals(DayOfWeek.MONDAY) ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
             RouteEntity route = createRoute(Set.of(differentDay), Set.of(LocalTime.of(8, 0), LocalTime.of(14, 0)));
 
             given(routeRepository.findById(routeId)).willReturn(Optional.of(route));
@@ -426,7 +426,7 @@ class TransactionalFlightGenerationServiceTest {
 
             given(routeRepository.findIdsByStatus(RouteStatus.ACTIVE)).willReturn(routeIds);
             given(routeRepository.findById(anyLong())).willReturn(Optional.of(route));
-            given(flightRepository.findExistingDepartureTimes(any(), anyList())).willReturn(Collections.emptyList());
+            given(flightRepository.findExistingDepartureTimesInRange(anyLong(), any(), any())).willReturn(Collections.emptyList());
             willDoNothing().given(flightBatchPersistenceService).saveBatch(anyList());
 
             int totalGenerated = service.generateFlightsForAllRoutesAtHorizon();
@@ -441,14 +441,14 @@ class TransactionalFlightGenerationServiceTest {
             RouteEntity routeThatOperates = createRoute(Set.of(horizonDay), Set.of(LocalTime.of(8, 0)));
             routeThatOperates.setId(1L);
 
-            DayOfWeek differentDay = horizonDay == DayOfWeek.MONDAY ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
+            DayOfWeek differentDay = horizonDay.equals(DayOfWeek.MONDAY) ? DayOfWeek.TUESDAY : DayOfWeek.MONDAY;
             RouteEntity routeThatDoesNotOperate = createRoute(Set.of(differentDay), Set.of(LocalTime.of(8, 0)));
             routeThatDoesNotOperate.setId(2L);
 
             given(routeRepository.findIdsByStatus(RouteStatus.ACTIVE)).willReturn(routeIds);
             given(routeRepository.findById(1L)).willReturn(Optional.of(routeThatOperates));
             given(routeRepository.findById(2L)).willReturn(Optional.of(routeThatDoesNotOperate));
-            given(flightRepository.findExistingDepartureTimes(any(), anyList())).willReturn(Collections.emptyList());
+            given(flightRepository.findExistingDepartureTimesInRange(anyLong(), any(), any())).willReturn(Collections.emptyList());
             willDoNothing().given(flightBatchPersistenceService).saveBatch(anyList());
 
             int totalGenerated = service.generateFlightsForAllRoutesAtHorizon();
