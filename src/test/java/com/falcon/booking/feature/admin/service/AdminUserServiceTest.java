@@ -251,4 +251,37 @@ class AdminUserServiceTest {
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getEmail()).isEqualTo("same@test.com");
     }
+
+    @DisplayName("Should toggle disabled from false to true")
+    @Test
+    void shouldToggleDisabledFalseToTrue() {
+        UserEntity user = createUser(1L, "user@test.com", false, "CLIENT");
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+
+        adminUserService.toggleUserDisabled(1L);
+
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getDisabled()).isTrue();
+    }
+
+    @DisplayName("Should toggle disabled from true to false")
+    @Test
+    void shouldToggleDisabledTrueToFalse() {
+        UserEntity user = createUser(1L, "user@test.com", true, "CLIENT");
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+
+        adminUserService.toggleUserDisabled(1L);
+
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getDisabled()).isFalse();
+    }
+
+    @DisplayName("Should throw exception when toggling disabled for non-existent user")
+    @Test
+    void shouldThrowException_toggleUserNotFound() {
+        given(userRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class,
+                () -> adminUserService.toggleUserDisabled(99L));
+    }
 }

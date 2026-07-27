@@ -109,6 +109,27 @@ public class AdminController {
         return ResponseEntity.ok(PagedResponse.from(reservations));
     }
 
+    @Operation(summary = "Enable or disable a user",
+            description = "Toggles the disabled status of a user account. Requires ADMIN role.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User disabled status toggled successfully"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @PatchMapping("/users/{userId}/toggle-disabled")
+    public ResponseEntity<Void> toggleUserDisabled(
+            @PathVariable
+            @Parameter(description = "User numeric unique identifier", example = "1")
+            Long userId) {
+        adminUserService.toggleUserDisabled(userId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @Operation(summary = "Update user email or password",
             description = "Updates the email and/or password of a user. At least one field must be provided. Requires ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth"))

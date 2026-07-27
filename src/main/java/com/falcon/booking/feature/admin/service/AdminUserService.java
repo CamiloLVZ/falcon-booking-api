@@ -47,6 +47,14 @@ public class AdminUserService {
     }
 
     @Transactional
+    public void toggleUserDisabled(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.valueOf(userId)));
+        user.toggleDisabled();
+        userRepository.save(user);
+    }
+
+    @Transactional
     public void updateUserCredentials(Long userId, UpdateUserCredentialsDto dto) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.valueOf(userId)));
