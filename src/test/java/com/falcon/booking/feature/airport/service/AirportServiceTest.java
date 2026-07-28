@@ -15,12 +15,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -124,13 +127,13 @@ public class AirportServiceTest {
         Page<AirportEntity> airportPage = new PageImpl<>(List.of(airport1, airport2), pageable, 2);
         AirportDto dto1 = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
         AirportDto dto2 = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", countryDto, "America/Bogota");
-        given(airportRepository.findAll(pageable)).willReturn(airportPage);
+        given(airportRepository.findAll(any(Specification.class), eq(pageable))).willReturn(airportPage);
         given(airportMapper.toDto(airport1)).willReturn(dto1);
         given(airportMapper.toDto(airport2)).willReturn(dto2);
 
-        Page<AirportDto> pageFound = airportService.getAllAirports(0, 10);
+        Page<AirportDto> pageFound = airportService.getAllAirports(null, null, 0, 10);
 
-        verify(airportRepository).findAll(pageable);
+        verify(airportRepository).findAll(any(Specification.class), eq(pageable));
         verify(airportMapper).toDto(airport1);
         verify(airportMapper).toDto(airport2);
         assertThat(pageFound.getContent()).containsExactly(dto1, dto2);
@@ -145,11 +148,11 @@ public class AirportServiceTest {
     void shouldReturnEmptyDtoList_getAllAirports() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
         Page<AirportEntity> airportPage = new PageImpl<>(List.of(), pageable, 0);
-        given(airportRepository.findAll(pageable)).willReturn(airportPage);
+        given(airportRepository.findAll(any(Specification.class), eq(pageable))).willReturn(airportPage);
 
-        Page<AirportDto> pageFound = airportService.getAllAirports(0, 10);
+        Page<AirportDto> pageFound = airportService.getAllAirports(null, null, 0, 10);
 
-        verify(airportRepository).findAll(pageable);
+        verify(airportRepository).findAll(any(Specification.class), eq(pageable));
         assertThat(pageFound).isNotNull();
         assertThat(pageFound.getContent()).isEmpty();
         assertThat(pageFound.getNumber()).isZero();

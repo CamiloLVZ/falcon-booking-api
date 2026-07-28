@@ -63,7 +63,9 @@ public class RouteQueryService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ResponseRouteDto> getAllRoutes(String airportOriginIataCode, String airportDestinationIataCode, RouteStatus status, int page, int size) {
+    public Page<ResponseRouteDto> getAllRoutes(String airportOriginIataCode, String airportDestinationIataCode,
+                                                RouteStatus status, String flightNumber, Long airplaneTypeId,
+                                                int page, int size) {
         String normalizedOrigin = StringNormalizer.normalize(airportOriginIataCode);
         String normalizedDestination = StringNormalizer.normalize(airportDestinationIataCode);
 
@@ -71,6 +73,8 @@ public class RouteQueryService {
         specification = specification.and(RouteSpecifications.hasOriginIataCode(normalizedOrigin));
         specification = specification.and(RouteSpecifications.hasDestinationIataCode(normalizedDestination));
         specification = specification.and(RouteSpecifications.hasStatus(status));
+        specification = specification.and(RouteSpecifications.flightNumberContains(flightNumber));
+        specification = specification.and(RouteSpecifications.hasAirplaneTypeId(airplaneTypeId));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("flightNumber").ascending());
         return routeRepository.findAll(specification, pageable).map(routeMapper::toResponseDto);

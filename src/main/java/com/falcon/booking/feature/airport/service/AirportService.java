@@ -10,11 +10,13 @@ import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.AirportRepository;
+import com.falcon.booking.persistence.specification.AirportSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,9 +50,13 @@ public class AirportService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AirportDto> getAllAirports(int page, int size) {
+    public Page<AirportDto> getAllAirports(String countryIsoCode, String search, int page, int size) {
+        Specification<AirportEntity> spec = Specification.allOf();
+        spec = spec.and(AirportSpecifications.hasCountryIsoCode(countryIsoCode));
+        spec = spec.and(AirportSpecifications.nameOrIataContains(search));
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("city").ascending());
-        Page<AirportEntity> airportEntities = airportRepository.findAll(pageable);
+        Page<AirportEntity> airportEntities = airportRepository.findAll(spec, pageable);
         return airportEntities.map(airportMapper::toDto);
     }
     @Transactional(readOnly = true)

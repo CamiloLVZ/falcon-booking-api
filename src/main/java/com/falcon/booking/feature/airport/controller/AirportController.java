@@ -60,7 +60,7 @@ public class AirportController {
     }
 
 
-    @Operation(summary = "Get airports", description = "Returns a paginated list with all registered airports. Requires authentication with JWT token and ADMIN role",
+    @Operation(summary = "Get airports", description = "Returns a paginated list with all registered airports, with optional filters by country ISO code, name or IATA code. Requires authentication with JWT token and ADMIN role",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Paginated airports retrieved successfully, even if content is empty.",
@@ -73,13 +73,20 @@ public class AirportController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
     })
     @GetMapping
-    public ResponseEntity<PagedResponse<AirportDto>> getAirports(@RequestParam @Min(1) @NotNull
-                                                             @Parameter(description = "Number of airport records to be returned per page", example = "10", required = true)
-                                                             int size,
-                                                                  @RequestParam @Min(0) @NotNull
-                                                             @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
-                                                             int page) {
-        Page<AirportDto> airportPage = airportService.getAllAirports(page, size);
+    public ResponseEntity<PagedResponse<AirportDto>> getAirports(
+            @RequestParam(required = false)
+            @Parameter(description = "Filter by country ISO code", example = "CO")
+            String country,
+            @RequestParam(required = false)
+            @Parameter(description = "Search by airport name or IATA code (partial match)", example = "BOG")
+            String search,
+            @RequestParam @Min(1) @NotNull
+            @Parameter(description = "Number of airport records to be returned per page", example = "10", required = true)
+            int size,
+            @RequestParam @Min(0) @NotNull
+            @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+            int page) {
+        Page<AirportDto> airportPage = airportService.getAllAirports(country, search, page, size);
         return ResponseEntity.ok(PagedResponse.from(airportPage));
     }
 
