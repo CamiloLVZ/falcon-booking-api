@@ -72,6 +72,7 @@ SET timezone = CASE
                    WHEN id_country = 32 THEN 'America/Cayenne'      -- CAY
 
                    ELSE 'UTC' -- Valor por defecto si no coincide ninguno
-    END;
+    END
+WHERE timezone IS NULL;
 
 ALTER TABLE airport ALTER COLUMN timezone SET NOT NULL;
