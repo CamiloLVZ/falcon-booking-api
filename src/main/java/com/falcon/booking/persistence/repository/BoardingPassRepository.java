@@ -15,6 +15,7 @@ public interface BoardingPassRepository extends JpaRepository<BoardingPassEntity
     @EntityGraph(attributePaths = {
             "passengerReservation.flight", "passengerReservation.flight.route",
             "passengerReservation.flight.route.airportOrigin", "passengerReservation.flight.route.airportDestination",
-            "passengerReservation.passenger", "passengerReservation.passenger.countryNationality"})
+            "passengerReservation.passenger", "passengerReservation.passenger.countryNationality",
+            "passengerReservation.flight", "passengerReservation.flight.airplaneType"})
     Optional<BoardingPassEntity> findByQrToken(UUID qrToken);
 }
