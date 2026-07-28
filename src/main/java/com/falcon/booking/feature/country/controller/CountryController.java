@@ -5,6 +5,7 @@ import com.falcon.booking.common.web.PagedResponse;
 import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.feature.airport.service.AirportService;
 import com.falcon.booking.feature.country.dto.CountryDto;
+import com.falcon.booking.feature.country.dto.CreateCountryDto;
 import com.falcon.booking.feature.country.service.CountryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,12 +14,15 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +74,30 @@ public class CountryController {
         return ResponseEntity.ok(countries);
     }
 
+
+    @Operation(summary = "Create a new country", description = "Creates a new country record. Requires ADMIN role.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Country created successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CountryDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "409", description = "Country with this ISO code already exists",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @PostMapping
+    public ResponseEntity<CountryDto> createCountry(@Valid @RequestBody
+                                                     @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                                             description = "Country creation data",
+                                                             required = true)
+                                                     CreateCountryDto dto) {
+        CountryDto created = countryService.createCountry(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
 
     @Operation(summary = "Get airports of a country",
             description = "Returns a paginated list with all the airports related to a country using its unique two characters ISO code.")

@@ -76,6 +76,8 @@ public class SecurityConfig {
                                 "/v1/routes/**"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers("/v1/admin/**").hasRole("ADMIN")
+
                         .anyRequest().hasRole("ADMIN")
 
                 ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

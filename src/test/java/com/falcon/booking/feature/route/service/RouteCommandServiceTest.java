@@ -32,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class RouteCommandServiceTest {
@@ -243,5 +244,52 @@ public class RouteCommandServiceTest {
 
         assertThrows(RouteSameOriginAndDestinationException.class, () ->
                 routeCommandService.updateRoute("AV1234", updateDto));
+    }
+
+    @DisplayName("Should throw exception when updating non-draft route with destination change")
+    @Test
+    void shouldThrowException_updateRoute_nonDraftWithOriginChange_shouldThrow() {
+        RouteEntity route = createRouteEntity("AV1234");
+        route.setStatus(RouteStatus.ACTIVE);
+        UpdateRouteDto updateDto = new UpdateRouteDto(null, "BAQ", null, null, null, null);
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+
+        assertThrows(RouteDraftInvalidUpdateException.class, () ->
+                routeCommandService.updateRoute("AV1234", updateDto));
+    }
+
+    @DisplayName("Should update duration and base prices")
+    @Test
+    void shouldUpdateRoute_durationAndPrices() {
+        RouteEntity route = createRouteEntity("AV1234");
+        UpdateRouteDto updateDto = new UpdateRouteDto(null, null, null, 90, BigDecimal.valueOf(150), BigDecimal.valueOf(300));
+        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 90, RouteStatus.DRAFT, BigDecimal.valueOf(150), BigDecimal.valueOf(300));
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeMapper.toResponseDto(route)).willReturn(responseDto);
+
+        ResponseRouteDto result = routeCommandService.updateRoute("AV1234", updateDto);
+
+        assertThat(result).isEqualTo(responseDto);
+        assertThat(route.getDurationMinutes()).isEqualTo(90);
+        assertThat(route.getBasePriceEconomy()).isEqualByComparingTo(BigDecimal.valueOf(150));
+        assertThat(route.getBasePriceFirstClass()).isEqualByComparingTo(BigDecimal.valueOf(300));
+    }
+
+    @DisplayName("Should not update fields when update dto has null values")
+    @Test
+    void shouldNotUpdateFields_whenDtoHasNulls() {
+        RouteEntity route = createRouteEntity("AV1234");
+        UpdateRouteDto updateDto = new UpdateRouteDto(null, null, null, null, null, null);
+        ResponseRouteDto responseDto = new ResponseRouteDto("AV1234", null, null, null, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+        given(routeMapper.toResponseDto(route)).willReturn(responseDto);
+
+        ResponseRouteDto result = routeCommandService.updateRoute("AV1234", updateDto);
+
+        assertThat(result).isEqualTo(responseDto);
+        assertThat(route.getDurationMinutes()).isEqualTo(60);
     }
 }

@@ -62,6 +62,7 @@ class CheckInControllerIT {
                 10L,
                 passengerDto,
                 15,
+                null,
                 SeatClass.ECONOMY,
                 PassengerReservationStatus.CHECKED_IN
         );

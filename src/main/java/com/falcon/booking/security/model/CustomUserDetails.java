@@ -16,6 +16,7 @@ public class CustomUserDetails implements UserDetails {
     private String email;
     private String password;
     private List<GrantedAuthority> authorities = new ArrayList<>();
+    private boolean enabled;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -30,6 +31,11 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public List<String> getStringAuthorities(){

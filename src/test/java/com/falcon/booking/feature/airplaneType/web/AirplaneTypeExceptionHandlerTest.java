@@ -1,11 +1,9 @@
 package com.falcon.booking.feature.airplaneType.web;
 
 import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.airplaneType.exception.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

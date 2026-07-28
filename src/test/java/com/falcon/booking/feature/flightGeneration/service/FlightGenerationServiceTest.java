@@ -4,8 +4,6 @@ import com.falcon.booking.common.enums.FlightGenerationStatus;
 import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.feature.airplaneType.service.AirplaneTypeService;
-import com.falcon.booking.feature.flight.mapper.FlightMapper;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.mapper.FlightGenerationMapper;
@@ -13,7 +11,6 @@ import com.falcon.booking.feature.route.exception.RouteNotActiveException;
 import com.falcon.booking.feature.route.service.RouteQueryService;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
-import com.falcon.booking.persistence.repository.FlightRepository;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,13 +19,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -184,6 +186,81 @@ public class FlightGenerationServiceTest {
                 FlightGenerationAlreadyRunningException.class,
                 () -> flightGenerationService.startDailyFlightGeneration(LocalDate.now())
         );
+    }
+
+    @DisplayName("Should return all flight generations when no filters applied")
+    @Test
+    void shouldReturnAllFlightGenerations_noFilters() {
+        FlightGenerationEntity entity = FlightGenerationEntity.startGlobalGeneration();
+        entity.setId(1L);
+        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, entity.getStartedAt(), null, null, "/flight-generations/1");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startedAt").descending());
+        Page<FlightGenerationEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+
+        given(flightGenerationRepository.findAll(any(Specification.class), eq(pageable))).willReturn(page);
+        given(flightGenerationMapper.toDto(entity)).willReturn(dto);
+
+        Page<ResponseFlightsGenerationDto> result = flightGenerationService.getAllFlightGenerations(null, null, null, 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @DisplayName("Should filter flight generations by route flight number")
+    @Test
+    void shouldFilterFlightGenerationsByRouteFlightNumber() {
+        RouteEntity route = createRoute("AV1234", "UTC", true);
+        route.setId(5L);
+        FlightGenerationEntity entity = FlightGenerationEntity.startRouteGeneration(5L);
+        entity.setId(1L);
+        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.ROUTE, 5L, null, entity.getStartedAt(), null, null, "/flight-generations/1");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startedAt").descending());
+        Page<FlightGenerationEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+
+        given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
+        given(flightGenerationRepository.findAll(any(Specification.class), eq(pageable))).willReturn(page);
+        given(flightGenerationMapper.toDto(entity)).willReturn(dto);
+
+        Page<ResponseFlightsGenerationDto> result = flightGenerationService.getAllFlightGenerations(null, null, "AV1234", 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+        verify(routeQueryService).getRouteEntity("AV1234");
+    }
+
+    @DisplayName("Should ignore blank route flight number filter")
+    @Test
+    void shouldIgnoreBlankRouteFlightNumber() {
+        FlightGenerationEntity entity = FlightGenerationEntity.startGlobalGeneration();
+        entity.setId(1L);
+        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, entity.getStartedAt(), null, null, "/flight-generations/1");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startedAt").descending());
+        Page<FlightGenerationEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+
+        given(flightGenerationRepository.findAll(any(Specification.class), eq(pageable))).willReturn(page);
+        given(flightGenerationMapper.toDto(entity)).willReturn(dto);
+
+        Page<ResponseFlightsGenerationDto> result = flightGenerationService.getAllFlightGenerations(null, null, "   ", 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+    }
+
+    @DisplayName("Should filter flight generations by type and status")
+    @Test
+    void shouldFilterFlightGenerationsByTypeAndStatus() {
+        FlightGenerationEntity entity = FlightGenerationEntity.startGlobalGeneration();
+        entity.setId(1L);
+        entity.setStatus(FlightGenerationStatus.COMPLETED);
+        entity.setFinishedAt(Instant.now());
+        ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.COMPLETED, FlightGenerationType.GLOBAL, null, null, entity.getStartedAt(), entity.getFinishedAt(), null, "/flight-generations/1");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startedAt").descending());
+        Page<FlightGenerationEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+
+        given(flightGenerationRepository.findAll(any(Specification.class), eq(pageable))).willReturn(page);
+        given(flightGenerationMapper.toDto(entity)).willReturn(dto);
+
+        Page<ResponseFlightsGenerationDto> result = flightGenerationService.getAllFlightGenerations(FlightGenerationType.GLOBAL, FlightGenerationStatus.COMPLETED, null, 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
     }
 
     @DisplayName("Should throw DataIntegrityViolationException when the error is not generation already running")

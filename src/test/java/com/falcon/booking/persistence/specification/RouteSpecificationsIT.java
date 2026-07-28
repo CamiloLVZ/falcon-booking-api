@@ -6,11 +6,7 @@ import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
-import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
-import com.falcon.booking.persistence.repository.AirportRepository;
-import com.falcon.booking.persistence.repository.CountryRepository;
-import com.falcon.booking.persistence.repository.RouteRepository;
-import com.falcon.booking.persistence.repository.BaseRepositoryTest;
+import com.falcon.booking.persistence.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -176,6 +172,89 @@ class RouteSpecificationsIT extends BaseRepositoryTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getFlightNumber()).isEqualTo("AV100");
+    }
+
+    @DisplayName("Should filter routes by flight number containing text")
+    @Test
+    void shouldFilterByFlightNumberContains() {
+        Specification<RouteEntity> spec = RouteSpecifications.flightNumberContains("AV1");
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getFlightNumber()).isEqualTo("AV100");
+    }
+
+    @DisplayName("Should return all routes when flight number is null")
+    @Test
+    void shouldReturnAllWhenFlightNumberIsNull() {
+        Specification<RouteEntity> spec = RouteSpecifications.flightNumberContains(null);
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).hasSize(3);
+    }
+
+    @DisplayName("Should return all routes when flight number is blank")
+    @Test
+    void shouldReturnAllWhenFlightNumberIsBlank() {
+        Specification<RouteEntity> spec = RouteSpecifications.flightNumberContains("   ");
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).hasSize(3);
+    }
+
+    @DisplayName("Should be case-insensitive when filtering by flight number")
+    @Test
+    void shouldBeCaseInsensitiveForFlightNumber() {
+        Specification<RouteEntity> spec = RouteSpecifications.flightNumberContains("av1");
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getFlightNumber()).isEqualTo("AV100");
+    }
+
+    @DisplayName("Should filter routes by airplane type ID")
+    @Test
+    void shouldFilterByAirplaneTypeId() {
+        Specification<RouteEntity> spec = RouteSpecifications.hasAirplaneTypeId(airplaneType.getId());
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).hasSize(3);
+    }
+
+    @DisplayName("Should return all routes when airplane type ID is null")
+    @Test
+    void shouldReturnAllWhenAirplaneTypeIdIsNull() {
+        Specification<RouteEntity> spec = RouteSpecifications.hasAirplaneTypeId(null);
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).hasSize(3);
+    }
+
+    @DisplayName("Should return empty when no routes match airplane type ID")
+    @Test
+    void shouldReturnEmptyWhenNoAirplaneTypeMatch() {
+        Specification<RouteEntity> spec = RouteSpecifications.hasAirplaneTypeId(999L);
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).isEmpty();
+    }
+
+    @DisplayName("Should combine flight number and airplane type filters")
+    @Test
+    void shouldCombineFlightNumberAndAirplaneType() {
+        Specification<RouteEntity> spec = RouteSpecifications.flightNumberContains("AV")
+                .and(RouteSpecifications.hasAirplaneTypeId(airplaneType.getId()));
+
+        List<RouteEntity> result = routeRepository.findAll(spec);
+
+        assertThat(result).hasSize(3);
     }
 
     @DisplayName("Should return empty when no routes match")

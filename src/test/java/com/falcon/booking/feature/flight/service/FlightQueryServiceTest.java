@@ -25,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
@@ -163,6 +164,23 @@ class FlightQueryServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
+    @DisplayName("Should return paginated flights with date range")
+    @Test
+    void shouldReturnFlightsPaginated_withDateRange() {
+        RouteEntity route = createRoute("AV1234", "UTC", true);
+        FlightEntity expectedFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", expectedFlight.getDepartureDateTime(), expectedFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+
+        Page<FlightEntity> flightPage = new PageImpl<>(List.of(expectedFlight), PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME)), 1);
+        given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME))))).willReturn(flightPage);
+        given(flightMapper.toDto(expectedFlight)).willReturn(dto);
+
+        Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
     @DisplayName("Should return paginated flights ordered by departure date descending")
     @Test
     void shouldReturnFlightsPaginated_OrderedDesc() {
@@ -174,7 +192,7 @@ class FlightQueryServiceTest {
         given(flightRepository.findAll(any(Specification.class), eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, FlightQueryService.SORT_FIELD_DEPARTURE_DATE_TIME))))).willReturn(flightPage);
         given(flightMapper.toDto(expectedFlight)).willReturn(dto);
 
-        Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, 0, 10);
+        Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, null, null, 0, 10);
         assertThat(result.getContent()).containsExactly(dto);
         assertThat(result.getTotalElements()).isEqualTo(1);
     }

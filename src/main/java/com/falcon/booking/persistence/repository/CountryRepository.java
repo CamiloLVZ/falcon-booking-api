@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface CountryRepository extends JpaRepository<CountryEntity, Integer> {
     List<CountryEntity> findAllByOrderByNameAsc();
     Optional<CountryEntity> findByIsoCode(String isoCode);
+    boolean existsByNameIgnoreCase(String name);
 }

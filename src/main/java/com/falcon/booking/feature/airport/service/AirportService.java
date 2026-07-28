@@ -2,19 +2,25 @@ package com.falcon.booking.feature.airport.service;
 
 import com.falcon.booking.common.utils.StringNormalizer;
 import com.falcon.booking.feature.airport.dto.AirportDto;
+import com.falcon.booking.feature.airport.dto.CreateAirportDto;
+import com.falcon.booking.feature.airport.exception.AirportAlreadyExistsException;
 import com.falcon.booking.feature.airport.exception.AirportNotFoundException;
 import com.falcon.booking.feature.airport.mapper.AirportMapper;
 import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.persistence.entity.AirportEntity;
 import com.falcon.booking.persistence.entity.CountryEntity;
 import com.falcon.booking.persistence.repository.AirportRepository;
+import com.falcon.booking.persistence.specification.AirportSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.ZoneId;
 
 @Service
 public class AirportService {
@@ -44,9 +50,13 @@ public class AirportService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AirportDto> getAllAirports(int page, int size) {
+    public Page<AirportDto> getAllAirports(String countryIsoCode, String search, int page, int size) {
+        Specification<AirportEntity> spec = Specification.allOf();
+        spec = spec.and(AirportSpecifications.hasCountryIsoCode(countryIsoCode));
+        spec = spec.and(AirportSpecifications.nameOrIataContains(search));
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("city").ascending());
-        Page<AirportEntity> airportEntities = airportRepository.findAll(pageable);
+        Page<AirportEntity> airportEntities = airportRepository.findAll(spec, pageable);
         return airportEntities.map(airportMapper::toDto);
     }
     @Transactional(readOnly = true)
@@ -55,6 +65,29 @@ public class AirportService {
         CountryEntity country = countryService.getCountryEntityByIsoCode(isoCode);
         Page<AirportEntity> airportEntities = airportRepository.findAllByCountry(country,  pageable);
         return airportEntities.map(airportMapper::toDto);
+    }
+
+    @Transactional
+    public AirportDto createAirport(CreateAirportDto dto) {
+        String normalizedIataCode = StringNormalizer.normalize(dto.iataCode());
+
+        if (airportRepository.findByIataCode(normalizedIataCode).isPresent()) {
+            throw new AirportAlreadyExistsException(dto.iataCode());
+        }
+
+        ZoneId.of(dto.timezone());
+
+        CountryEntity country = countryService.getCountryEntityByIsoCode(dto.countryIsoCode());
+
+        AirportEntity airport = new AirportEntity();
+        airport.setIataCode(normalizedIataCode);
+        airport.setName(dto.name().trim());
+        airport.setCity(dto.city().trim());
+        airport.setCountry(country);
+        airport.setTimezone(dto.timezone());
+
+        AirportEntity saved = airportRepository.save(airport);
+        return airportMapper.toDto(saved);
     }
 
 }

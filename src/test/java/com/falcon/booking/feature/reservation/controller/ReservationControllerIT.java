@@ -108,7 +108,7 @@ class ReservationControllerIT {
                 Instant.parse("2026-01-01T12:00:00Z"),
                 status,
                 flight,
-                List.of(new ResponsePassengerReservationDto(null, passenger, 12, SeatClass.ECONOMY, PassengerReservationStatus.RESERVED))
+                List.of(new ResponsePassengerReservationDto(null, passenger, 12, null, SeatClass.ECONOMY, PassengerReservationStatus.RESERVED))
         );
     }
 

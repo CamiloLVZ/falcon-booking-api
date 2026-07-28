@@ -1,6 +1,8 @@
 package com.falcon.booking.feature.country.service;
 
 import com.falcon.booking.feature.country.dto.CountryDto;
+import com.falcon.booking.feature.country.dto.CreateCountryDto;
+import com.falcon.booking.feature.country.exception.CountryAlreadyExistsException;
 import com.falcon.booking.feature.country.exception.CountryNotFoundException;
 import com.falcon.booking.feature.country.mapper.CountryMapper;
 import com.falcon.booking.persistence.entity.CountryEntity;
@@ -132,5 +134,95 @@ public class CountryServiceTest {
         verify(countryMapper).toDto(List.of());
         assertThat(listFound).isNotNull();
         assertThat(listFound).isEmpty();
+    }
+
+    @DisplayName("Should create country and return CountryDto")
+    @Test
+    void shouldCreateCountry() {
+        CreateCountryDto dto = new CreateCountryDto("Colombia", "CO");
+        CountryEntity entity = new CountryEntity();
+        entity.setName("Colombia");
+        entity.setIsoCode("CO");
+        CountryEntity saved = new CountryEntity();
+        saved.setId(1);
+        saved.setName("Colombia");
+        saved.setIsoCode("CO");
+        CountryDto expectedDto = new CountryDto("Colombia", "CO");
+
+        given(countryRepository.findByIsoCode("CO")).willReturn(Optional.empty());
+        given(countryRepository.existsByNameIgnoreCase("Colombia")).willReturn(false);
+        given(countryMapper.toEntity(dto)).willReturn(entity);
+        given(countryRepository.save(entity)).willReturn(saved);
+        given(countryMapper.toDto(saved)).willReturn(expectedDto);
+
+        CountryDto result = countryService.createCountry(dto);
+
+        assertThat(result).isEqualTo(expectedDto);
+        verify(countryRepository).findByIsoCode("CO");
+        verify(countryRepository).existsByNameIgnoreCase("Colombia");
+        verify(countryMapper).toEntity(dto);
+        verify(countryRepository).save(entity);
+        verify(countryMapper).toDto(saved);
+    }
+
+    @DisplayName("Should throw exception when country ISO code already exists")
+    @Test
+    void shouldThrowException_createCountry_duplicateIsoCode() {
+        CreateCountryDto dto = new CreateCountryDto("Colombia", "CO");
+        CountryEntity existing = new CountryEntity();
+        existing.setName("Colombia");
+        existing.setIsoCode("CO");
+
+        given(countryRepository.findByIsoCode("CO")).willReturn(Optional.of(existing));
+
+        CountryAlreadyExistsException ex =
+                assertThrows(CountryAlreadyExistsException.class,
+                        () -> countryService.createCountry(dto));
+
+        assertThat(ex.getMessage()).contains("ISO code");
+        verify(countryRepository).findByIsoCode("CO");
+    }
+
+    @DisplayName("Should throw exception when country name already exists")
+    @Test
+    void shouldThrowException_createCountry_duplicateName() {
+        CreateCountryDto dto = new CreateCountryDto("Colombia", "CO");
+
+        given(countryRepository.findByIsoCode("CO")).willReturn(Optional.empty());
+        given(countryRepository.existsByNameIgnoreCase("Colombia")).willReturn(true);
+
+        CountryAlreadyExistsException ex =
+                assertThrows(CountryAlreadyExistsException.class,
+                        () -> countryService.createCountry(dto));
+
+        assertThat(ex.getMessage()).contains("name");
+        verify(countryRepository).findByIsoCode("CO");
+        verify(countryRepository).existsByNameIgnoreCase("Colombia");
+    }
+
+    @DisplayName("Should normalize ISO code when creating country")
+    @Test
+    void shouldNormalizeIsoCode_createCountry() {
+        CreateCountryDto dto = new CreateCountryDto("Colombia", " co ");
+        CountryEntity entity = new CountryEntity();
+        entity.setName("Colombia");
+        entity.setIsoCode("CO");
+        CountryEntity saved = new CountryEntity();
+        saved.setId(1);
+        saved.setName("Colombia");
+        saved.setIsoCode("CO");
+        CountryDto expectedDto = new CountryDto("Colombia", "CO");
+
+        given(countryRepository.findByIsoCode("CO")).willReturn(Optional.empty());
+        given(countryRepository.existsByNameIgnoreCase("Colombia")).willReturn(false);
+        given(countryMapper.toEntity(dto)).willReturn(entity);
+        given(countryRepository.save(entity)).willReturn(saved);
+        given(countryMapper.toDto(saved)).willReturn(expectedDto);
+
+        CountryDto result = countryService.createCountry(dto);
+
+        assertThat(result).isEqualTo(expectedDto);
+        verify(countryRepository).findByIsoCode("CO");
+        verify(countryRepository).existsByNameIgnoreCase("Colombia");
     }
 }

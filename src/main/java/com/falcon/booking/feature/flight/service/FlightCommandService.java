@@ -48,6 +48,8 @@ public class FlightCommandService {
         checkFlightDoesNotExist(route, offsetDepartureDateTime);
 
         FlightEntity entityToSave = new FlightEntity(route, route.getDefaultAirplaneType(), offsetDepartureDateTime, FlightStatus.SCHEDULED);
+        entityToSave.setBasePriceEconomy(route.getBasePriceEconomy());
+        entityToSave.setBasePriceFirstClass(route.getBasePriceFirstClass());
 
         FlightEntity entitySaved = flightRepository.save(entityToSave);
         log.info("Single flight generated for route {} with departure time {}", route.getFlightNumber(), offsetDepartureDateTime);

@@ -126,7 +126,7 @@ public class RouteControllerIT {
                 List.of(createResponseRouteDto("AV1234"), createResponseRouteDto("AV5678")),
                 PageRequest.of(0, 10),
                 2);
-        given(routeQueryService.getAllRoutes(null, null, null, 0, 10)).willReturn(routes);
+        given(routeQueryService.getAllRoutes(null, null, null, null, null, 0, 10)).willReturn(routes);
 
         ResultActions response = mockMvc.perform(get("/v1/routes")
                 .param("page", "0")

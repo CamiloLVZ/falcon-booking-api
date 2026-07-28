@@ -36,7 +36,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     userEntity.getId(),
                     userEntity.getEmail(),
                     userEntity.getPassword(),
-                    authorities);
+                    authorities,
+                    !userEntity.getDisabled());
 
         } catch (UserNotFoundException e) {
             throw new UsernameNotFoundException("User not found: " + email);

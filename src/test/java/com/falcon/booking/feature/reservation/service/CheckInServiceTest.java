@@ -93,7 +93,7 @@ public class CheckInServiceTest {
         FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
         ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.ECONOMY);
         // Seat 25 is valid for economy (range 21-120)
-        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, null, 25, SeatClass.ECONOMY, PassengerReservationStatus.CHECKED_IN);
+        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, null, 25, null, SeatClass.ECONOMY, PassengerReservationStatus.CHECKED_IN);
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);
@@ -118,7 +118,7 @@ public class CheckInServiceTest {
         FlightEntity flight = createFlight(FlightStatus.CHECK_IN_AVAILABLE);
         ReservationEntity reservation = createReservationWithPassenger(passenger, flight, SeatClass.FIRST_CLASS);
         // Seat 5 is valid for first class (range 1-20)
-        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, null, 5, SeatClass.FIRST_CLASS, PassengerReservationStatus.CHECKED_IN);
+        ResponsePassengerReservationDto response = new ResponsePassengerReservationDto(null, null, 5, null, SeatClass.FIRST_CLASS, PassengerReservationStatus.CHECKED_IN);
 
         given(passengerService.getPassengerEntityByIdentificationNumber("123", "CO")).willReturn(passenger);
         given(reservationQueryService.getReservationEntityByNumber("ABC123")).willReturn(reservation);

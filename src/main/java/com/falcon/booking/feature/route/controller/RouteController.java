@@ -59,7 +59,7 @@ public class RouteController {
     }
 
     @Operation(summary = "Get all routes",
-            description = "Returns all routes with optional filters by origin IATA, destination IATA and status.")
+            description = "Returns all routes with optional filters by origin IATA, destination IATA, status, flight number and airplane type.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Paginated routes retrieved successfully, even if content is empty",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
@@ -76,6 +76,12 @@ public class RouteController {
                                                                @RequestParam(required = false)
                                                                @Parameter(description = "Route status", example = "ACTIVE")
                                                                RouteStatus status,
+                                                               @RequestParam(required = false)
+                                                               @Parameter(description = "Filter by flight number (partial match)", example = "AV")
+                                                               String flightNumber,
+                                                               @RequestParam(required = false)
+                                                               @Parameter(description = "Filter by default airplane type ID", example = "1")
+                                                               Long airplaneTypeId,
                                                                @RequestParam @Min(1) @NotNull
                                                                @Parameter(description = "Number of route records to be returned per page", example = "10", required = true)
                                                                int size,
@@ -83,7 +89,7 @@ public class RouteController {
                                                                @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
                                                                int page) {
 
-        Page<ResponseRouteDto> routes = routeQueryService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status, page, size);
+        Page<ResponseRouteDto> routes = routeQueryService.getAllRoutes(originAirportIataCode, destinationAirportIataCode, status, flightNumber, airplaneTypeId, page, size);
         return ResponseEntity.ok(PagedResponse.from(routes));
 
     }
