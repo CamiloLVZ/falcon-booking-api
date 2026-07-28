@@ -1,6 +1,8 @@
 package com.falcon.booking.feature.airport.service;
 
 import com.falcon.booking.feature.airport.dto.AirportDto;
+import com.falcon.booking.feature.airport.dto.CreateAirportDto;
+import com.falcon.booking.feature.airport.exception.AirportAlreadyExistsException;
 import com.falcon.booking.feature.airport.exception.AirportNotFoundException;
 import com.falcon.booking.feature.airport.mapper.AirportMapper;
 import com.falcon.booking.feature.country.dto.CountryDto;
@@ -259,5 +261,43 @@ public class AirportServiceTest {
         assertThat(result.getSize()).isEqualTo(10);
         assertThat(result.getTotalElements()).isZero();
         assertThat(result.getTotalPages()).isZero();
+    }
+
+    @DisplayName("Should create airport successfully")
+    @Test
+    void shouldCreateAirport() {
+        CreateAirportDto dto = new CreateAirportDto("BOG", "El Dorado", "Bogota", "CO", "America/Bogota");
+        CountryEntity country = createCountry("CO", "Colombia");
+        CountryDto countryDto = new CountryDto("Colombia", "CO");
+        AirportEntity airportToSave = createAirport("BOG", "El Dorado", "Bogota", country);
+        AirportEntity savedAirport = createAirport("BOG", "El Dorado", "Bogota", country);
+        savedAirport.setId(10L);
+        AirportDto expectedDto = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
+
+        given(airportRepository.findByIataCode("BOG")).willReturn(Optional.empty());
+        given(countryService.getCountryEntityByIsoCode("CO")).willReturn(country);
+        given(airportRepository.save(any())).willReturn(savedAirport);
+        given(airportMapper.toDto(savedAirport)).willReturn(expectedDto);
+
+        AirportDto result = airportService.createAirport(dto);
+
+        assertThat(result).isEqualTo(expectedDto);
+        verify(airportRepository).findByIataCode("BOG");
+        verify(countryService).getCountryEntityByIsoCode("CO");
+        verify(airportRepository).save(any());
+        verify(airportMapper).toDto(savedAirport);
+    }
+
+    @DisplayName("Should throw AirportAlreadyExistsException when creating duplicate airport")
+    @Test
+    void shouldThrowException_createAirport_duplicate() {
+        CreateAirportDto dto = new CreateAirportDto("BOG", "El Dorado", "Bogota", "CO", "America/Bogota");
+        CountryEntity country = createCountry("CO", "Colombia");
+        AirportEntity existingAirport = createAirport("BOG", "El Dorado", "Bogota", country);
+
+        given(airportRepository.findByIataCode("BOG")).willReturn(Optional.of(existingAirport));
+
+        assertThrows(AirportAlreadyExistsException.class, () -> airportService.createAirport(dto));
+        verify(airportRepository).findByIataCode("BOG");
     }
 }

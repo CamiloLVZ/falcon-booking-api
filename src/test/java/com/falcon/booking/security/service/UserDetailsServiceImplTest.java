@@ -72,6 +72,32 @@ public class UserDetailsServiceImplTest {
         verify(userService).getUserByEmail("ghost@test.com");
     }
 
+    @DisplayName("Should return disabled UserDetails when user account is disabled")
+    @Test
+    void shouldReturnDisabledUserDetails_loadUserByUsername() {
+        RoleEntity role = new RoleEntity("CLIENT");
+
+        UserEntity user = new UserEntity();
+        user.setId(20L);
+        user.setEmail("disabled@test.com");
+        user.setPassword("encoded");
+        user.setDisabled(true);
+
+        UserRoleEntity userRole = new UserRoleEntity();
+        setField(userRole, "user", user);
+        setField(userRole, "role", role);
+        user.setUserRoles(Set.of(userRole));
+
+        given(userService.getUserByEmail("disabled@test.com")).willReturn(user);
+
+        UserDetails result = userDetailsService.loadUserByUsername("disabled@test.com");
+
+        assertThat(result).isInstanceOf(CustomUserDetails.class);
+        assertThat(result.isEnabled()).isFalse();
+        assertThat(result.getAuthorities()).hasSize(1);
+        assertThat(result.getAuthorities().iterator().next().getAuthority()).isEqualTo("CLIENT");
+    }
+
     private void setField(Object target, String fieldName, Object value) {
         try {
             var field = target.getClass().getDeclaredField(fieldName);
