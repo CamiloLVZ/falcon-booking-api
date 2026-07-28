@@ -12,6 +12,8 @@ public record ResponsePassengerReservationDto (
         ResponsePassengerDto passenger,
         @Schema(description = "Seat number assigned to the passenger", example = "12")
         Integer seatNumber,
+        @Schema(description = "Human-readable seat label (e.g. 12A)", example = "2C")
+        String seatLabel,
         @Schema(description = "Seat class selected (FIRST_CLASS or ECONOMY)", example = "ECONOMY")
         SeatClass seatClass,
         @Schema(description = "Passenger reservation status", example = "CHECKED_IN")

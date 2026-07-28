@@ -48,7 +48,7 @@ class BoardingControllerIT {
         BoardingPassValidationResponseDto responseDto = new BoardingPassValidationResponseDto(
                 qrToken, "ANA PEREZ", "12345", "AV1234",
                 "BOG", "MDE", OffsetDateTime.now().plusHours(2),
-                SeatClass.ECONOMY, 12, BoardingPassStatus.ISSUED);
+                SeatClass.ECONOMY, 12, "3B", BoardingPassStatus.ISSUED);
 
         given(boardingService.validate(qrToken)).willReturn(responseDto);
 
@@ -59,6 +59,7 @@ class BoardingControllerIT {
                 .andExpect(jsonPath("$.passengerName").value("ANA PEREZ"))
                 .andExpect(jsonPath("$.flightNumber").value("AV1234"))
                 .andExpect(jsonPath("$.seatClass").value("ECONOMY"))
+                .andExpect(jsonPath("$.seatLabel").value("3B"))
                 .andExpect(jsonPath("$.status").value("ISSUED"));
     }
 
