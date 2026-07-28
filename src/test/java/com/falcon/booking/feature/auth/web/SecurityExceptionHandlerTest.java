@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,5 +70,12 @@ class SecurityExceptionHandlerTest {
         var response = handler.handleException(new InvalidPasswordResetTokenException());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().type()).isEqualTo("invalid-password-reset-token");
+    }
+
+    @Test
+    void shouldHandleDisabledException() {
+        var response = handler.handleException(new DisabledException("Account disabled"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().type()).isEqualTo("user-disabled");
     }
 }

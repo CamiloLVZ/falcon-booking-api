@@ -15,6 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -25,6 +31,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -125,6 +133,56 @@ public class RouteQueryServiceTest {
         assertThat(result).isEqualTo(airportDtos);
         verify(routeRepository).findDistinctOrigins();
         verify(airportMapper).toSearchOptionDto(airports);
+    }
+
+    @DisplayName("Should return paginated routes with all filters")
+    @Test
+    void shouldReturnPaginatedRoutesWithAllFilters() {
+        RouteEntity route = createRouteEntity("AV100");
+        ResponseRouteDto dto = new ResponseRouteDto("AV100", null, null, null, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("flightNumber").ascending());
+        Page<RouteEntity> routePage = new PageImpl<>(List.of(route), pageable, 1);
+
+        given(routeRepository.findAll(any(Specification.class), eq(pageable))).willReturn(routePage);
+        given(routeMapper.toResponseDto(route)).willReturn(dto);
+
+        Page<ResponseRouteDto> result = routeQueryService.getAllRoutes("BOG", "MDE", RouteStatus.DRAFT, "AV100", 1L, 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @DisplayName("Should return paginated routes with null filters")
+    @Test
+    void shouldReturnPaginatedRoutesWithNullFilters() {
+        RouteEntity route = createRouteEntity("AV100");
+        ResponseRouteDto dto = new ResponseRouteDto("AV100", null, null, null, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("flightNumber").ascending());
+        Page<RouteEntity> routePage = new PageImpl<>(List.of(route), pageable, 1);
+
+        given(routeRepository.findAll(any(Specification.class), eq(pageable))).willReturn(routePage);
+        given(routeMapper.toResponseDto(route)).willReturn(dto);
+
+        Page<ResponseRouteDto> result = routeQueryService.getAllRoutes(null, null, null, null, null, 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @DisplayName("Should normalize origin and destination IATA codes")
+    @Test
+    void shouldNormalizeIataCodes_getAllRoutes() {
+        RouteEntity route = createRouteEntity("AV100");
+        ResponseRouteDto dto = new ResponseRouteDto("AV100", null, null, null, 60, RouteStatus.DRAFT, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("flightNumber").ascending());
+        Page<RouteEntity> routePage = new PageImpl<>(List.of(route), pageable, 1);
+
+        given(routeRepository.findAll(any(Specification.class), eq(pageable))).willReturn(routePage);
+        given(routeMapper.toResponseDto(route)).willReturn(dto);
+
+        Page<ResponseRouteDto> result = routeQueryService.getAllRoutes(" bog ", " mde ", null, null, null, 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
     }
 
     @DisplayName("Should return destination airport options by normalized origin")

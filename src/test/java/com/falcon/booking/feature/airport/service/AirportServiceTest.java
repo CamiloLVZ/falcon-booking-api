@@ -161,6 +161,57 @@ public class AirportServiceTest {
         assertThat(pageFound.getTotalPages()).isZero();
     }
 
+    @DisplayName("Should filter airports by country ISO code")
+    @Test
+    void shouldFilterAirportsByCountry() {
+        CountryEntity country = createCountry("CO", "Colombia");
+        CountryDto countryDto = new CountryDto("Colombia", "CO");
+        AirportEntity airport = createAirport("BOG", "El Dorado", "Bogota", country);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
+        Page<AirportEntity> airportPage = new PageImpl<>(List.of(airport), pageable, 1);
+        AirportDto dto = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
+        given(airportRepository.findAll(any(Specification.class), eq(pageable))).willReturn(airportPage);
+        given(airportMapper.toDto(airport)).willReturn(dto);
+
+        Page<AirportDto> result = airportService.getAllAirports("CO", null, 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+    }
+
+    @DisplayName("Should filter airports by search term")
+    @Test
+    void shouldFilterAirportsBySearch() {
+        CountryEntity country = createCountry("CO", "Colombia");
+        CountryDto countryDto = new CountryDto("Colombia", "CO");
+        AirportEntity airport = createAirport("BOG", "El Dorado", "Bogota", country);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
+        Page<AirportEntity> airportPage = new PageImpl<>(List.of(airport), pageable, 1);
+        AirportDto dto = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
+        given(airportRepository.findAll(any(Specification.class), eq(pageable))).willReturn(airportPage);
+        given(airportMapper.toDto(airport)).willReturn(dto);
+
+        Page<AirportDto> result = airportService.getAllAirports(null, "Dorado", 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+    }
+
+    @DisplayName("Should filter airports by both country and search")
+    @Test
+    void shouldFilterAirportsByCountryAndSearch() {
+        CountryEntity country = createCountry("CO", "Colombia");
+        CountryDto countryDto = new CountryDto("Colombia", "CO");
+        AirportEntity airport = createAirport("BOG", "El Dorado", "Bogota", country);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("city").ascending());
+        Page<AirportEntity> airportPage = new PageImpl<>(List.of(airport), pageable, 1);
+        AirportDto dto = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
+        given(airportRepository.findAll(any(Specification.class), eq(pageable))).willReturn(airportPage);
+        given(airportMapper.toDto(airport)).willReturn(dto);
+
+        Page<AirportDto> result = airportService.getAllAirports("CO", "Dorado", 0, 10);
+
+        assertThat(result.getContent()).containsExactly(dto);
+    }
+
     @DisplayName("Should return AirportDto list by country iso code")
     @Test
     void shouldReturnDtoList_getAirportsByCountryIsoCode() {

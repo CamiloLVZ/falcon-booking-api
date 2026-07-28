@@ -232,11 +232,17 @@ class AdminUserServiceTest {
     void shouldThrowException_emailAlreadyInUse() {
         UserEntity user = createUser(1L, "user@test.com", false, "CLIENT");
         UserEntity otherUser = createUser(2L, "existing@test.com", false, "CLIENT");
+
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
         given(userRepository.findByEmail("existing@test.com")).willReturn(Optional.of(otherUser));
 
-        assertThrows(UserAlreadyExistException.class,
-                () -> adminUserService.updateUserCredentials(1L, new UpdateUserCredentialsDto("existing@test.com", null)));
+        UpdateUserCredentialsDto dto =
+                new UpdateUserCredentialsDto("existing@test.com", null);
+
+        assertThrows(
+                UserAlreadyExistException.class,
+                () -> adminUserService.updateUserCredentials(1L, dto)
+        );
     }
 
     @DisplayName("Should allow updating email to same email")
