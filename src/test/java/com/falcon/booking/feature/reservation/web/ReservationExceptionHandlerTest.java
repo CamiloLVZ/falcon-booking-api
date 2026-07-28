@@ -1,11 +1,9 @@
 package com.falcon.booking.feature.reservation.web;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.reservation.exception.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

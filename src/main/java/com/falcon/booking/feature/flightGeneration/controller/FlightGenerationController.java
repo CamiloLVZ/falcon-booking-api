@@ -1,5 +1,7 @@
 package com.falcon.booking.feature.flightGeneration.controller;
 
+import com.falcon.booking.common.enums.FlightGenerationStatus;
+import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.common.web.Error;
 import com.falcon.booking.common.web.PagedResponse;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
@@ -33,7 +35,7 @@ public class FlightGenerationController {
     }
 
     @Operation(summary = "Get all flight generations",
-            description = "Returns a paginated list of historic flight generations. Requires authentication with JWT token and ADMIN role",
+            description = "Returns a paginated list of historic flight generations with optional filters. Requires authentication with JWT token and ADMIN role",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Paginated flight generations retrieved successfully, even if content is empty",
@@ -46,13 +48,23 @@ public class FlightGenerationController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.falcon.booking.common.web.Error.class)))
     })
     @GetMapping("/generations")
-    public ResponseEntity<PagedResponse<ResponseFlightsGenerationDto>> getAllFlightGenerations(@RequestParam @Min(1) @NotNull
-                                                                                               @Parameter(description = "Number of flight generation records to be returned per page", example = "10", required = true)
-                                                                                               int size,
-                                                                                               @RequestParam @Min(0) @NotNull
-                                                                                               @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
-                                                                                               int page) {
-        Page<ResponseFlightsGenerationDto> generations = flightGenerationService.getAllFlightGenerations(page, size);
+    public ResponseEntity<PagedResponse<ResponseFlightsGenerationDto>> getAllFlightGenerations(
+            @RequestParam(required = false)
+            @Parameter(description = "Filter by generation type", example = "DAILY")
+            FlightGenerationType type,
+            @RequestParam(required = false)
+            @Parameter(description = "Filter by generation status", example = "COMPLETED")
+            FlightGenerationStatus status,
+            @RequestParam(required = false)
+            @Parameter(description = "Filter by route flight number", example = "AV1234")
+            String routeFlightNumber,
+            @RequestParam @Min(1) @NotNull
+            @Parameter(description = "Number of flight generation records to be returned per page", example = "10", required = true)
+            int size,
+            @RequestParam @Min(0) @NotNull
+            @Parameter(description = "Zero-based page number to be returned", example = "0", required = true)
+            int page) {
+        Page<ResponseFlightsGenerationDto> generations = flightGenerationService.getAllFlightGenerations(type, status, routeFlightNumber, page, size);
         return ResponseEntity.ok(PagedResponse.from(generations));
     }
 

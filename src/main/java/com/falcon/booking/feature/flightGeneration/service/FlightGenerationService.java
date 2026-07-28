@@ -1,5 +1,7 @@
 package com.falcon.booking.feature.flightGeneration.service;
 
+import com.falcon.booking.common.enums.FlightGenerationStatus;
+import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.feature.flightGeneration.dto.ResponseFlightsGenerationDto;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
@@ -11,12 +13,14 @@ import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import com.falcon.booking.persistence.entity.FlightGenerationEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
 import com.falcon.booking.persistence.repository.FlightGenerationRepository;
+import com.falcon.booking.persistence.specification.FlightGenerationSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -47,9 +51,19 @@ public class FlightGenerationService {
         return flightGenerationMapper.toDto(entity);
     }
 
-    public Page<ResponseFlightsGenerationDto> getAllFlightGenerations(int page, int size){
+    public Page<ResponseFlightsGenerationDto> getAllFlightGenerations(FlightGenerationType type, FlightGenerationStatus status,
+                                                                       String routeFlightNumber, int page, int size){
+        Specification<FlightGenerationEntity> spec = Specification.allOf();
+        spec = spec.and(FlightGenerationSpecifications.hasType(type));
+        spec = spec.and(FlightGenerationSpecifications.hasStatus(status));
+
+        if (routeFlightNumber != null && !routeFlightNumber.isBlank()) {
+            RouteEntity route = routeQueryService.getRouteEntity(routeFlightNumber);
+            spec = spec.and(FlightGenerationSpecifications.hasRouteId(route.getId()));
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("startedAt").descending());
-        return flightGenerationRepository.findAll(pageable).map(flightGenerationMapper::toDto);
+        return flightGenerationRepository.findAll(spec, pageable).map(flightGenerationMapper::toDto);
     }
 
     public ResponseFlightsGenerationDto startGlobalFlightGeneration() {

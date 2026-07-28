@@ -2,6 +2,7 @@ package com.falcon.booking.feature.flight.service;
 
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.feature.boarding.service.BoardingService;
+import com.falcon.booking.feature.reservation.service.ReservationCommandService;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +27,13 @@ public class FlightStatusService {
 
     private final FlightRepository flightRepository;
     private final BoardingService boardingService;
+    private final ReservationCommandService reservationCommandService;
 
-    public FlightStatusService(FlightRepository flightRepository, BoardingService boardingService) {
+    public FlightStatusService(FlightRepository flightRepository, BoardingService boardingService,
+                               ReservationCommandService reservationCommandService) {
         this.flightRepository = flightRepository;
         this.boardingService = boardingService;
+        this.reservationCommandService = reservationCommandService;
     }
 
     public boolean updateFlightStatus(FlightEntity flight, OffsetDateTime now) {
@@ -46,6 +50,7 @@ public class FlightStatusService {
         flight.correctStatusByTime(now);
 
         if (now.isAfter(departureDateTime)) {
+            reservationCommandService.completeReservationsForFlight(flight);
             flight.markAsCompleted();
             return true;
         }

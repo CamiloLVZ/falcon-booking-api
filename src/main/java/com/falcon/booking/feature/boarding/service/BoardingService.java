@@ -210,6 +210,8 @@ public class BoardingService {
         PassengerEntity passenger = passengerReservation.getPassenger();
         FlightEntity flight = passengerReservation.getFlight();
 
+        String seatLabel = flight.getAirplaneType().getSeatLabel(passengerReservation.getSeatNumber());
+
         return new BoardingPassValidationResponseDto(
                 boardingPass.getQrToken(),
                 passenger.getFullName(),
@@ -220,6 +222,7 @@ public class BoardingService {
                 flight.getDepartureDateTime(),
                 passengerReservation.getSeatClass(),
                 passengerReservation.getSeatNumber(),
+                seatLabel,
                 boardingPass.getStatus()
         );
     }

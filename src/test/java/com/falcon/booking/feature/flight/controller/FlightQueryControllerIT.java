@@ -140,7 +140,7 @@ class FlightQueryControllerIT {
                 createResponseDto(1L, "AV1234", FlightStatus.CHECK_IN_AVAILABLE)
         ), PageRequest.of(0, 10), 2);
 
-        given(flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, 0, 10)).willReturn(flights);
+        given(flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, null, null, 0, 10)).willReturn(flights);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/flights/all")
@@ -165,7 +165,7 @@ class FlightQueryControllerIT {
                 createResponseDto(1L, "AV1234", FlightStatus.SCHEDULED)
         ), PageRequest.of(0, 10), 1);
 
-        given(flightQueryService.getAllFlightsPaginated(null, null, 0, 10)).willReturn(flights);
+        given(flightQueryService.getAllFlightsPaginated(null, null, null, null, 0, 10)).willReturn(flights);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/flights/all")

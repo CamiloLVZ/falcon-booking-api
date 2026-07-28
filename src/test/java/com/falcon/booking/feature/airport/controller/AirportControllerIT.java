@@ -88,7 +88,7 @@ public class AirportControllerIT {
         AirportDto airport1 = new AirportDto("BOG", "El Dorado", "Bogota", countryDto, "America/Bogota");
         AirportDto airport2 = new AirportDto("MDE", "Jose Maria Cordoba", "Medellin", countryDto, "America/Bogota");
         Page<AirportDto> airports = new PageImpl<>(List.of(airport1, airport2), PageRequest.of(0, 10), 2);
-        given(airportService.getAllAirports(0, 10)).willReturn(airports);
+        given(airportService.getAllAirports(null, null, 0, 10)).willReturn(airports);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/airports")
@@ -113,7 +113,7 @@ public class AirportControllerIT {
     @Test
     void shouldReturn200AndEmptyAirportDtoList_getAirports() throws Exception {
         Page<AirportDto> airports = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-        given(airportService.getAllAirports(0, 10)).willReturn(airports);
+        given(airportService.getAllAirports(null, null, 0, 10)).willReturn(airports);
 
         ResultActions response = mockMvc.perform(
                 get("/v1/airports")

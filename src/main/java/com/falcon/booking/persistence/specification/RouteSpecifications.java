@@ -38,4 +38,18 @@ public class RouteSpecifications {
         };
     }
 
+    public static Specification<RouteEntity> flightNumberContains(String flightNumber) {
+        return (root, query, cb) -> {
+            if (flightNumber == null || flightNumber.isBlank()) return cb.conjunction();
+            return cb.like(cb.upper(root.get("flightNumber")), "%" + flightNumber.trim().toUpperCase() + "%");
+        };
+    }
+
+    public static Specification<RouteEntity> hasAirplaneTypeId(Long airplaneTypeId) {
+        return (root, query, cb) -> {
+            if (airplaneTypeId == null) return cb.conjunction();
+            return cb.equal(root.get("defaultAirplaneType").get("id"), airplaneTypeId);
+        };
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.reservation.service;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
+import com.falcon.booking.common.enums.ReservationStatus;
 import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
 import com.falcon.booking.feature.passenger.service.PassengerService;
 import com.falcon.booking.feature.payment.dto.PaymentPassengerDto;
@@ -130,6 +131,23 @@ public class ReservationCommandService {
         reservation.cancel();
         log.info("Reservation number {} has been canceled by contact email verification", reservation.getNumber());
         return reservationMapper.toResponseDto(reservation);
+    }
+
+    @Transactional
+    public int completeReservationsForFlight(FlightEntity flight) {
+        List<ReservationEntity> reservations = reservationRepository.findAllByFlightAndStatus(flight, ReservationStatus.RESERVED);
+
+        int count = 0;
+        for (ReservationEntity reservation : reservations) {
+            reservation.markAsCompleted();
+            count++;
+        }
+
+        if (count > 0) {
+            log.info("Completed {} reservation(s) whose flight departure has passed", count);
+        }
+
+        return count;
     }
 
     private ReservationEntity getReservationAvailableForGuestCancellation(String reservationNumber, String contactEmail) {

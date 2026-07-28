@@ -2,7 +2,8 @@ ALTER TABLE airplane_type
     ADD COLUMN status VARCHAR(20);
 
 UPDATE airplane_type
-SET status = 'ACTIVE';
+SET status = 'ACTIVE'
+WHERE status IS NULL;
 
 ALTER TABLE airplane_type
     ALTER COLUMN status SET NOT NULL;

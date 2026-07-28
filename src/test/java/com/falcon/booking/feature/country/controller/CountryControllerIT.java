@@ -3,6 +3,8 @@ package com.falcon.booking.feature.country.controller;
 import com.falcon.booking.feature.airport.dto.AirportDto;
 import com.falcon.booking.feature.airport.service.AirportService;
 import com.falcon.booking.feature.country.dto.CountryDto;
+import com.falcon.booking.feature.country.dto.CreateCountryDto;
+import com.falcon.booking.feature.country.exception.CountryAlreadyExistsException;
 import com.falcon.booking.feature.country.exception.CountryNotFoundException;
 import com.falcon.booking.feature.country.service.CountryService;
 import com.falcon.booking.security.jwt.JwtUtil;
@@ -22,7 +24,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -211,6 +215,63 @@ public class CountryControllerIT {
                 .andExpect(jsonPath("$.message").exists());
     }
 
+    @DisplayName("Should return 201 created when country is created")
+    @Test
+    void shouldReturn201Created_createCountry() throws Exception {
+        CreateCountryDto dto = new CreateCountryDto("Colombia", "CO");
+        CountryDto responseDto = new CountryDto("Colombia", "CO");
+        given(countryService.createCountry(dto)).willReturn(responseDto);
+
+        ResultActions response = mockMvc.perform(
+                post("/v1/countries")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Colombia", "isoCode": "CO"}
+                                """)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Colombia"))
+                .andExpect(jsonPath("$.isoCode").value("CO"));
+    }
+
+    @DisplayName("Should return 400 when create country request body is invalid")
+    @Test
+    void shouldReturn400_createCountry_invalidBody() throws Exception {
+        ResultActions response = mockMvc.perform(
+                post("/v1/countries")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "", "isoCode": "CO"}
+                                """)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("invalid-arguments"));
+    }
+
+    @DisplayName("Should return 409 when country ISO code already exists")
+    @Test
+    void shouldReturn409_createCountry_duplicate() throws Exception {
+        CreateCountryDto dto = new CreateCountryDto("Colombia", "CO");
+        given(countryService.createCountry(dto))
+                .willThrow(new CountryAlreadyExistsException("ISO code", "CO"));
+
+        ResultActions response = mockMvc.perform(
+                post("/v1/countries")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Colombia", "isoCode": "CO"}
+                                """)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isConflict())
+                .andExpect(jsonPath("$.type").value("country-already-exists"))
+                .andExpect(jsonPath("$.message").exists());
+    }
 }
 
 

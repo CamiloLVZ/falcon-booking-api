@@ -1,12 +1,8 @@
 package com.falcon.booking.security.service;
 
-import com.falcon.booking.feature.auth.dto.CreateUserDto;
-import com.falcon.booking.feature.auth.dto.LoginRequestDto;
-import com.falcon.booking.feature.auth.dto.LoginResponseDto;
-import com.falcon.booking.feature.auth.dto.PasswordResetRequestDto;
-import com.falcon.booking.feature.auth.dto.ResetPasswordDto;
-import com.falcon.booking.feature.auth.service.UserService;
+import com.falcon.booking.feature.auth.dto.*;
 import com.falcon.booking.feature.auth.service.PasswordResetService;
+import com.falcon.booking.feature.auth.service.UserService;
 import com.falcon.booking.security.jwt.JwtPayload;
 import com.falcon.booking.security.jwt.JwtUtil;
 import com.falcon.booking.security.model.CustomUserDetails;
@@ -56,7 +52,8 @@ public class AuthServiceTest {
                 5L,
                 "client@test.com",
                 "encoded-password",
-                List.of(new SimpleGrantedAuthority("ROLE_CLIENT")));
+                List.of(new SimpleGrantedAuthority("ROLE_CLIENT")),
+                true);
 
         given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn(authentication);

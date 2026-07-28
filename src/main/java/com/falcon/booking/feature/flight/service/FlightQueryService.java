@@ -89,10 +89,16 @@ public class FlightQueryService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ResponseFlightDto> getAllFlightsPaginated(String flightNumber, FlightStatus flightStatus, int page, int size) {
+    public Page<ResponseFlightDto> getAllFlightsPaginated(String flightNumber, FlightStatus flightStatus, LocalDate dateFrom, LocalDate dateTo, int page, int size) {
         Specification<FlightEntity> spec = Specification.allOf();
         spec = spec.and(FlightSpecifications.hasFlightNumber(flightNumber));
         spec = spec.and(FlightSpecifications.hasStatus(flightStatus));
+
+        if (dateFrom != null || dateTo != null) {
+            ZoneId timezone = ZoneId.of("UTC");
+            spec = spec.and(FlightSpecifications.hasDateStart(dateFrom != null ? DateTimeUtils.toOffsetDateTime(dateFrom, timezone) : null));
+            spec = spec.and(FlightSpecifications.hasDateEnd(dateTo != null ? DateTimeUtils.toOffsetDateTime(dateTo, timezone) : null));
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, SORT_FIELD_DEPARTURE_DATE_TIME));
         return flightRepository.findAll(spec, pageable).map(flightMapper::toDto);

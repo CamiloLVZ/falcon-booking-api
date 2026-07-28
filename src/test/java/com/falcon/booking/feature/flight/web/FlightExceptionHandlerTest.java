@@ -1,14 +1,12 @@
 package com.falcon.booking.feature.flight.web;
 
 import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.flight.exception.*;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationAlreadyRunningException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationNotFoundException;
 import com.falcon.booking.feature.flightGeneration.exception.FlightGenerationPartialFailureException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.OffsetDateTime;
 import java.util.List;

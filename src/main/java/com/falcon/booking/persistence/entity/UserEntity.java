@@ -37,6 +37,10 @@ public class UserEntity {
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
     private PassengerEntity passengerProfile;
 
+    public void toggleDisabled(){
+        this.disabled = !this.disabled;
+    }
+
     public Set<RoleEntity> getRoles(){
 
         return Optional.ofNullable(userRoles)
