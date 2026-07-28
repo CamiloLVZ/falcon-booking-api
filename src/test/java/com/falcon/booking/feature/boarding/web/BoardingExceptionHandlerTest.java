@@ -1,12 +1,13 @@
 package com.falcon.booking.feature.boarding.web;
 
 import com.falcon.booking.common.enums.PassengerReservationStatus;
-import com.falcon.booking.common.web.Error;
-import com.falcon.booking.feature.boarding.exception.*;
+import com.falcon.booking.feature.boarding.exception.BoardingPassAlreadyBoardedException;
+import com.falcon.booking.feature.boarding.exception.BoardingPassExpiredException;
+import com.falcon.booking.feature.boarding.exception.BoardingPassNotFoundException;
+import com.falcon.booking.feature.boarding.exception.InvalidBoardingPassengerReservationException;
 import com.falcon.booking.feature.boarding.pdf.exception.PdfGenerationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 

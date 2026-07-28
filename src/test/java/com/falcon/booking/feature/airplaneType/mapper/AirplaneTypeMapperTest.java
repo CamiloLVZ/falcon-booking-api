@@ -4,7 +4,6 @@ import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
 import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
-import com.falcon.booking.feature.airplaneType.exception.InvalidSeatConfigurationException;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class AirplaneTypeMapperTest {

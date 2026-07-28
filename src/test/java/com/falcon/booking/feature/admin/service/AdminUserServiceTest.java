@@ -10,7 +10,6 @@ import com.falcon.booking.persistence.entity.RoleEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.entity.UserRoleEntity;
 import com.falcon.booking.persistence.repository.UserRepository;
-import com.falcon.booking.persistence.specification.UserSpecifications;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,15 +24,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class AdminUserServiceTest {
@@ -213,8 +211,10 @@ class AdminUserServiceTest {
     void shouldThrowException_userNotFound() {
         given(userRepository.findById(99L)).willReturn(Optional.empty());
 
+        UpdateUserCredentialsDto credentials = new UpdateUserCredentialsDto("new@test.com", null);
+
         assertThrows(UserNotFoundException.class,
-                () -> adminUserService.updateUserCredentials(99L, new UpdateUserCredentialsDto("new@test.com", null)));
+                () -> adminUserService.updateUserCredentials(99L, credentials));
     }
 
     @DisplayName("Should throw exception when no fields provided")
@@ -223,8 +223,10 @@ class AdminUserServiceTest {
         UserEntity user = createUser(1L, "user@test.com", false, "CLIENT");
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
+        UpdateUserCredentialsDto credentials = new UpdateUserCredentialsDto(null, null);
+
         assertThrows(IllegalArgumentException.class,
-                () -> adminUserService.updateUserCredentials(1L, new UpdateUserCredentialsDto(null, null)));
+                () -> adminUserService.updateUserCredentials(1L, credentials));
     }
 
     @DisplayName("Should throw exception when email already in use by another user")

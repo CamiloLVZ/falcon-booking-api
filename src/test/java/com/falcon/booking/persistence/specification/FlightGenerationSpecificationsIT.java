@@ -4,17 +4,8 @@ import com.falcon.booking.common.enums.AirplaneTypeStatus;
 import com.falcon.booking.common.enums.FlightGenerationStatus;
 import com.falcon.booking.common.enums.FlightGenerationType;
 import com.falcon.booking.common.enums.RouteStatus;
-import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
-import com.falcon.booking.persistence.entity.AirportEntity;
-import com.falcon.booking.persistence.entity.CountryEntity;
-import com.falcon.booking.persistence.entity.FlightGenerationEntity;
-import com.falcon.booking.persistence.entity.RouteEntity;
-import com.falcon.booking.persistence.repository.AirplaneTypeRepository;
-import com.falcon.booking.persistence.repository.AirportRepository;
-import com.falcon.booking.persistence.repository.BaseRepositoryTest;
-import com.falcon.booking.persistence.repository.CountryRepository;
-import com.falcon.booking.persistence.repository.FlightGenerationRepository;
-import com.falcon.booking.persistence.repository.RouteRepository;
+import com.falcon.booking.persistence.entity.*;
+import com.falcon.booking.persistence.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -108,14 +99,14 @@ class FlightGenerationSpecificationsIT extends BaseRepositoryTest {
     }
 
     private RouteEntity createRoute(String flightNumber, AirportEntity origin, AirportEntity destination, AirplaneTypeEntity airplaneType) {
-        RouteEntity route = new RouteEntity();
-        route.setFlightNumber(flightNumber);
-        route.setAirportOrigin(origin);
-        route.setAirportDestination(destination);
-        route.setDefaultAirplaneType(airplaneType);
-        route.setDurationMinutes(60);
-        route.setStatus(RouteStatus.ACTIVE);
-        return route;
+        RouteEntity entity = new RouteEntity();
+        entity.setFlightNumber(flightNumber);
+        entity.setAirportOrigin(origin);
+        entity.setAirportDestination(destination);
+        entity.setDefaultAirplaneType(airplaneType);
+        entity.setDurationMinutes(60);
+        entity.setStatus(RouteStatus.ACTIVE);
+        return entity;
     }
 
     @DisplayName("Should filter by type")

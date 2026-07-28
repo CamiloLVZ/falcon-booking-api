@@ -1,11 +1,9 @@
 package com.falcon.booking.feature.auth.web;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.falcon.booking.common.web.Error;
 import com.falcon.booking.feature.auth.exception.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
