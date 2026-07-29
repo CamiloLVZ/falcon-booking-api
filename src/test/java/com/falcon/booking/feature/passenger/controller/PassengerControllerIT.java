@@ -1,10 +1,11 @@
 package com.falcon.booking.feature.passenger.controller;
 
-import com.falcon.booking.common.enums.PassengerGender;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.falcon.booking.feature.passenger.exception.PassengerNotFoundException;
 import com.falcon.booking.feature.passenger.service.PassengerService;
+import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import com.falcon.booking.security.jwt.JwtUtil;
@@ -279,6 +280,35 @@ public class PassengerControllerIT {
                 .andExpect(jsonPath("$.content.size()").value(1))
                 .andExpect(jsonPath("$.content[0].identificationNumber").value("10001"))
                 .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @DisplayName("Should return 200 OK with passenger reservation summary")
+    @Test
+    void shouldReturn200_getPassengerReservationsSummary() throws Exception {
+        List<ResponsePassengerReservationDto> summary = List.of();
+        given(reservationQueryService.getPassengerReservationsSummary(1L)).willReturn(summary);
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/passengers/{id}/reservations/summary", 1L)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.size()").value(0));
+    }
+
+    @DisplayName("Should return 404 when passenger not found for reservation summary")
+    @Test
+    void shouldReturn404_getPassengerReservationsSummary() throws Exception {
+        given(reservationQueryService.getPassengerReservationsSummary(99L))
+                .willThrow(new PassengerNotFoundException(99L));
+
+        ResultActions response = mockMvc.perform(
+                get("/v1/passengers/{id}/reservations/summary", 99L)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("passenger-does-not-exist"));
     }
 }
 

@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.airplaneType.mapper;
 
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
+import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeOptionDto;
 import com.falcon.booking.feature.airplaneType.dto.CreateAirplaneTypeDto;
 import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
 import com.falcon.booking.persistence.entity.AirplaneTypeEntity;
@@ -15,6 +16,8 @@ public interface AirplaneTypeMapper {
     ResponseAirplaneTypeDto toResponseDto(AirplaneTypeEntity airplaneTypeEntity);
     List<ResponseAirplaneTypeDto> toResponseDto(List<AirplaneTypeEntity> airplaneTypeEntities);
     AirplaneTypeInFlightDto toInFlightDto(AirplaneTypeEntity airplaneTypeEntity);
+    AirplaneTypeOptionDto toOptionDto(AirplaneTypeEntity airplaneTypeEntity);
+    List<AirplaneTypeOptionDto> toOptionDto(List<AirplaneTypeEntity> airplaneTypeEntities);
 
     /**
      * Maps only producer and model from the DTO. Seat fields (economySeats, firstClassSeats,

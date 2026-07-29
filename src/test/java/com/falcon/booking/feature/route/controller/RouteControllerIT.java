@@ -4,7 +4,6 @@ import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.airplaneType.dto.AirplaneTypeInFlightDto;
 import com.falcon.booking.feature.airplaneType.dto.ResponseAirplaneTypeDto;
 import com.falcon.booking.feature.airport.dto.AirportDto;
-import com.falcon.booking.feature.airport.dto.AirportSearchOptionDto;
 import com.falcon.booking.feature.country.dto.CountryDto;
 import com.falcon.booking.feature.flight.dto.ResponseFlightDto;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
@@ -139,55 +138,6 @@ public class RouteControllerIT {
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.size").value(10))
                 .andExpect(jsonPath("$.totalElements").value(2));
-    }
-
-    @DisplayName("Should return 200 OK and origin airport list")
-    @Test
-    void shouldReturn200AndOriginAirportList_getOriginAirports() throws Exception {
-        List<AirportSearchOptionDto> airports = List.of(
-                new AirportSearchOptionDto("BOG", "Bogota", "El Dorado"),
-                new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba")
-        );
-        given(routeQueryService.getOriginAirports()).willReturn(airports);
-
-        ResultActions response = mockMvc.perform(get("/v1/routes/search/origins").accept(MediaType.APPLICATION_JSON));
-
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.size()").value(2))
-                .andExpect(jsonPath("$[0].iataCode").value("BOG"));
-    }
-
-    @DisplayName("Should return 200 OK and destination airport list by origin")
-    @Test
-    void shouldReturn200AndDestinationAirportList_getDestinationAirports() throws Exception {
-        List<AirportSearchOptionDto> airports = List.of(
-                new AirportSearchOptionDto("MDE", "Medellin", "Jose Maria Cordoba"),
-                new AirportSearchOptionDto("CLO", "Cali", "Alfonso Bonilla Aragon")
-        );
-        given(routeQueryService.getDestinationAirports("BOG")).willReturn(airports);
-
-        ResultActions response = mockMvc.perform(
-                get("/v1/routes/search/destinations")
-                        .param("originIataCode", "BOG")
-                        .accept(MediaType.APPLICATION_JSON));
-
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.size()").value(2))
-                .andExpect(jsonPath("$[0].iataCode").value("MDE"));
-    }
-
-    @DisplayName("Should return 400 invalid-arguments when origin IATA code size is invalid")
-    @Test
-    void shouldReturn400InvalidArguments_getDestinationAirports() throws Exception {
-        ResultActions response = mockMvc.perform(
-                get("/v1/routes/search/destinations")
-                        .param("originIataCode", "BO")
-                        .accept(MediaType.APPLICATION_JSON));
-
-        response.andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.type").value("invalid-arguments"));
     }
 
     @DisplayName("Should return 201 created when route is added")

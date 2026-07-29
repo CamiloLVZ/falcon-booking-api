@@ -33,4 +33,10 @@ public interface PassengerReservationRepository extends JpaRepository<PassengerR
             "ORDER BY r.reservationDatetime ASC",
             countQuery = "SELECT COUNT(pr) FROM PassengerReservationEntity pr WHERE pr.passenger = :passenger")
     Page<PassengerReservationEntity> findAllByPassenger(@Param("passenger") PassengerEntity passenger, Pageable pageable);
+
+    @Query(value = "SELECT pr FROM PassengerReservationEntity pr " +
+            "JOIN FETCH pr.reservation r " +
+            "WHERE pr.passenger = :passenger " +
+            "ORDER BY r.reservationDatetime DESC")
+    List<PassengerReservationEntity> findTop3ByPassengerOrderByReservationDatetimeDesc(@Param("passenger") PassengerEntity passenger, Pageable pageable);
 }

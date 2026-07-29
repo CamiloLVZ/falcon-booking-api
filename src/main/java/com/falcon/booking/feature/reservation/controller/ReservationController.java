@@ -130,6 +130,21 @@ public class ReservationController {
         return ResponseEntity.ok(PagedResponse.from(reservations));
     }
 
+    @Operation(summary = "Get reservation with details",
+            description = "Returns a reservation with full passenger details and flight information in a single response, using the reservation database ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Reservation details retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseReservationDto.class))),
+            @ApiResponse(responseCode = "404", description = "Reservation not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/{id}/with-details")
+    public ResponseEntity<ResponseReservationDto> getReservationWithDetails(@PathVariable
+                                                                            @Parameter(description = "Reservation numeric unique identifier", example = "1")
+                                                                            Long id) {
+        return ResponseEntity.ok(reservationQueryService.getReservationById(id));
+    }
+
     @Operation(summary = "Cancel reservation",
             description = "Cancels a reservation after verifying its number and contact email. No authentication is required.")
     @ApiResponses(value = {
