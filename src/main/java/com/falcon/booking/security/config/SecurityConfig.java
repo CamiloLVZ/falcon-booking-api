@@ -68,6 +68,9 @@ public class SecurityConfig {
                         //ROUTES
                         .requestMatchers(HttpMethod.GET, "/v1/routes/**").permitAll()
 
+                        //CATALOG
+                        .requestMatchers("/v1/catalog/**").permitAll()
+
                         //ADMIN ONLY
                         .requestMatchers(
                                 "/v1/airplane-types/**",

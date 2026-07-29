@@ -5,10 +5,12 @@ import com.falcon.booking.common.web.PagedResponse;
 import com.falcon.booking.feature.passenger.dto.AddPassengerDto;
 import com.falcon.booking.feature.passenger.dto.ResponsePassengerDto;
 import com.falcon.booking.feature.passenger.service.PassengerService;
+import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.service.ReservationQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,6 +28,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Passengers", description = "Operations related to passengers")
 @RestController
@@ -235,6 +239,28 @@ public class PassengerController {
                                                                              @Parameter(description = "New passport number", example = "B9988776")
                                                                              String newPassportNumber) {
         return ResponseEntity.ok(passengerService.updatePassengerPassport(identificationNumber, countryIsoCode, newPassportNumber));
+    }
+
+    @Operation(summary = "Get passenger reservation summary",
+            description = "Returns the last 3 passenger reservations (includes passenger data, seat info and status) for a passenger. Requires authentication with JWT token and ADMIN role",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Passenger reservation summary retrieved successfully",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResponsePassengerReservationDto.class)))),
+            @ApiResponse(responseCode = "400", description = "Error by invalid passenger id",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions to retrieve passenger reservations",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "404", description = "Passenger not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/{id}/reservations/summary")
+    public ResponseEntity<List<ResponsePassengerReservationDto>> getPassengerReservationsSummary(@PathVariable
+                                                                                                  @Parameter(description = "Passenger numeric unique identifier", example = "25")
+                                                                                                  Long id) {
+        return ResponseEntity.ok(reservationQueryService.getPassengerReservationsSummary(id));
     }
 
 }

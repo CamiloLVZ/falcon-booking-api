@@ -1,13 +1,12 @@
 package com.falcon.booking.feature.reservation.service;
 
-import com.falcon.booking.common.enums.AirplaneTypeStatus;
-import com.falcon.booking.common.enums.FlightStatus;
-import com.falcon.booking.common.enums.ReservationStatus;
-import com.falcon.booking.common.enums.RouteStatus;
+import com.falcon.booking.common.enums.*;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.passenger.service.PassengerService;
+import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
+import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
 import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
@@ -43,6 +42,8 @@ class ReservationQueryServiceTest {
     private PassengerService passengerService;
     @Mock
     private ReservationMapper reservationMapper;
+    @Mock
+    private PassengerReservationMapper passengerReservationMapper;
 
     @InjectMocks
     private ReservationQueryService reservationQueryService;
@@ -177,5 +178,55 @@ class ReservationQueryServiceTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).status()).isEqualTo(ReservationStatus.RESERVED);
         verify(reservationRepository).findAllByUserAndStatus(user, ReservationStatus.RESERVED, pageable);
+    }
+
+    @DisplayName("Should return reservation by id")
+    @Test
+    void shouldReturnReservationById() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
+        ResponseReservationDto dto = new ResponseReservationDto("ABC123", "mail@test.com",
+                Instant.now(), ReservationStatus.RESERVED, null, List.of());
+        given(reservationRepository.findById(1L)).willReturn(Optional.of(reservation));
+        given(reservationMapper.toResponseDto(reservation)).willReturn(dto);
+
+        ResponseReservationDto result = reservationQueryService.getReservationById(1L);
+
+        assertThat(result).isEqualTo(dto);
+        verify(reservationRepository).findById(1L);
+    }
+
+    @DisplayName("Should throw exception when reservation by id does not exist")
+    @Test
+    void shouldThrowException_getReservationById() {
+        given(reservationRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThrows(ReservationNotFoundException.class, () -> reservationQueryService.getReservationById(99L));
+    }
+
+    @DisplayName("Should return passenger reservations summary (last 3)")
+    @Test
+    void shouldReturnPassengerReservationsSummary() {
+        PassengerEntity passenger = new PassengerEntity();
+        passenger.setId(1L);
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        ReservationEntity reservation = new ReservationEntity("ABC123", flight, "mail@test.com", Instant.now());
+        PassengerReservationEntity pr = new PassengerReservationEntity(passenger, reservation, 1, SeatClass.ECONOMY);
+        Pageable topThree = PageRequest.of(0, 3);
+        ResponsePassengerReservationDto dto = new ResponsePassengerReservationDto(1L, null, 1, null, SeatClass.ECONOMY, null);
+
+        given(passengerService.getPassengerEntityById(1L)).willReturn(passenger);
+        given(passengerReservationRepository.findTop3ByPassengerOrderByReservationDatetimeDesc(passenger, topThree))
+                .willReturn(List.of(pr));
+        given(passengerReservationMapper.toResponseDto(List.of(pr))).willReturn(List.of(dto));
+
+        List<ResponsePassengerReservationDto> result = reservationQueryService.getPassengerReservationsSummary(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().id()).isEqualTo(1L);
+        assertThat(result.getFirst().seatNumber()).isEqualTo(1);
+        verify(passengerService).getPassengerEntityById(1L);
+        verify(passengerReservationRepository).findTop3ByPassengerOrderByReservationDatetimeDesc(passenger, topThree);
+        verify(passengerReservationMapper).toResponseDto(List.of(pr));
     }
 }

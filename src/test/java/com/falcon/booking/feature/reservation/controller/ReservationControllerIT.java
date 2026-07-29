@@ -310,6 +310,32 @@ class ReservationControllerIT {
                 .andExpect(jsonPath("$.content.size()").value(1))
                 .andExpect(jsonPath("$.content[0].status").value("RESERVED"));
     }
+
+    @DisplayName("Should return 200 OK and reservation details by id")
+    @Test
+    void shouldReturn200_getReservationWithDetails() throws Exception {
+        ResponseReservationDto dto = createResponseReservationDto("ABC123", ReservationStatus.RESERVED);
+        given(reservationQueryService.getReservationById(1L)).willReturn(dto);
+
+        ResultActions response = mockMvc.perform(get("/v1/reservations/1/with-details").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value("ABC123"))
+                .andExpect(jsonPath("$.flight.flightNumber").value("AV1234"))
+                .andExpect(jsonPath("$.passengers").isArray())
+                .andExpect(jsonPath("$.passengers[0].passenger.firstName").value("ANA"));
+    }
+
+    @DisplayName("Should return 404 when reservation details by id does not exist")
+    @Test
+    void shouldReturn404_getReservationWithDetails() throws Exception {
+        given(reservationQueryService.getReservationById(99L)).willThrow(new ReservationNotFoundException(99L));
+
+        ResultActions response = mockMvc.perform(get("/v1/reservations/99/with-details").accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("reservation-does-not-exist"));
+    }
 }
 
 

@@ -112,35 +112,7 @@ public class RouteController {
         return ResponseEntity.ok(routeQueryService.getRouteByFlightNumber(flightNumber));
     }
 
-    @Operation(summary = "Get origin airports for search",
-            description = "Returns a list of airports with active routes as origin options for route search filters.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Origin airport options retrieved successfully, even if list is empty",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AirportSearchOptionDto.class))))
-    })
-    @GetMapping("/search/origins")
-    public ResponseEntity<List<AirportSearchOptionDto>> getOriginAirports() {
-        return ResponseEntity.ok(routeQueryService.getOriginAirports());
-    }
-
-    @Operation(summary = "Get destination airports for search",
-            description = "Returns a list of destination airports with active routes from the selected origin airport.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Destination airport options retrieved successfully, even if list is empty",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AirportSearchOptionDto.class)))),
-            @ApiResponse(responseCode = "400", description = "Error by invalid origin IATA code",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
-    })
-    @GetMapping("/search/destinations")
-    public ResponseEntity<List<AirportSearchOptionDto>> getDestinationAirports(@RequestParam
-                                                                               @NotNull(message = "originIataCode is required")
-                                                                               @Size(min = 3, max = 3, message = "Iata Code must be a 3 letter String")
-                                                                               @Parameter(description = "Origin airport IATA code used to find available destinations", example = "BOG")
-                                                                               String originIataCode) {
-        return ResponseEntity.ok(routeQueryService.getDestinationAirports(originIataCode));
-    }
-
-     @Operation(summary = "Create a route",
+    @Operation(summary = "Create a route",
              description = "Creates a route record using origin and destination airports and default airplane type. Requires authentication with JWT token and ADMIN role",
              security = @SecurityRequirement(name = "bearerAuth"))
      @ApiResponses(value = {
