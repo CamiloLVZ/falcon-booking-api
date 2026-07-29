@@ -4,8 +4,10 @@ import com.falcon.booking.common.enums.ReservationStatus;
 import com.falcon.booking.common.utils.StringNormalizer;
 import com.falcon.booking.feature.flight.service.FlightQueryService;
 import com.falcon.booking.feature.passenger.service.PassengerService;
+import com.falcon.booking.feature.reservation.dto.ResponsePassengerReservationDto;
 import com.falcon.booking.feature.reservation.dto.ResponseReservationDto;
 import com.falcon.booking.feature.reservation.exception.ReservationNotFoundException;
+import com.falcon.booking.feature.reservation.mapper.PassengerReservationMapper;
 import com.falcon.booking.feature.reservation.mapper.ReservationMapper;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PassengerEntity;
@@ -21,6 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class ReservationQueryService {
 
@@ -29,23 +33,31 @@ public class ReservationQueryService {
     private final FlightQueryService flightQueryService;
     private final PassengerService passengerService;
     private final ReservationMapper reservationMapper;
+    private final PassengerReservationMapper passengerReservationMapper;
 
     public ReservationQueryService(ReservationRepository reservationRepository,
                                    PassengerReservationRepository passengerReservationRepository,
                                    FlightQueryService flightQueryService,
                                    PassengerService passengerService,
-                                   ReservationMapper reservationMapper) {
+                                   ReservationMapper reservationMapper,
+                                   PassengerReservationMapper passengerReservationMapper) {
         this.reservationRepository = reservationRepository;
         this.passengerReservationRepository = passengerReservationRepository;
         this.flightQueryService = flightQueryService;
         this.passengerService = passengerService;
         this.reservationMapper = reservationMapper;
+        this.passengerReservationMapper = passengerReservationMapper;
     }
 
     public ReservationEntity getReservationEntityByNumber(String reservationNumber) {
         String normalized = StringNormalizer.normalize(reservationNumber);
         return reservationRepository.findByNumber(normalized)
                 .orElseThrow(() -> new ReservationNotFoundException(normalized));
+    }
+
+    public ReservationEntity getReservationEntityById(Long id) {
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException(id));
     }
 
     public Page<ReservationEntity> getReservationsByPassenger(PassengerEntity passenger, Pageable pageable) {
@@ -60,6 +72,20 @@ public class ReservationQueryService {
     @Transactional(readOnly = true)
     public ResponseReservationDto getReservationByNumber(String reservationNumber) {
         return reservationMapper.toResponseDto(getReservationEntityByNumber(reservationNumber));
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseReservationDto getReservationById(Long id) {
+        return reservationMapper.toResponseDto(getReservationEntityById(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ResponsePassengerReservationDto> getPassengerReservationsSummary(Long passengerId) {
+        PassengerEntity passenger = passengerService.getPassengerEntityById(passengerId);
+        Pageable topThree = PageRequest.of(0, 3);
+        List<PassengerReservationEntity> passengerReservations =
+                passengerReservationRepository.findTop3ByPassengerOrderByReservationDatetimeDesc(passenger, topThree);
+        return passengerReservationMapper.toResponseDto(passengerReservations);
     }
 
     @Transactional(readOnly = true)
