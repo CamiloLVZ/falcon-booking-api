@@ -18,7 +18,7 @@ import com.falcon.booking.feature.reservation.exception.PassengerReservationNotF
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.BoardingPassRepository;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,10 +29,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.TextStyle;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -83,32 +80,36 @@ public class BoardingService {
         this.logoBytes = resourceService.loadAsBytes(LOGO_PATH);
     }
 
+    @Transactional
+    public BoardingPassEntity createBoardingPass(Long passengerReservationId) {
+        PassengerReservationEntity passengerReservation = passengerReservationRepository.findById(passengerReservationId)
+                .orElseThrow(() -> new PassengerReservationNotFoundException(passengerReservationId));
+
+        return boardingPassRepository.findByPassengerReservation(passengerReservation)
+                .orElseGet(() -> {
+                    log.debug("Creating new BoardingPassEntity for PassengerReservationId: {}", passengerReservation.getId());
+                    return boardingPassRepository.save(new BoardingPassEntity(passengerReservation, UUID.randomUUID()));
+                });
+    }
+
     @Async("boardingExecutor")
     @Transactional
     public void issue(Long passengerReservationId) {
         try {
             log.info("Starting Boarding Pass issuance process for PassengerReservationId: {}", passengerReservationId);
 
-            PassengerReservationEntity passengerReservation = passengerReservationRepository.findById(passengerReservationId)
-                    .orElseThrow(() -> new PassengerReservationNotFoundException(passengerReservationId));
+            BoardingPassEntity boardingPass = createBoardingPass(passengerReservationId);
+            PassengerReservationEntity passengerReservation = boardingPass.getPassengerReservation();
 
-        BoardingPassEntity boardingPass = getOrCreateBoardingPass(passengerReservation);
-        if (boardingPass.getId() == null) {
-            log.debug("Creating new BoardingPassEntity for PassengerReservationId: {}", passengerReservation.getId());
-            boardingPassRepository.save(boardingPass);
-        } else {
-            log.debug("Found existing BoardingPassEntity for PassengerReservationId: {}", passengerReservation.getId());
-        }
+            log.debug("Generating QR Code and Boarding Pass Document...");
+            byte[] qr = qrCodeService.generate(buildValidationUrl(boardingPass));
+            BoardingPassDocumentData document = buildDocument(passengerReservation, qr);
+            BoardingPassView view = boardingPassViewAssembler.toView(document);
 
-        log.debug("Generating QR Code and Boarding Pass Document...");
-        byte[] qr = qrCodeService.generate(buildValidationUrl(boardingPass));
-        BoardingPassDocumentData document = buildDocument(passengerReservation, qr);
-        BoardingPassView view = boardingPassViewAssembler.toView(document);
+            byte[] pdf = boardingPassPdfService.generate(view);
+            log.debug("PDF generation completed. Sending email to passenger...");
 
-        byte[] pdf = boardingPassPdfService.generate(view);
-        log.debug("PDF generation completed. Sending email to passenger...");
-
-        sendEmail(passengerReservation, document, pdf);
+            sendEmail(passengerReservation, document, pdf);
 
             boardingPass.markAsEmailed();
             log.info("Boarding pass successfully issued and emailed for PassengerReservationId: {}", passengerReservationId);
@@ -117,10 +118,23 @@ public class BoardingService {
         }
     }
 
-    private BoardingPassEntity getOrCreateBoardingPass(PassengerReservationEntity passengerReservation) {
-        return boardingPassRepository.findByPassengerReservation(passengerReservation)
-                .orElseGet(() -> new BoardingPassEntity(passengerReservation, UUID.randomUUID()));
+    @Transactional(readOnly = true)
+    public byte[] generatePdf(Long passengerReservationId) {
+        log.info("Generating Boarding Pass PDF for PassengerReservationId: {}", passengerReservationId);
 
+        PassengerReservationEntity passengerReservation = passengerReservationRepository.findById(passengerReservationId)
+                .orElseThrow(() -> new PassengerReservationNotFoundException(passengerReservationId));
+
+        BoardingPassEntity boardingPass = boardingPassRepository.findByPassengerReservation(passengerReservation)
+                .orElseThrow(() -> new BoardingPassNotFoundException(passengerReservationId));
+
+        byte[] qr = qrCodeService.generate(buildValidationUrl(boardingPass));
+        BoardingPassDocumentData document = buildDocument(passengerReservation, qr);
+        BoardingPassView view = boardingPassViewAssembler.toView(document);
+
+        byte[] pdf = boardingPassPdfService.generate(view);
+        log.info("PDF generated successfully for PassengerReservationId: {} ({} bytes)", passengerReservationId, pdf.length);
+        return pdf;
     }
 
     private void sendEmail(PassengerReservationEntity passengerReservation, BoardingPassDocumentData document, byte[] pdf) {
@@ -172,7 +186,7 @@ public class BoardingService {
 
         ReservationEntity reservation = passengerReservation.getReservation();
         PassengerEntity passenger = passengerReservation.getPassenger();
-        FlightEntity flight = reservation.getFlight();
+        FlightEntity flight = passengerReservation.getFlight();
 
         OffsetDateTime departureDateTime = flight.getDepartureDateTime();
 

@@ -231,4 +231,82 @@ class BoardingServiceTest {
         org.junit.jupiter.api.Assertions.assertTrue(pr.isExpired());
         org.junit.jupiter.api.Assertions.assertEquals(com.falcon.booking.common.enums.BoardingPassStatus.EXPIRED, boardingPass.getStatus());
     }
+
+    @DisplayName("Should generate PDF for existing boarding pass")
+    @Test
+    void shouldGeneratePdf() {
+        PassengerReservationEntity pr = buildPassengerReservation();
+        BoardingPassEntity existingPass = new BoardingPassEntity(pr, UUID.randomUUID());
+        BoardingPassView mockView = mock(BoardingPassView.class);
+        byte[] expectedPdf = {7, 8, 9};
+
+        when(passengerReservationRepository.findById(10L)).thenReturn(Optional.of(pr));
+        when(boardingPassRepository.findByPassengerReservation(pr)).thenReturn(Optional.of(existingPass));
+        when(qrCodeService.generate(anyString())).thenReturn(new byte[]{4, 5, 6});
+        when(boardingPassViewAssembler.toView(any(BoardingPassDocumentData.class))).thenReturn(mockView);
+        when(boardingPassPdfService.generate(mockView)).thenReturn(expectedPdf);
+
+        byte[] result = boardingService.generatePdf(10L);
+
+        org.junit.jupiter.api.Assertions.assertArrayEquals(expectedPdf, result);
+        verify(passengerReservationRepository).findById(10L);
+        verify(boardingPassRepository).findByPassengerReservation(pr);
+        verify(qrCodeService).generate(anyString());
+        verify(boardingPassViewAssembler).toView(any(BoardingPassDocumentData.class));
+        verify(boardingPassPdfService).generate(mockView);
+        verify(boardingPassRepository, never()).save(any());
+        verify(emailService, never()).send(any());
+    }
+
+    @DisplayName("Should throw BoardingPassNotFoundException when generating PDF if boarding pass was not created yet")
+    @Test
+    void shouldThrowBoardingPassNotFoundException_whenBoardingPassDoesNotExist_generatePdf() {
+        PassengerReservationEntity pr = buildPassengerReservation();
+        when(passengerReservationRepository.findById(10L)).thenReturn(Optional.of(pr));
+        when(boardingPassRepository.findByPassengerReservation(pr)).thenReturn(Optional.empty());
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.falcon.booking.feature.boarding.exception.BoardingPassNotFoundException.class,
+                () -> boardingService.generatePdf(10L)
+        );
+    }
+
+    @DisplayName("Should throw PassengerReservationNotFoundException when generating PDF for non-existent reservation")
+    @Test
+    void shouldThrowException_whenPassengerReservationNotFound_generatePdf() {
+        when(passengerReservationRepository.findById(10L)).thenReturn(Optional.empty());
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.falcon.booking.feature.reservation.exception.PassengerReservationNotFoundException.class,
+                () -> boardingService.generatePdf(10L)
+        );
+    }
+
+    @DisplayName("Should create boarding pass synchronously if not present")
+    @Test
+    void shouldCreateBoardingPass_whenNotPresent() {
+        PassengerReservationEntity pr = buildPassengerReservation();
+        when(passengerReservationRepository.findById(10L)).thenReturn(Optional.of(pr));
+        when(boardingPassRepository.findByPassengerReservation(pr)).thenReturn(Optional.empty());
+        when(boardingPassRepository.save(any(BoardingPassEntity.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        BoardingPassEntity created = boardingService.createBoardingPass(10L);
+
+        org.junit.jupiter.api.Assertions.assertNotNull(created);
+        verify(boardingPassRepository).save(any(BoardingPassEntity.class));
+    }
+
+    @DisplayName("Should return existing boarding pass when calling createBoardingPass")
+    @Test
+    void shouldReturnExistingBoardingPass_whenCreateBoardingPassCalled() {
+        PassengerReservationEntity pr = buildPassengerReservation();
+        BoardingPassEntity existingPass = new BoardingPassEntity(pr, UUID.randomUUID());
+        when(passengerReservationRepository.findById(10L)).thenReturn(Optional.of(pr));
+        when(boardingPassRepository.findByPassengerReservation(pr)).thenReturn(Optional.of(existingPass));
+
+        BoardingPassEntity result = boardingService.createBoardingPass(10L);
+
+        org.junit.jupiter.api.Assertions.assertEquals(existingPass, result);
+        verify(boardingPassRepository, never()).save(any());
+    }
 }

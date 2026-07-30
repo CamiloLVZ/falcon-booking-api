@@ -50,6 +50,7 @@ public class CheckInController {
     @PostMapping
     public ResponseEntity<ResponsePassengerReservationDto> checkInPassenger(@Valid @RequestBody CheckInRequestDto request){
         ResponsePassengerReservationDto response = checkInService.checkInByIdentificationNumber(request.reservationNumber(), request.contactEmail(), request.identificationNumber(), request.countryIsoCode(), request.seatNumber());
+        boardingService.createBoardingPass(response.id());
         boardingService.issue(response.id());
         return ResponseEntity.ok(response);
     }
