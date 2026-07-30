@@ -56,6 +56,13 @@ class ReservationCommandServiceTest {
     @Mock
     private ReservationNumberGenerator reservationNumberGenerator;
 
+    @Mock
+    private com.falcon.booking.common.email.EmailService emailService;
+    @Mock
+    private com.falcon.booking.common.email.template.EmailTemplateService emailTemplateService;
+    @Mock
+    private com.falcon.booking.feature.boarding.resources.ResourceService resourceService;
+
     @InjectMocks
     private ReservationCommandService reservationCommandService;
 
@@ -140,13 +147,35 @@ class ReservationCommandServiceTest {
         when(passengerService.getPassengerEntityByIdentificationNumber("123456", "CO"))
                 .thenThrow(new PassengerNotFoundException("123456"));
         when(reservationNumberGenerator.generate()).thenReturn("RES123");
-        when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> {
+            ReservationEntity res = i.getArgument(0);
+            ReflectionTestUtils.setField(res, "id", 1L);
+            return res;
+        });
         when(passengerService.createOrGetPassenger(addPassengerDto)).thenReturn(passenger);
+        ReservationEntity reservation = reservationCommandService.createReservationFromPayment(requestDto, flight, null);
 
-        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight, null);
-
-        assertThat(reservationNumber).isEqualTo("RES123");
+        assertThat(reservation.getNumber()).isEqualTo("RES123");
         verify(passengerReservationRepository).saveAll(anyList());
+    }
+
+    @DisplayName("Should send reservation confirmation email successfully")
+    @Test
+    void shouldSendReservationConfirmationEmail() {
+        FlightEntity flight = createFlight(FlightStatus.SCHEDULED, 108, 12);
+        PassengerEntity passenger = createPassenger("123456");
+        ReservationEntity reservation = new ReservationEntity("RES123", flight, "test@test.com", Instant.now());
+        ReflectionTestUtils.setField(reservation, "id", 1L);
+        PassengerReservationEntity pr = new PassengerReservationEntity(passenger, reservation, null, SeatClass.ECONOMY);
+        pr.setPrice(new java.math.BigDecimal("150.00"));
+        ReflectionTestUtils.setField(reservation, "passengerReservations", List.of(pr));
+
+        when(reservationRepository.findByIdWithPassengers(1L)).thenReturn(java.util.Optional.of(reservation));
+        when(emailTemplateService.process(anyString(), any())).thenReturn("<html>Confirmed</html>");
+
+        reservationCommandService.sendReservationConfirmationEmail(1L);
+
+        verify(emailService).send(any(com.falcon.booking.common.email.dto.EmailRequest.class));
     }
 
     @DisplayName("Should fail to create reservation if passenger already reserved")
@@ -233,12 +262,15 @@ class ReservationCommandServiceTest {
         when(passengerService.getPassengerEntityByIdentificationNumber("123456", "CO"))
                 .thenThrow(new PassengerNotFoundException("123456"));
         when(reservationNumberGenerator.generate()).thenReturn("RES456");
-        when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(reservationRepository.save(any(ReservationEntity.class))).thenAnswer(i -> {
+            ReservationEntity res = i.getArgument(0);
+            ReflectionTestUtils.setField(res, "id", 1L);
+            return res;
+        });
         when(passengerService.createOrGetPassenger(addPassengerDto)).thenReturn(passenger);
+        ReservationEntity reservation = reservationCommandService.createReservationFromPayment(requestDto, flight, user);
 
-        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight, user);
-
-        assertThat(reservationNumber).isEqualTo("RES456");
+        assertThat(reservation.getNumber()).isEqualTo("RES456");
         verify(passengerReservationRepository).saveAll(anyList());
     }
 

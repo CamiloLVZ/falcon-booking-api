@@ -27,10 +27,29 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import com.falcon.booking.common.email.EmailService;
+import com.falcon.booking.common.email.dto.EmailInlineImage;
+import com.falcon.booking.common.email.dto.EmailRequest;
+import com.falcon.booking.common.email.template.EmailTemplateService;
+import com.falcon.booking.feature.boarding.resources.ResourceService;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Async;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 public class ReservationCommandService {
+
+    private static final String LOGO_PATH = "static/images/falcon-logo.jpg";
+    private static final String LOGO_CID = "falcon-logo";
 
     private final ReservationRepository reservationRepository;
     private final PassengerReservationRepository passengerReservationRepository;
@@ -39,6 +58,9 @@ public class ReservationCommandService {
     private final ReservationQueryService reservationQueryService;
     private final ReservationAccessService reservationAccessService;
     private final ReservationNumberGenerator reservationNumberGenerator;
+    private final EmailService emailService;
+    private final EmailTemplateService emailTemplateService;
+    private final byte[] logoBytes;
 
     @Value("${app.reservation.cancellation.minimum-hours-before-departure}")
     private long minimumHoursBeforeDeparture;
@@ -49,7 +71,10 @@ public class ReservationCommandService {
                                      ReservationMapper reservationMapper,
                                      ReservationQueryService reservationQueryService,
                                      ReservationAccessService reservationAccessService,
-                                     ReservationNumberGenerator reservationNumberGenerator) {
+                                     ReservationNumberGenerator reservationNumberGenerator,
+                                     @Qualifier("resendEmailService") EmailService emailService,
+                                     EmailTemplateService emailTemplateService,
+                                     ResourceService resourceService) {
         this.reservationRepository = reservationRepository;
         this.passengerReservationRepository = passengerReservationRepository;
         this.passengerService = passengerService;
@@ -57,9 +82,12 @@ public class ReservationCommandService {
         this.reservationQueryService = reservationQueryService;
         this.reservationAccessService = reservationAccessService;
         this.reservationNumberGenerator = reservationNumberGenerator;
+        this.emailService = emailService;
+        this.emailTemplateService = emailTemplateService;
+        this.logoBytes = resourceService.loadAsBytes(LOGO_PATH);
     }
 
-    public String createReservationFromPayment(PaymentRequestDto requestDto, FlightEntity flight, UserEntity user) {
+    public ReservationEntity createReservationFromPayment(PaymentRequestDto requestDto, FlightEntity flight, UserEntity user) {
         checkPassengersAlreadyReservedFlight(requestDto.passengers(), flight);
 
         String reservationNumber = reservationNumberGenerator.generate();
@@ -79,7 +107,62 @@ public class ReservationCommandService {
         passengerReservationRepository.saveAll(passengerReservations);
 
         log.info("Created reservation number {} for flight {} via payment. Passengers: {}", reservation.getNumber(), flight.getId(), passengerReservations.size());
-        return reservationNumber;
+        return reservation;
+    }
+
+    @Async("boardingExecutor")
+    @Transactional(readOnly = true)
+    public void sendReservationConfirmationEmail(Long reservationId) {
+        try {
+            log.info("Starting Async Reservation Confirmation Email sending for Reservation ID: {}", reservationId);
+            ReservationEntity reservation = reservationRepository.findByIdWithPassengers(reservationId)
+                    .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
+
+            FlightEntity flight = reservation.getFlight();
+            OffsetDateTime departureDateTime = flight.getDepartureDateTime();
+            LocalDateTime departureLocalDateTime = departureDateTime.atZoneSameInstant(ZoneId.of(flight.getRoute().getAirportOrigin().getTimezone())).toLocalDateTime();
+
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            List<Map<String, Object>> passengerDataList = new ArrayList<>();
+            for (PassengerReservationEntity pr : reservation.getPassengerReservations()) {
+                Map<String, Object> pMap = new HashMap<>();
+                pMap.put("name", pr.getPassenger().getFullName());
+                pMap.put("identification", pr.getPassenger().getIdentification());
+                pMap.put("seatClass", pr.getSeatClass().name());
+                pMap.put("price", pr.getPrice());
+                passengerDataList.add(pMap);
+                if (pr.getPrice() != null) {
+                    totalAmount = totalAmount.add(pr.getPrice());
+                }
+            }
+
+            Map<String, Object> templateVariables = new HashMap<>();
+            templateVariables.put("reservationNumber", reservation.getNumber());
+            templateVariables.put("flightNumber", flight.getRoute().getFlightNumber());
+            templateVariables.put("originAirport", flight.getRoute().getAirportOrigin().getIataCode());
+            templateVariables.put("destinationAirport", flight.getRoute().getAirportDestination().getIataCode());
+            templateVariables.put("departureDate", departureLocalDateTime.toLocalDate().toString());
+            templateVariables.put("departureTime", departureLocalDateTime.toLocalTime().toString());
+            templateVariables.put("totalAmount", totalAmount);
+            templateVariables.put("passengers", passengerDataList);
+
+            String html = emailTemplateService.process("email/reservation-confirmation-email", templateVariables);
+            EmailInlineImage logoInline = new EmailInlineImage(LOGO_CID, "image/jpeg", logoBytes);
+
+            EmailRequest request = new EmailRequest(
+                    reservation.getContactEmail(),
+                    "Falcon Airlines Reservation Confirmation - " + reservation.getNumber(),
+                    html,
+                    true,
+                    List.of(logoInline),
+                    List.of()
+            );
+
+            emailService.send(request);
+            log.info("Reservation Confirmation email sent successfully to {}", reservation.getContactEmail());
+        } catch (Exception e) {
+            log.error("Failed to send reservation confirmation email for Reservation ID: {}", reservationId, e);
+        }
     }
 
     private void checkPassengersAlreadyReservedFlight(List<PaymentPassengerDto> passengers, FlightEntity flight) {
