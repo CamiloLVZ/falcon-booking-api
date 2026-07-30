@@ -71,8 +71,11 @@ public class PaymentService {
         return new ResponsePaymentDto(reservationNumber, totalAmount, PaymentStatus.APPROVED, payment.getCreatedAt());
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.flight.check-in.hours-before-to-close:1}")
+    private int hoursBeforeToCloseCheckIn;
+
     private void checkFlightCanBeReserved(FlightEntity flight) {
-        if (!flight.canBeReserved()) {
+        if (!flight.canBeReserved(hoursBeforeToCloseCheckIn)) {
             throw new FlightCanNotBeReservedException(flight.getId());
         }
     }

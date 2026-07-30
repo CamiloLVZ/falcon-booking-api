@@ -17,6 +17,7 @@ import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.FlightRepository;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.specification.FlightSpecifications;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +47,9 @@ public class FlightQueryService {
     private final PricingService pricingService;
 
     static final String SORT_FIELD_DEPARTURE_DATE_TIME = "departureDateTime";
+
+    @Value("${app.flight.check-in.hours-before-to-close:1}")
+    private int hoursBeforeToCloseCheckIn;
 
     public FlightQueryService(FlightRepository flightRepository,
                               RouteQueryService routeQueryService,
@@ -115,7 +119,7 @@ public class FlightQueryService {
             List<FlightStatus> reservableStatuses = List.of(FlightStatus.SCHEDULED, FlightStatus.CHECK_IN_AVAILABLE);
             return flightRepository.findFlightsByAirportsAndDateAndStatusIn(originIataCode, destinationIataCode, startDateTime, endDateTime, reservableStatuses)
                     .stream()
-                    .filter(FlightEntity::canBeReserved)
+                    .filter(f -> f.canBeReserved(hoursBeforeToCloseCheckIn))
                     .map(flightMapper::toDto)
                     .collect(Collectors.toList());
         }
