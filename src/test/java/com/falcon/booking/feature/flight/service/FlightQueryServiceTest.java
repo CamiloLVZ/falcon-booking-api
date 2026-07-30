@@ -30,9 +30,12 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.Collection;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
@@ -195,6 +198,79 @@ class FlightQueryServiceTest {
         Page<ResponseFlightDto> result = flightQueryService.getAllFlightsPaginated("AV1234", FlightStatus.SCHEDULED, null, null, 0, 10);
         assertThat(result.getContent()).containsExactly(dto);
         assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    // -------------------------------------------------------------------------
+    // getAllFlightsByOriginDestinationAndDate tests
+    // -------------------------------------------------------------------------
+
+    @DisplayName("Should return SCHEDULED and CHECK_IN_AVAILABLE flights that canBeReserved when status is null")
+    @Test
+    void shouldReturnReservableFlights_whenStatusIsNull() {
+        RouteEntity route = createRoute("AV1234", "America/Bogota", true);
+        AirportEntity airport = createAirport("America/Bogota");
+
+        FlightEntity scheduledFlight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC).plusDays(1), FlightStatus.SCHEDULED);
+        FlightEntity checkInFlight   = createFlight(2L, route, OffsetDateTime.now(ZoneOffset.UTC).plusDays(1), FlightStatus.CHECK_IN_AVAILABLE);
+
+        ResponseFlightDto dto1 = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", scheduledFlight.getDepartureDateTime(), scheduledFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+        ResponseFlightDto dto2 = new ResponseFlightDto(2L, "AV1234", "BOG", "BOG", checkInFlight.getDepartureDateTime(), checkInFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.CHECK_IN_AVAILABLE, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+
+        given(airportService.getAirportEntityByIataCode("BOG")).willReturn(airport);
+        given(flightRepository.findFlightsByAirportsAndDateAndStatusIn(
+                eq("BOG"), eq("MDE"), any(OffsetDateTime.class), any(OffsetDateTime.class), any(Collection.class)))
+                .willReturn(List.of(scheduledFlight, checkInFlight));
+        given(flightMapper.toDto(scheduledFlight)).willReturn(dto1);
+        given(flightMapper.toDto(checkInFlight)).willReturn(dto2);
+
+        List<ResponseFlightDto> result = flightQueryService.getAllFlightsByOriginDestinationAndDate("BOG", "MDE", LocalDate.now().plusDays(1), null);
+
+        assertThat(result).containsExactlyInAnyOrder(dto1, dto2);
+    }
+
+    @DisplayName("Should exclude flights where canBeReserved returns false when status is null")
+    @Test
+    void shouldExcludeNonReservableFlights_whenStatusIsNull() {
+        RouteEntity route = createRoute("AV1234", "America/Bogota", true);
+        AirportEntity airport = createAirport("America/Bogota");
+
+        // A CANCELED flight should never appear from the DB query, but we simulate
+        // a flight whose canBeReserved() returns false (e.g., status null edge case via reflection)
+        FlightEntity reservableFlight    = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC).plusDays(1), FlightStatus.SCHEDULED);
+        FlightEntity nonReservableFlight = createFlight(2L, route, OffsetDateTime.now(ZoneOffset.UTC).plusDays(1), FlightStatus.CANCELED);
+
+        ResponseFlightDto dto1 = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", reservableFlight.getDepartureDateTime(), reservableFlight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+
+        given(airportService.getAirportEntityByIataCode("BOG")).willReturn(airport);
+        given(flightRepository.findFlightsByAirportsAndDateAndStatusIn(
+                eq("BOG"), eq("MDE"), any(OffsetDateTime.class), any(OffsetDateTime.class), anyCollection()))
+                .willReturn(List.of(reservableFlight, nonReservableFlight));
+        given(flightMapper.toDto(reservableFlight)).willReturn(dto1);
+
+        List<ResponseFlightDto> result = flightQueryService.getAllFlightsByOriginDestinationAndDate("BOG", "MDE", LocalDate.now().plusDays(1), null);
+
+        assertThat(result).containsExactly(dto1);
+        assertThat(result).hasSize(1);
+    }
+
+    @DisplayName("Should use single-status query when status is explicitly provided")
+    @Test
+    void shouldUseSingleStatusQuery_whenStatusIsExplicit() {
+        RouteEntity route = createRoute("AV1234", "America/Bogota", true);
+        AirportEntity airport = createAirport("America/Bogota");
+
+        FlightEntity flight = createFlight(1L, route, OffsetDateTime.now(ZoneOffset.UTC).plusDays(1), FlightStatus.SCHEDULED);
+        ResponseFlightDto dto = new ResponseFlightDto(1L, "AV1234", "BOG", "BOG", flight.getDepartureDateTime(), flight.getDepartureDateTime().toLocalDateTime(), 40, null, FlightStatus.SCHEDULED, BigDecimal.valueOf(100.0), BigDecimal.valueOf(200.0));
+
+        given(airportService.getAirportEntityByIataCode("BOG")).willReturn(airport);
+        given(flightRepository.findFlightsByAirportsAndDate(
+                eq("BOG"), eq("MDE"), any(OffsetDateTime.class), any(OffsetDateTime.class), eq(FlightStatus.SCHEDULED)))
+                .willReturn(List.of(flight));
+        given(flightMapper.toDto(flight)).willReturn(dto);
+
+        List<ResponseFlightDto> result = flightQueryService.getAllFlightsByOriginDestinationAndDate("BOG", "MDE", LocalDate.now().plusDays(1), FlightStatus.SCHEDULED);
+
+        assertThat(result).containsExactly(dto);
     }
 
     // -------------------------------------------------------------------------

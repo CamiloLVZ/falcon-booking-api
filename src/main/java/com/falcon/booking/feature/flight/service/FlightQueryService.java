@@ -106,11 +106,19 @@ public class FlightQueryService {
 
     public List<ResponseFlightDto> getAllFlightsByOriginDestinationAndDate(String originIataCode, String destinationIataCode, LocalDate date, FlightStatus status) {
         AirportEntity airportOrigin = airportService.getAirportEntityByIataCode(originIataCode);
-        if (status == null) status = FlightStatus.SCHEDULED;
 
         Map<String, OffsetDateTime> dayRange = DateTimeUtils.getDayRange(date, ZoneId.of(airportOrigin.getTimezone()));
         OffsetDateTime startDateTime = dayRange.get("start");
         OffsetDateTime endDateTime = dayRange.get("end");
+
+        if (status == null) {
+            List<FlightStatus> reservableStatuses = List.of(FlightStatus.SCHEDULED, FlightStatus.CHECK_IN_AVAILABLE);
+            return flightRepository.findFlightsByAirportsAndDateAndStatusIn(originIataCode, destinationIataCode, startDateTime, endDateTime, reservableStatuses)
+                    .stream()
+                    .filter(FlightEntity::canBeReserved)
+                    .map(flightMapper::toDto)
+                    .collect(Collectors.toList());
+        }
 
         return flightRepository.findFlightsByAirportsAndDate(originIataCode, destinationIataCode, startDateTime, endDateTime, status)
                 .stream()

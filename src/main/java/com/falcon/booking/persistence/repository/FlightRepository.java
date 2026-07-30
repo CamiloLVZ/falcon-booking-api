@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,18 @@ public interface FlightRepository extends JpaRepository<FlightEntity, Long>, Jpa
 """)
     @EntityGraph(attributePaths = {"airplaneType", "route", "route.airportOrigin", "route.airportDestination"})
     List<FlightEntity> findFlightsByAirportsAndDate(String origin, String destination, OffsetDateTime start, OffsetDateTime end, FlightStatus status);
+
+    @Query("""
+    SELECT f FROM FlightEntity f
+    WHERE f.route.airportOrigin.iataCode = :origin
+      AND f.route.airportDestination.iataCode = :destination
+      AND f.departureDateTime >= :start
+      AND f.departureDateTime < :end
+      AND f.status IN :statuses
+    ORDER BY f.departureDateTime ASC
+""")
+    @EntityGraph(attributePaths = {"airplaneType", "route", "route.airportOrigin", "route.airportDestination"})
+    List<FlightEntity> findFlightsByAirportsAndDateAndStatusIn(String origin, String destination, OffsetDateTime start, OffsetDateTime end, Collection<FlightStatus> statuses);
 
 
 }

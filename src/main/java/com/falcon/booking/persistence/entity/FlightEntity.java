@@ -7,9 +7,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -25,6 +27,9 @@ import java.util.Objects;
 @Getter
 @Setter
 public class FlightEntity {
+
+    @Value("${app.flight.check-in.hours-before-to-close}")
+    int hoursBeforeToCloseCheckIn;
 
     public FlightEntity(RouteEntity route, AirplaneTypeEntity airplaneType, OffsetDateTime departureDateTime, FlightStatus status) {
         this.route = route;
@@ -120,7 +125,12 @@ public class FlightEntity {
 
     public boolean canBeReserved() {
         if (this.status==null) return false;
-        return (this.isScheduled() || this.isCheckInAvailable());
+        if (this.isScheduled()) return true;
+        if (this.isCheckInAvailable()){
+            Instant now = Instant.now();
+            return now.isBefore(departureDateTime.minusHours(hoursBeforeToCloseCheckIn).minusMinutes(10).toInstant());
+        }
+        return false;
     }
 
     public void cancel(){
