@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+
+    <meta charset="UTF-8"/>
+
+    <title>Falcon Airlines</title>
+
+    <style th:utext="${css}">/* CSS injected at render time */</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <img
+                th:src="${logo}"
+                alt="Falcon Airlines"/>
+
+        <div>
+
+            <h1>Falcon Airlines</h1>
+
+            <span>Reservation Confirmation</span>
+
+        </div>
+
+    </header>
+
+    <main>
+
+        <h2>Reservation Confirmation - <span th:text="${reservationNumber}"></span></h2>
+
+        <p>
+
+            Thank you for booking with Falcon Airlines. Your reservation has been successfully confirmed.
+
+        </p>
+
+        <div class="flight-card">
+
+            <div>
+
+                <span class="label">Reservation Number</span>
+
+                <span class="value"
+                      th:text="${reservationNumber}">
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Flight</span>
+
+                <span class="value"
+                      th:text="${flightNumber}">
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Route</span>
+
+                <span class="value">
+
+                    <span th:text="${originAirport}"></span>
+
+                    →
+
+                    <span th:text="${destinationAirport}"></span>
+
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Departure</span>
+
+                <span class="value">
+
+                    <span th:text="${departureDate}"></span>
+
+                    ·
+
+                    <span th:text="${departureTime}"></span>
+
+                </span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Total Amount</span>
+
+                <span class="value"
+                      th:text="${totalAmount}">
+                </span>
+
+            </div>
+
+        </div>
+
+        <h3>Passengers</h3>
+
+        <div class="flight-card" th:each="passenger : ${passengers}">
+
+            <div>
+
+                <span class="label">Passenger</span>
+
+                <span class="value" th:text="${passenger.name}"></span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Identification</span>
+
+                <span class="value" th:text="${passenger.identification}"></span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Class</span>
+
+                <span class="value" th:text="${passenger.seatClass}"></span>
+
+            </div>
+
+            <div>
+
+                <span class="label">Price</span>
+
+                <span class="value" th:text="${passenger.price}"></span>
+
+            </div>
+
+        </div>
+
+        <div class="notice">
+
+            <strong>✈ Check-in Reminder</strong><br/>
+            Online check-in is available from <strong>24 hours</strong> up to <strong>1 hour before</strong> your departure.
+            Don't forget to check in on time to secure your seat!
+
+        </div>
+
+    </main>
+
+    <footer>
+
+        Thank you for choosing Falcon Airlines.
+
+    </footer>
+
+</div>
+
+</body>
+
+</html>

@@ -14,6 +14,7 @@ import com.falcon.booking.feature.reservation.exception.FlightCapacityExceededEx
 import com.falcon.booking.feature.reservation.service.ReservationCommandService;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.PaymentEntity;
+import com.falcon.booking.persistence.entity.ReservationEntity;
 import com.falcon.booking.persistence.entity.UserEntity;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
 import com.falcon.booking.persistence.repository.PaymentRepository;
@@ -63,16 +64,22 @@ public class PaymentService {
             totalAmount = totalAmount.add(price);
         }
 
-        String reservationNumber = reservationCommandService.createReservationFromPayment(requestDto, flight, user);
+        ReservationEntity reservation = reservationCommandService.createReservationFromPayment(requestDto, flight, user);
+        String reservationNumber = reservation.getNumber();
 
         PaymentEntity payment = new PaymentEntity(reservationNumber, totalAmount, PaymentStatus.APPROVED, Instant.now());
         paymentRepository.save(payment);
 
+        reservationCommandService.sendReservationConfirmationEmail(reservation.getId());
+
         return new ResponsePaymentDto(reservationNumber, totalAmount, PaymentStatus.APPROVED, payment.getCreatedAt());
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.flight.check-in.hours-before-to-close:1}")
+    private int hoursBeforeToCloseCheckIn;
+
     private void checkFlightCanBeReserved(FlightEntity flight) {
-        if (!flight.canBeReserved()) {
+        if (!flight.canBeReserved(hoursBeforeToCloseCheckIn)) {
             throw new FlightCanNotBeReservedException(flight.getId());
         }
     }
