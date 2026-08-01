@@ -121,7 +121,7 @@ public class FlightQueryService {
                     .stream()
                     .filter(f -> f.canBeReserved(hoursBeforeToCloseCheckIn))
                     .map(flightMapper::toDto)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         return flightRepository.findFlightsByAirportsAndDate(originIataCode, destinationIataCode, startDateTime, endDateTime, status)
