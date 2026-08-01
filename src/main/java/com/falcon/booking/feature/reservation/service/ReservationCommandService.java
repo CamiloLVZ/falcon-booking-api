@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import com.falcon.booking.common.email.EmailService;
 import com.falcon.booking.common.email.dto.EmailInlineImage;
