@@ -3,6 +3,7 @@ package com.falcon.booking.feature.checkIn.controller;
 import com.falcon.booking.common.enums.PassengerGender;
 import com.falcon.booking.common.enums.PassengerReservationStatus;
 import com.falcon.booking.common.enums.SeatClass;
+import com.falcon.booking.feature.boarding.service.BoardingPassCreationService;
 import com.falcon.booking.feature.boarding.service.BoardingService;
 import com.falcon.booking.feature.checkIn.dto.CheckInRequestDto;
 import com.falcon.booking.feature.checkIn.service.CheckInService;
@@ -41,6 +42,9 @@ class CheckInControllerIT {
 
     @MockitoBean
     private BoardingService boardingService;
+
+    @MockitoBean
+    private BoardingPassCreationService boardingPassCreationService;
 
     @MockitoBean
     private JwtUtil jwtUtil;
@@ -84,6 +88,7 @@ class CheckInControllerIT {
                 .andExpect(jsonPath("$.status").value("CHECKED_IN"));
 
         verify(checkInService, times(1)).checkInByIdentificationNumber("ABC1234", "contact@test.com", "123456789", "CO", 15);
+        verify(boardingPassCreationService, times(1)).createBoardingPass(10L);
         verify(boardingService, times(1)).issue(10L);
     }
 
@@ -100,6 +105,7 @@ class CheckInControllerIT {
                 .andExpect(status().isOk());
 
         verify(checkInService, times(1)).checkInByIdentificationNumber("ABC1234", "contact@test.com", "123456789", "CO", null);
+        verify(boardingPassCreationService, times(1)).createBoardingPass(10L);
         verify(boardingService, times(1)).issue(10L);
     }
 }

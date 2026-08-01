@@ -11,6 +11,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -59,5 +62,27 @@ public class BoardingController {
     public ResponseEntity<Void> boardPassengerViaQr(@PathVariable @Parameter(description = "UUID QR token") UUID qrToken) {
         boardingService.boardPassenger(qrToken);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Download Boarding Pass PDF", description = "Generates and downloads the boarding pass PDF for a given passenger reservation ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "PDF generated successfully",
+                    content = @Content(mediaType = "application/pdf")),
+            @ApiResponse(responseCode = "404", description = "Passenger reservation not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+            @ApiResponse(responseCode = "500", description = "PDF generation error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+    })
+    @GetMapping("/{passengerReservationId}/download")
+    public ResponseEntity<ByteArrayResource> downloadBoardingPass(@PathVariable @Parameter(description = "Passenger reservation ID") Long passengerReservationId) {
+        byte[] pdf = boardingService.generatePdf(passengerReservationId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "boarding-pass.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(new ByteArrayResource(pdf));
     }
 }

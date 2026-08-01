@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -25,6 +26,7 @@ import java.util.Objects;
 @Getter
 @Setter
 public class FlightEntity {
+
 
     public FlightEntity(RouteEntity route, AirplaneTypeEntity airplaneType, OffsetDateTime departureDateTime, FlightStatus status) {
         this.route = route;
@@ -118,9 +120,14 @@ public class FlightEntity {
         return this.status.equals(FlightStatus.CANCELED);
     }
 
-    public boolean canBeReserved() {
-        if (this.status==null) return false;
-        return (this.isScheduled() || this.isCheckInAvailable());
+    public boolean canBeReserved(int hoursBeforeToCloseCheckIn) {
+        if (this.status == null) return false;
+        if (this.isScheduled()) return true;
+        if (this.isCheckInAvailable()) {
+            Instant now = Instant.now();
+            return now.isBefore(departureDateTime.minusHours(hoursBeforeToCloseCheckIn).minusMinutes(10).toInstant());
+        }
+        return false;
     }
 
     public void cancel(){

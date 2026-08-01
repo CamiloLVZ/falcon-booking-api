@@ -25,6 +25,14 @@ class BoardingExceptionHandlerTest {
     }
 
     @Test
+    void shouldHandleBoardingPassNotFoundByPassengerReservationId() {
+        var response = handler.handleException(new BoardingPassNotFoundException(10L));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().type()).isEqualTo("boarding-pass-not-found");
+        assertThat(response.getBody().message()).contains("10");
+    }
+
+    @Test
     void shouldHandleBoardingPassAlreadyBoarded() {
         var response = handler.handleException(new BoardingPassAlreadyBoardedException("test"));
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);

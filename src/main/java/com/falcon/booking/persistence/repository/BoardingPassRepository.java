@@ -13,9 +13,10 @@ import java.util.UUID;
 public interface BoardingPassRepository extends JpaRepository<BoardingPassEntity,Long> {
     Optional<BoardingPassEntity> findByPassengerReservation(PassengerReservationEntity passengerReservation);
     @EntityGraph(attributePaths = {
-            "passengerReservation.flight", "passengerReservation.flight.route",
-            "passengerReservation.flight.route.airportOrigin", "passengerReservation.flight.route.airportDestination",
-            "passengerReservation.passenger", "passengerReservation.passenger.countryNationality",
-            "passengerReservation.flight", "passengerReservation.flight.airplaneType"})
+            "passengerReservation.passenger",
+            "passengerReservation.flight.airplaneType",
+            "passengerReservation.flight.route.airportOrigin",
+            "passengerReservation.flight.route.airportDestination"
+    })
     Optional<BoardingPassEntity> findByQrToken(UUID qrToken);
 }

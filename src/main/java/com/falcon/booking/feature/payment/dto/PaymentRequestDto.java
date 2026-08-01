@@ -17,7 +17,7 @@ public record PaymentRequestDto(
     String contactEmail,
 
     @NotNull(message = "Passengers list can not be null")
-    @Size(min = 1, message = "Reservation must have at least one passenger")
+    @Size(min = 1, max = 9, message = "Reservation must have between 1 and 9 passengers")
     @Valid
     List<PaymentPassengerDto> passengers
 ) {}

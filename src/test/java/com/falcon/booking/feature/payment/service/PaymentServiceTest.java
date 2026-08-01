@@ -86,7 +86,9 @@ class PaymentServiceTest {
         when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(5);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(50);
-        when(reservationCommandService.createReservationFromPayment(requestDto, flight, null)).thenReturn("RES123");
+        ReservationEntity reservation = new ReservationEntity("RES123", flight, "test@test.com", java.time.Instant.now());
+        org.springframework.test.util.ReflectionTestUtils.setField(reservation, "id", 1L);
+        when(reservationCommandService.createReservationFromPayment(requestDto, flight, null)).thenReturn(reservation);
         when(paymentRepository.save(any(PaymentEntity.class))).thenAnswer(i -> i.getArguments()[0]);
 
         ResponsePaymentDto response = paymentService.processPayment(requestDto, null);
@@ -96,6 +98,7 @@ class PaymentServiceTest {
         assertThat(response.status()).isEqualTo(PaymentStatus.APPROVED);
         assertThat(response.totalAmount()).isGreaterThan(BigDecimal.ZERO);
         verify(paymentRepository).save(any(PaymentEntity.class));
+        verify(reservationCommandService).sendReservationConfirmationEmail(1L);
     }
 
     @DisplayName("Should fail when flight cannot be reserved (e.g., CANCELED)")
@@ -172,7 +175,9 @@ class PaymentServiceTest {
         when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(5);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(50);
-        when(reservationCommandService.createReservationFromPayment(requestDto, flight, user)).thenReturn("RES123");
+        ReservationEntity reservation = new ReservationEntity("RES123", flight, "test@test.com", java.time.Instant.now());
+        org.springframework.test.util.ReflectionTestUtils.setField(reservation, "id", 1L);
+        when(reservationCommandService.createReservationFromPayment(requestDto, flight, user)).thenReturn(reservation);
         when(paymentRepository.save(any(PaymentEntity.class))).thenAnswer(i -> i.getArguments()[0]);
 
         ResponsePaymentDto response = paymentService.processPayment(requestDto, user);
@@ -181,5 +186,6 @@ class PaymentServiceTest {
         assertThat(response.reservationNumber()).isEqualTo("RES123");
         assertThat(response.status()).isEqualTo(PaymentStatus.APPROVED);
         verify(reservationCommandService).createReservationFromPayment(requestDto, flight, user);
+        verify(reservationCommandService).sendReservationConfirmationEmail(1L);
     }
 }

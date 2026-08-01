@@ -22,6 +22,7 @@ import java.util.UUID;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -83,5 +84,34 @@ class BoardingControllerIT {
         ResultActions response = mockMvc.perform(patch("/v1/boarding-passes/board/{qrToken}", qrToken));
 
         response.andExpect(status().isOk());
+    }
+
+    @DisplayName("Should return 200 and PDF when downloading boarding pass")
+    @Test
+    void shouldReturn200_downloadBoardingPass() throws Exception {
+        Long passengerReservationId = 10L;
+        byte[] pdfBytes = {1, 2, 3, 4, 5};
+
+        given(boardingService.generatePdf(passengerReservationId)).willReturn(pdfBytes);
+
+        ResultActions response = mockMvc.perform(get("/v1/boarding-passes/{passengerReservationId}/download", passengerReservationId));
+
+        response.andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"))
+                .andExpect(content().bytes(pdfBytes));
+    }
+
+    @DisplayName("Should return 404 when downloading boarding pass for non-existent reservation")
+    @Test
+    void shouldReturn404_downloadBoardingPass() throws Exception {
+        Long passengerReservationId = 99L;
+
+        given(boardingService.generatePdf(passengerReservationId))
+                .willThrow(new com.falcon.booking.feature.reservation.exception.PassengerReservationNotFoundException(passengerReservationId));
+
+        ResultActions response = mockMvc.perform(get("/v1/boarding-passes/{passengerReservationId}/download", passengerReservationId));
+
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("passenger-reservation-does-not-exist"));
     }
 }
