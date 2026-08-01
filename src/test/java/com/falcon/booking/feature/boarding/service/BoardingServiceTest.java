@@ -1,15 +1,9 @@
 package com.falcon.booking.feature.boarding.service;
 
-import com.falcon.booking.common.email.EmailService;
-import com.falcon.booking.common.email.dto.EmailRequest;
-import com.falcon.booking.common.email.template.EmailTemplateService;
 import com.falcon.booking.common.enums.SeatClass;
-import com.falcon.booking.common.qr.QrCodeService;
-import com.falcon.booking.feature.boarding.assembler.BoardingPassViewAssembler;
 import com.falcon.booking.feature.boarding.dto.BoardingPassDocumentData;
-import com.falcon.booking.feature.boarding.dto.BoardingPassView;
-import com.falcon.booking.feature.boarding.pdf.BoardingPassPdfService;
-import com.falcon.booking.feature.boarding.resources.ResourceService;
+import com.falcon.booking.feature.boarding.pdf.BoardingPassPdfGenerator;
+import com.falcon.booking.feature.boarding.pdf.BoardingPassPdfResult;
 import com.falcon.booking.persistence.entity.*;
 import com.falcon.booking.persistence.repository.BoardingPassRepository;
 import com.falcon.booking.persistence.repository.PassengerReservationRepository;
@@ -22,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,38 +33,20 @@ class BoardingServiceTest {
     @Mock
     private BoardingPassRepository boardingPassRepository;
     @Mock
-    private BoardingPassViewAssembler boardingPassViewAssembler;
+    private BoardingPassPdfGenerator boardingPassPdfGenerator;
     @Mock
-    private BoardingPassPdfService boardingPassPdfService;
-    @Mock
-    private QrCodeService qrCodeService;
-    @Mock
-    private EmailService emailService;
-    @Mock
-    private EmailTemplateService emailTemplateService;
-    @Mock
-    private ResourceService resourceService;
+    private BoardingEmailService boardingEmailService;
 
     private BoardingService boardingService;
 
     @BeforeEach
     void setUp() {
-        when(resourceService.loadAsBytes(anyString())).thenReturn(new byte[]{1, 2, 3});
         boardingService = new BoardingService(
                 passengerReservationRepository,
                 boardingPassRepository,
-                boardingPassViewAssembler,
-                boardingPassPdfService,
-                qrCodeService,
-                emailService,
-                emailTemplateService,
-                resourceService
+                boardingPassPdfGenerator,
+                boardingEmailService
         );
-        ReflectionTestUtils.setField(boardingService, "baseUrl", "https://falcon.example.com");
-        ReflectionTestUtils.setField(boardingService, "contextPath", "/api");
-        ReflectionTestUtils.setField(boardingService, "validationPath", "/v1/boarding-passes");
-        ReflectionTestUtils.setField(boardingService, "minutesBeforeToEndBoarding", 15);
-        ReflectionTestUtils.setField(boardingService, "minutesBeforeToStartBoarding", 60);
     }
 
     private PassengerReservationEntity buildPassengerReservation() {
@@ -109,49 +86,36 @@ class BoardingServiceTest {
         return new PassengerReservationEntity(passenger, reservation, 5, SeatClass.ECONOMY);
     }
 
-    @DisplayName("Should issue boarding pass: generate QR, PDF, save entity and send email")
+    @DisplayName("Should issue boarding pass: save entity, mark as emailed and delegate async email")
     @Test
     void shouldIssueBoardingPass() {
         PassengerReservationEntity pr = buildPassengerReservation();
-        BoardingPassView mockView = mock(BoardingPassView.class);
 
         when(passengerReservationRepository.findById(10L)).thenReturn(Optional.of(pr));
         when(boardingPassRepository.findByPassengerReservation(pr)).thenReturn(Optional.empty());
         when(boardingPassRepository.save(any(BoardingPassEntity.class))).thenAnswer(i -> i.getArguments()[0]);
-        when(qrCodeService.generate(anyString())).thenReturn(new byte[]{4, 5, 6});
-        when(boardingPassViewAssembler.toView(any(BoardingPassDocumentData.class))).thenReturn(mockView);
-        when(boardingPassPdfService.generate(mockView)).thenReturn(new byte[]{7, 8, 9});
-        when(emailTemplateService.process(anyString(), any())).thenReturn("<html>email</html>");
 
         boardingService.issue(10L);
 
         verify(passengerReservationRepository).findById(10L);
-        verify(qrCodeService).generate(anyString());
-        verify(boardingPassPdfService).generate(mockView);
         verify(boardingPassRepository).save(any(BoardingPassEntity.class));
-        verify(emailService).send(any(EmailRequest.class));
+        verify(boardingEmailService).generateAndSendBoardingPassEmail(10L);
     }
 
-    @DisplayName("Should find existing boarding pass entity via repository and still send email")
+    @DisplayName("Should find existing boarding pass entity via repository and still delegate async email")
     @Test
     void shouldFindExistingBoardingPassEntityAndSendEmail() {
         PassengerReservationEntity pr = buildPassengerReservation();
         BoardingPassEntity existingPass = new BoardingPassEntity(pr, UUID.randomUUID());
-        BoardingPassView mockView = mock(BoardingPassView.class);
 
         when(passengerReservationRepository.findById(10L)).thenReturn(Optional.of(pr));
         when(boardingPassRepository.findByPassengerReservation(pr)).thenReturn(Optional.of(existingPass));
-        when(qrCodeService.generate(anyString())).thenReturn(new byte[]{4, 5, 6});
-        when(boardingPassViewAssembler.toView(any(BoardingPassDocumentData.class))).thenReturn(mockView);
-        when(boardingPassPdfService.generate(mockView)).thenReturn(new byte[]{7, 8, 9});
-        when(emailTemplateService.process(anyString(), any())).thenReturn("<html>email</html>");
 
         boardingService.issue(10L);
 
-        // Email must always be sent regardless of whether the entity was new or preexisting
-        verify(emailService).send(any(EmailRequest.class));
-        verify(qrCodeService).generate(anyString());
-        verify(boardingPassPdfService).generate(mockView);
+        // Email must always be delegated regardless of whether the entity was new or preexisting
+        verify(boardingEmailService).generateAndSendBoardingPassEmail(10L);
+        verify(boardingPassRepository, never()).save(any());
     }
 
     @DisplayName("Should silently handle missing PassengerReservation without throwing")
@@ -162,7 +126,7 @@ class BoardingServiceTest {
         boardingService.issue(10L);
 
         verify(boardingPassRepository, never()).save(any());
-        verify(emailService, never()).send(any());
+        verify(boardingEmailService, never()).generateAndSendBoardingPassEmail(anyLong());
     }
 
     @DisplayName("Should validate boarding pass successfully")
@@ -237,25 +201,26 @@ class BoardingServiceTest {
     void shouldGeneratePdf() {
         PassengerReservationEntity pr = buildPassengerReservation();
         BoardingPassEntity existingPass = new BoardingPassEntity(pr, UUID.randomUUID());
-        BoardingPassView mockView = mock(BoardingPassView.class);
+        BoardingPassDocumentData document = new BoardingPassDocumentData(
+                "ANA PEREZ", "AV1234", "BOG", "MDE",
+                LocalDateTime.of(2026, 8, 1, 10, 0),
+                LocalDateTime.of(2026, 8, 1, 9, 0),
+                LocalDateTime.of(2026, 8, 1, 9, 45),
+                "GMT-5", "12A", "RES123", new byte[]{4, 5, 6});
         byte[] expectedPdf = {7, 8, 9};
 
         when(passengerReservationRepository.findById(10L)).thenReturn(Optional.of(pr));
         when(boardingPassRepository.findByPassengerReservation(pr)).thenReturn(Optional.of(existingPass));
-        when(qrCodeService.generate(anyString())).thenReturn(new byte[]{4, 5, 6});
-        when(boardingPassViewAssembler.toView(any(BoardingPassDocumentData.class))).thenReturn(mockView);
-        when(boardingPassPdfService.generate(mockView)).thenReturn(expectedPdf);
+        when(boardingPassPdfGenerator.generate(existingPass)).thenReturn(new BoardingPassPdfResult(document, expectedPdf));
 
         byte[] result = boardingService.generatePdf(10L);
 
         org.junit.jupiter.api.Assertions.assertArrayEquals(expectedPdf, result);
         verify(passengerReservationRepository).findById(10L);
         verify(boardingPassRepository).findByPassengerReservation(pr);
-        verify(qrCodeService).generate(anyString());
-        verify(boardingPassViewAssembler).toView(any(BoardingPassDocumentData.class));
-        verify(boardingPassPdfService).generate(mockView);
+        verify(boardingPassPdfGenerator).generate(existingPass);
         verify(boardingPassRepository, never()).save(any());
-        verify(emailService, never()).send(any());
+        verify(boardingEmailService, never()).generateAndSendBoardingPassEmail(anyLong());
     }
 
     @DisplayName("Should throw BoardingPassNotFoundException when generating PDF if boarding pass was not created yet")
