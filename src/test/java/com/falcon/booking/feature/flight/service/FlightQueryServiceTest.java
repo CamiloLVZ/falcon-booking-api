@@ -249,8 +249,7 @@ class FlightQueryServiceTest {
 
         List<ResponseFlightDto> result = flightQueryService.getAllFlightsByOriginDestinationAndDate("BOG", "MDE", LocalDate.now().plusDays(1), null);
 
-        assertThat(result).containsExactly(dto1);
-        assertThat(result).hasSize(1);
+        assertThat(result).containsExactly(dto1).hasSize(1);
     }
 
     @DisplayName("Should use single-status query when status is explicitly provided")
