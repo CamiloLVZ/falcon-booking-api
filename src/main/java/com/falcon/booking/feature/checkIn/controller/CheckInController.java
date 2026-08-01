@@ -1,6 +1,7 @@
 package com.falcon.booking.feature.checkIn.controller;
 
 import com.falcon.booking.common.web.Error;
+import com.falcon.booking.feature.boarding.service.BoardingPassCreationService;
 import com.falcon.booking.feature.boarding.service.BoardingService;
 import com.falcon.booking.feature.checkIn.dto.CheckInRequestDto;
 import com.falcon.booking.feature.checkIn.service.CheckInService;
@@ -28,11 +29,13 @@ public class CheckInController {
 
     private final CheckInService checkInService;
     private final BoardingService boardingService;
+    private final BoardingPassCreationService boardingPassCreationService;
 
     @Autowired
-    public CheckInController(CheckInService checkInService, BoardingService boardingService) {
+    public CheckInController(CheckInService checkInService, BoardingService boardingService, BoardingPassCreationService boardingPassCreationService) {
         this.checkInService = checkInService;
         this.boardingService = boardingService;
+        this.boardingPassCreationService = boardingPassCreationService;
     }
 
     @Operation(summary = "Check in passenger",
@@ -50,7 +53,7 @@ public class CheckInController {
     @PostMapping
     public ResponseEntity<ResponsePassengerReservationDto> checkInPassenger(@Valid @RequestBody CheckInRequestDto request){
         ResponsePassengerReservationDto response = checkInService.checkInByIdentificationNumber(request.reservationNumber(), request.contactEmail(), request.identificationNumber(), request.countryIsoCode(), request.seatNumber());
-        boardingService.createBoardingPass(response.id());
+        boardingPassCreationService.createBoardingPass(response.id());
         boardingService.issue(response.id());
         return ResponseEntity.ok(response);
     }

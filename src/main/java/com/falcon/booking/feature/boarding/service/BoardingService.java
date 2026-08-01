@@ -23,27 +23,18 @@ public class BoardingService {
     private final BoardingPassRepository boardingPassRepository;
     private final BoardingPassPdfGenerator boardingPassPdfGenerator;
     private final BoardingEmailService boardingEmailService;
+    private final BoardingPassCreationService boardingPassCreationService;
 
     public BoardingService(PassengerReservationRepository passengerReservationRepository,
                            BoardingPassRepository boardingPassRepository,
                            BoardingPassPdfGenerator boardingPassPdfGenerator,
-                           BoardingEmailService boardingEmailService) {
+                           BoardingEmailService boardingEmailService,
+                           BoardingPassCreationService boardingPassCreationService) {
         this.passengerReservationRepository = passengerReservationRepository;
         this.boardingPassRepository = boardingPassRepository;
         this.boardingPassPdfGenerator = boardingPassPdfGenerator;
         this.boardingEmailService = boardingEmailService;
-    }
-
-    @Transactional
-    public BoardingPassEntity createBoardingPass(Long passengerReservationId) {
-        PassengerReservationEntity passengerReservation = passengerReservationRepository.findById(passengerReservationId)
-                .orElseThrow(() -> new PassengerReservationNotFoundException(passengerReservationId));
-
-        return boardingPassRepository.findByPassengerReservation(passengerReservation)
-                .orElseGet(() -> {
-                    log.debug("Creating new BoardingPassEntity for PassengerReservationId: {}", passengerReservation.getId());
-                    return boardingPassRepository.save(new BoardingPassEntity(passengerReservation, UUID.randomUUID()));
-                });
+        this.boardingPassCreationService = boardingPassCreationService;
     }
 
     @Transactional
@@ -51,7 +42,7 @@ public class BoardingService {
         try {
             log.info("Starting Boarding Pass issuance process for PassengerReservationId: {}", passengerReservationId);
 
-            BoardingPassEntity boardingPass = createBoardingPass(passengerReservationId);
+            BoardingPassEntity boardingPass = boardingPassCreationService.createBoardingPass(passengerReservationId);
             boardingPass.markAsEmailed();
 
             boardingEmailService.generateAndSendBoardingPassEmail(passengerReservationId);
