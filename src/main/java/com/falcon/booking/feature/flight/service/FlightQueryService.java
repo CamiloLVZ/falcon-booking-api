@@ -70,6 +70,11 @@ public class FlightQueryService {
                 .orElseThrow(() -> new FlightNotFoundException(id));
     }
 
+    public FlightEntity getFlightEntityWithLock(Long id) {
+        return flightRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new FlightNotFoundException(id));
+    }
+
     @Transactional(readOnly = true)
     public ResponseFlightDto getFlightById(Long id) {
         return flightMapper.toDto(getFlightEntity(id));
