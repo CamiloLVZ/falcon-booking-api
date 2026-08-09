@@ -3,12 +3,14 @@ package com.falcon.booking.persistence.repository;
 import com.falcon.booking.common.enums.FlightStatus;
 import com.falcon.booking.persistence.entity.FlightEntity;
 import com.falcon.booking.persistence.entity.RouteEntity;
+import jakarta.persistence.LockModeType;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -27,6 +29,11 @@ public interface FlightRepository extends JpaRepository<FlightEntity, Long>, Jpa
     @EntityGraph(attributePaths = {"airplaneType"})
     @NonNull
     Optional<FlightEntity> findById(@NonNull Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = {"airplaneType"})
+    @Query("SELECT f FROM FlightEntity f WHERE f.id = :id")
+    Optional<FlightEntity> findByIdWithLock(@Param("id") Long id);
 
     @Query("SELECT f.departureDateTime FROM FlightEntity f " +
             "WHERE f.route = :route " +

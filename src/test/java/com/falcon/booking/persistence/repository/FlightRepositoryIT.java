@@ -152,4 +152,18 @@ class FlightRepositoryIT extends BaseRepositoryTest {
 
         assertThat(existing).containsExactly(departure1);
     }
+
+    @DisplayName("Should find flight by ID with pessimistic lock and eager airplaneType")
+    @Test
+    void shouldFindByIdWithLock() {
+        RouteEntity route = createRoute("AV9999");
+        OffsetDateTime departure = OffsetDateTime.now().plusDays(2).withNano(0);
+        FlightEntity flight = flightRepository.save(createFlight(route, departure, FlightStatus.SCHEDULED));
+
+        java.util.Optional<FlightEntity> lockedFlightOpt = flightRepository.findByIdWithLock(flight.getId());
+
+        assertThat(lockedFlightOpt).isPresent();
+        assertThat(lockedFlightOpt.get().getId()).isEqualTo(flight.getId());
+        assertThat(lockedFlightOpt.get().getAirplaneType()).isNotNull();
+    }
 }

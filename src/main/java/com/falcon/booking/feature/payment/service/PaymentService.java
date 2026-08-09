@@ -44,7 +44,7 @@ public class PaymentService {
 
     @Transactional
     public ResponsePaymentDto processPayment(PaymentRequestDto requestDto, UserEntity user) {
-        FlightEntity flight = flightQueryService.getFlightEntity(requestDto.flightId());
+        FlightEntity flight = flightQueryService.getFlightEntityWithLock(requestDto.flightId());
 
         checkFlightCanBeReserved(flight);
         checkPassengerDuplication(requestDto.passengers());

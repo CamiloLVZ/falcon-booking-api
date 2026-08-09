@@ -109,6 +109,25 @@ class FlightQueryServiceTest {
         assertThrows(FlightNotFoundException.class, () -> flightQueryService.getFlightEntity(1L));
     }
 
+    @DisplayName("Should return FlightEntity with lock when exists")
+    @Test
+    void shouldReturnFlightEntityWithLock_whenExists() {
+        FlightEntity entity = createFlight(1L, createRoute("AV1234", "UTC", true), OffsetDateTime.now(ZoneOffset.UTC), FlightStatus.SCHEDULED);
+        given(flightRepository.findByIdWithLock(1L)).willReturn(Optional.of(entity));
+
+        FlightEntity result = flightQueryService.getFlightEntityWithLock(1L);
+
+        assertThat(result).isSameAs(entity);
+    }
+
+    @DisplayName("Should throw FlightNotFoundException when flight does not exist for getFlightEntityWithLock")
+    @Test
+    void shouldThrowException_getFlightEntityWithLock_whenNotFound() {
+        given(flightRepository.findByIdWithLock(1L)).willReturn(Optional.empty());
+
+        assertThrows(FlightNotFoundException.class, () -> flightQueryService.getFlightEntityWithLock(1L));
+    }
+
     @DisplayName("Should return flight dto by id")
     @Test
     void shouldReturnDto_getFlightById() {

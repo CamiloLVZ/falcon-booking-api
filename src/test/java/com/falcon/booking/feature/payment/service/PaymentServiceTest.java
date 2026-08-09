@@ -83,7 +83,7 @@ class PaymentServiceTest {
         PaymentPassengerDto pp2 = new PaymentPassengerDto(p2, SeatClass.FIRST_CLASS);
         PaymentRequestDto requestDto = new PaymentRequestDto(flight.getId(), "test@test.com", List.of(pp1, pp2));
 
-        when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
+        when(flightQueryService.getFlightEntityWithLock(flight.getId())).thenReturn(flight);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(5);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(50);
         ReservationEntity reservation = new ReservationEntity("RES123", flight, "test@test.com", java.time.Instant.now());
@@ -107,7 +107,7 @@ class PaymentServiceTest {
         FlightEntity flight = createFlight(FlightStatus.CANCELED, 100, 20);
         PaymentRequestDto requestDto = new PaymentRequestDto(flight.getId(), "test@test.com", List.of());
 
-        when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
+        when(flightQueryService.getFlightEntityWithLock(flight.getId())).thenReturn(flight);
 
         assertThatThrownBy(() -> paymentService.processPayment(requestDto, null))
                 .isInstanceOf(FlightCanNotBeReservedException.class);
@@ -121,7 +121,7 @@ class PaymentServiceTest {
         PaymentPassengerDto pp1 = new PaymentPassengerDto(p1, SeatClass.FIRST_CLASS);
         PaymentRequestDto requestDto = new PaymentRequestDto(flight.getId(), "test@test.com", List.of(pp1));
 
-        when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
+        when(flightQueryService.getFlightEntityWithLock(flight.getId())).thenReturn(flight);
         // All 20 first-class seats already taken
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(20);
 
@@ -137,7 +137,7 @@ class PaymentServiceTest {
         PaymentPassengerDto pp1 = new PaymentPassengerDto(p1, SeatClass.ECONOMY);
         PaymentRequestDto requestDto = new PaymentRequestDto(flight.getId(), "test@test.com", List.of(pp1));
 
-        when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
+        when(flightQueryService.getFlightEntityWithLock(flight.getId())).thenReturn(flight);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(0);
         // All 100 economy seats already taken
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(100);
@@ -156,7 +156,7 @@ class PaymentServiceTest {
         PaymentPassengerDto pp2 = new PaymentPassengerDto(p1, SeatClass.FIRST_CLASS);
         PaymentRequestDto requestDto = new PaymentRequestDto(flight.getId(), "test@test.com", List.of(pp1, pp2));
 
-        when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
+        when(flightQueryService.getFlightEntityWithLock(flight.getId())).thenReturn(flight);
 
         assertThatThrownBy(() -> paymentService.processPayment(requestDto, null))
                 .isInstanceOf(DuplicatedPassengerException.class);
@@ -172,7 +172,7 @@ class PaymentServiceTest {
         PaymentPassengerDto pp1 = new PaymentPassengerDto(p1, SeatClass.ECONOMY);
         PaymentRequestDto requestDto = new PaymentRequestDto(flight.getId(), "test@test.com", List.of(pp1));
 
-        when(flightQueryService.getFlightEntity(flight.getId())).thenReturn(flight);
+        when(flightQueryService.getFlightEntityWithLock(flight.getId())).thenReturn(flight);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.FIRST_CLASS, PassengerReservationStatus.CANCELED)).thenReturn(5);
         when(passengerReservationRepository.countByFlightAndSeatClassAndStatusNot(flight, SeatClass.ECONOMY, PassengerReservationStatus.CANCELED)).thenReturn(50);
         ReservationEntity reservation = new ReservationEntity("RES123", flight, "test@test.com", java.time.Instant.now());
