@@ -97,7 +97,7 @@ public class FlightGenerationServiceTest {
         generation.setId(1L);
         ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.GLOBAL, null, null, generation.getStartedAt(), null, null, "/flight-generations/1");
 
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
+        given(flightGenerationRepository.saveAndFlush(any(FlightGenerationEntity.class))).willReturn(generation);
         given(flightGenerationMapper.toDto(generation)).willReturn(dto);
 
         ResponseFlightsGenerationDto result = flightGenerationService.startGlobalFlightGeneration();
@@ -110,7 +110,7 @@ public class FlightGenerationServiceTest {
     void shouldThrowExceptionWhenGenerationAlreadyRunning_GlobalGeneration() {
         var constraintException = new ConstraintViolationException("duplicate", null, FlightGenerationService.SINGLE_RUNNING_GENERATION_CONSTRAINT);
         var dataException = new DataIntegrityViolationException("duplicate", constraintException);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
+        given(flightGenerationRepository.saveAndFlush(any(FlightGenerationEntity.class))).willThrow(dataException);
 
         assertThrows(
                 FlightGenerationAlreadyRunningException.class,
@@ -127,7 +127,7 @@ public class FlightGenerationServiceTest {
         ResponseFlightsGenerationDto dto = new ResponseFlightsGenerationDto(1L, FlightGenerationStatus.RUNNING, FlightGenerationType.ROUTE, route.getId(), null, generation.getStartedAt(), null, null, "/flight-generations/1");
 
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
+        given(flightGenerationRepository.saveAndFlush(any(FlightGenerationEntity.class))).willReturn(generation);
         given(flightGenerationMapper.toDto(generation)).willReturn(dto);
 
         ResponseFlightsGenerationDto result = flightGenerationService.startRouteFlightGeneration("AV1234");
@@ -153,7 +153,7 @@ public class FlightGenerationServiceTest {
         given(routeQueryService.getRouteEntity("AV1234")).willReturn(route);
         var constraintException = new ConstraintViolationException("duplicate", null, FlightGenerationService.SINGLE_RUNNING_GENERATION_CONSTRAINT);
         var dataException = new DataIntegrityViolationException("duplicate", constraintException);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
+        given(flightGenerationRepository.saveAndFlush(any(FlightGenerationEntity.class))).willThrow(dataException);
 
         assertThrows(
                 FlightGenerationAlreadyRunningException.class,
@@ -167,11 +167,11 @@ public class FlightGenerationServiceTest {
     void shouldStartDailyFlightGeneration() {
         FlightGenerationEntity generation = FlightGenerationEntity.startDailyGeneration(LocalDate.now());
         generation.setId(1L);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willReturn(generation);
+        given(flightGenerationRepository.saveAndFlush(any(FlightGenerationEntity.class))).willReturn(generation);
 
         flightGenerationService.startDailyFlightGeneration(LocalDate.now());
 
-        verify(flightGenerationRepository).save(any(FlightGenerationEntity.class));
+        verify(flightGenerationRepository).saveAndFlush(any(FlightGenerationEntity.class));
         verify(asyncFlightGenerationService).executeGeneration(any(Long.class));
     }
 
@@ -180,7 +180,7 @@ public class FlightGenerationServiceTest {
     void shouldThrowExceptionWhenGenerationAlreadyRunning_DailyGeneration() {
         var constraintException = new ConstraintViolationException("duplicate", null, FlightGenerationService.SINGLE_RUNNING_GENERATION_CONSTRAINT);
         var dataException = new DataIntegrityViolationException("duplicate", constraintException);
-        given(flightGenerationRepository.save(any(FlightGenerationEntity.class))).willThrow(dataException);
+        given(flightGenerationRepository.saveAndFlush(any(FlightGenerationEntity.class))).willThrow(dataException);
 
         assertThrows(
                 FlightGenerationAlreadyRunningException.class,
@@ -269,7 +269,7 @@ public class FlightGenerationServiceTest {
 
         var constraintException = new ConstraintViolationException("check violation", null, "chk_route_required_for_route_flight_generation");
         var dataException = new DataIntegrityViolationException("error", constraintException);
-        given(flightGenerationRepository.save(any())).willThrow(dataException);
+        given(flightGenerationRepository.saveAndFlush(any())).willThrow(dataException);
 
         assertThrows(
                 DataIntegrityViolationException.class,
