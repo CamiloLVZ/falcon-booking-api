@@ -39,6 +39,9 @@ public class AsyncFlightGenerationService {
                     break;
                 }
                 case ROUTE:{
+                    if (generation.getIdRoute() == null) {
+                        throw new IllegalArgumentException("Flight generation record of type ROUTE is missing route ID");
+                    }
                     totalGenerated = transactionalFlightGenerationService.generateAllFlightsForRoute(generation.getIdRoute());
                     generation.markAsCompleted(totalGenerated);
                     break;
