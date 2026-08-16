@@ -25,10 +25,11 @@ public class AsyncFlightGenerationService {
 
     @Async("flightGenerationExecutor")
     public void executeGeneration(Long generationId){
-        FlightGenerationEntity generation = flightGenerationRepository.findById(generationId)
-                .orElseThrow(()-> new FlightGenerationNotFoundException(generationId));
-
+        FlightGenerationEntity generation = null;
         try {
+            generation = flightGenerationRepository.findById(generationId)
+                    .orElseThrow(()-> new FlightGenerationNotFoundException(generationId));
+
             int totalGenerated=0;
 
             switch (generation.getType()){
@@ -52,11 +53,18 @@ public class AsyncFlightGenerationService {
             Duration duration = Duration.between(generation.getStartedAt(), generation.getFinishedAt());
             log.info("{} flight generation completed. {} flights generated in {} seconds.", generation.getType(), totalGenerated, duration.toSeconds());
 
-        }catch (Exception ex) {
-            generation.markAsFailed();
+        } catch (FlightGenerationNotFoundException ex) {
+            log.error("Flight generation record not found for ID: {}", generationId);
+            throw ex;
+        } catch (Exception ex) {
+            if (generation != null) {
+                generation.markAsFailed();
+            }
             log.error("Flight generation execution failed: {}", ex.getMessage());
-        }finally {
-            flightGenerationRepository.save(generation);
+        } finally {
+            if (generation != null) {
+                flightGenerationRepository.save(generation);
+            }
         }
     }
 
