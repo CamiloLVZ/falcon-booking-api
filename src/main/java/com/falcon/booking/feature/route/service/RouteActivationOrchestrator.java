@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 @Service
 public class RouteActivationOrchestrator {
 
@@ -21,7 +24,17 @@ public class RouteActivationOrchestrator {
     @Transactional
     public ResponseRouteDto activateRoute(String flightNumber) {
         ResponseRouteDto responseRouteDto = routeCommandService.activateRoute(flightNumber);
-        flightGenerationService.startRouteFlightGeneration(flightNumber);
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    flightGenerationService.startRouteFlightGeneration(flightNumber);
+                }
+            });
+        } else {
+            flightGenerationService.startRouteFlightGeneration(flightNumber);
+        }
 
         return responseRouteDto;
     }
