@@ -49,6 +49,9 @@ public class TransactionalFlightGenerationService {
     }
 
     public int generateAllFlightsForRoute(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Route ID must not be null for route flight generation");
+        }
         RouteEntity route = routeRepository.findById(id)
                 .orElseThrow(() -> new RouteNotFoundException(id));
 

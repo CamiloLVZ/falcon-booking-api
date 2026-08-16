@@ -64,6 +64,9 @@ public class FlightGenerationEntity {
     }
 
     public static FlightGenerationEntity startRouteGeneration(Long idRoute) {
+        if (idRoute == null) {
+            throw new IllegalArgumentException("idRoute must not be null for route flight generation");
+        }
         FlightGenerationEntity entity = new FlightGenerationEntity();
         entity.setType(FlightGenerationType.ROUTE);
         entity.setIdRoute(idRoute);
