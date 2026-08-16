@@ -8,6 +8,8 @@
 
 Backend application for the flight management system of Falcon Airlines, a fictional airline company. The system manages routes, flights, seat availability, reservations, and admin operations. It is designed as a portfolio-ready backend focused on maintainability, modularity, and real-world operational flows.
 
+> 🌐 **Frontend Application**: You can test and interact with this API using the live Web Application deployed at [falconbooking.org](https://falconbooking.org) or explore the frontend source code repository at [github.com/FalconFrontend](https://github.com/FalconFrontend).
+
 ---
 
 ## Project Overview
@@ -296,15 +298,16 @@ target/site/jacoco/index.html
 
 Interactive API documentation is available through Swagger UI.
 
-### Live Demo
+### Live Demo & Frontend Client
 
-The application is deployed and publicly accessible:
+The complete system is deployed and publicly accessible. You can test the API functionality visually through the Web Frontend application or inspect the API endpoints via Swagger UI:
 
-| Service | URL |
-|---|---|
-| **Frontend** | [www.falconbooking.org](https://www.falconbooking.org) / [falconbooking.org](https://falconbooking.org) |
-| **Backend API** | [api.falconbooking.org](https://api.falconbooking.org) |
-| **Swagger UI** | [api.falconbooking.org/api/swagger-ui/index.html](https://api.falconbooking.org/api/swagger-ui/index.html) |
+| Resource | Description | Link |
+|---|---|---|
+| **Web Frontend App** | Live application to test booking, flights, and reservations | [falconbooking.org](https://falconbooking.org) / [www.falconbooking.org](https://www.falconbooking.org) |
+| **Frontend Repository** | Source code repository for the Web Frontend client | [github.com/FalconFrontend](https://github.com/FalconFrontend) |
+| **Backend API** | Base URL for the production REST API | [api.falconbooking.org](https://api.falconbooking.org) |
+| **Swagger UI** | Interactive OpenAPI console to test API endpoints | [api.falconbooking.org/api/swagger-ui/index.html](https://api.falconbooking.org/api/swagger-ui/index.html) |
 
 ### Preview
 ![Swagger UI Preview](docs/swagger-preview.png)
