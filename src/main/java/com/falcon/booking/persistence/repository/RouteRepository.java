@@ -19,13 +19,14 @@ import java.util.Optional;
 @Repository
 public interface RouteRepository extends JpaRepository<RouteEntity, Long>, JpaSpecificationExecutor<RouteEntity> {
 
+    @EntityGraph(attributePaths = {"airportOrigin", "airportDestination", "defaultAirplaneType", "routeDays", "routeSchedules"})
     Optional<RouteEntity> findByFlightNumber(String flightNumber);
     boolean existsByFlightNumber(String flightNumber);
     List<RouteEntity> findAllByStatus(RouteStatus status);
     @Query("SELECT r.id FROM RouteEntity r WHERE r.status = :status")
     List<Long> findIdsByStatus(@Param("status") RouteStatus status);
 
-    @EntityGraph(attributePaths = {"airportOrigin", "defaultAirplaneType", "routeDays", "routeSchedules"})
+    @EntityGraph(attributePaths = {"airportOrigin", "airportDestination", "defaultAirplaneType", "routeDays", "routeSchedules"})
     Optional<RouteEntity> findById(Long id);
 
     List<RouteEntity> findAll(Specification<RouteEntity> spec, @NonNull Sort sort);

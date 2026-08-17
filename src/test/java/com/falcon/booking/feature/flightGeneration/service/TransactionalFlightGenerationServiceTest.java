@@ -548,5 +548,12 @@ class TransactionalFlightGenerationServiceTest {
 
             assertThat(allUseDefaultAirplane).isTrue();
         }
+
+        @Test
+        void shouldThrowIllegalArgumentExceptionWhenRouteIdIsNull() {
+            assertThatThrownBy(() -> service.generateAllFlightsForRoute(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Route ID must not be null");
+        }
     }
 }

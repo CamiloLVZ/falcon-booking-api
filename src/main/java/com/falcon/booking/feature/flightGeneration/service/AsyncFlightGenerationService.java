@@ -25,6 +25,10 @@ public class AsyncFlightGenerationService {
 
     @Async("flightGenerationExecutor")
     public void executeGeneration(Long generationId){
+        if (generationId == null) {
+            log.error("Flight generation execution failed: generationId must not be null");
+            return;
+        }
         FlightGenerationEntity generation = null;
         try {
             generation = flightGenerationRepository.findById(generationId)

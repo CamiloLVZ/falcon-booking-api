@@ -95,4 +95,13 @@ public class FlightGenerationEntityTest {
         assertThat(entity.getTotalGenerated()).isNull();
     }
 
+    @DisplayName("Should throw IllegalArgumentException when startRouteGeneration is called with null idRoute")
+    @Test
+    void shouldThrowIllegalArgumentException_whenStartRouteGenerationWithNullIdRoute() {
+        org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> FlightGenerationEntity.startRouteGeneration(null)
+        );
+    }
+
 }
