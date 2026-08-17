@@ -33,6 +33,7 @@ public class RouteQueryService {
         this.airportMapper = airportMapper;
     }
 
+    @Transactional(readOnly = true)
     public RouteEntity getRouteEntity(String flightNumber) {
         String normalized = StringNormalizer.normalize(flightNumber);
         return routeRepository.findByFlightNumber(normalized)

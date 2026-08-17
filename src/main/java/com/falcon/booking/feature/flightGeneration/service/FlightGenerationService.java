@@ -22,6 +22,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -66,10 +68,11 @@ public class FlightGenerationService {
         return flightGenerationRepository.findAll(spec, pageable).map(flightGenerationMapper::toDto);
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ResponseFlightsGenerationDto startGlobalFlightGeneration() {
         try {
             FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
-            FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);
+            FlightGenerationEntity generationSaved = flightGenerationRepository.saveAndFlush(generation);
             asyncFlightGenerationService.executeGeneration(generationSaved.getId());
             return flightGenerationMapper.toDto(generationSaved);
 
@@ -81,6 +84,7 @@ public class FlightGenerationService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ResponseFlightsGenerationDto startRouteFlightGeneration(String flightNumber) {
 
         RouteEntity routeEntity = routeQueryService.getRouteEntity(flightNumber);
@@ -90,7 +94,7 @@ public class FlightGenerationService {
 
         try {
             FlightGenerationEntity generation = FlightGenerationEntity.startRouteGeneration(routeEntity.getId());
-            FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);
+            FlightGenerationEntity generationSaved = flightGenerationRepository.saveAndFlush(generation);
             asyncFlightGenerationService.executeGeneration(generationSaved.getId());
             return flightGenerationMapper.toDto(generationSaved);
 
@@ -112,11 +116,12 @@ public class FlightGenerationService {
             throw new RouteAirplaneTypeIsNotActiveException(airplaneType.getId());
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void startDailyFlightGeneration(LocalDate targetDate) {
 
         try {
             FlightGenerationEntity generation = FlightGenerationEntity.startDailyGeneration(targetDate);
-            FlightGenerationEntity generationSaved = flightGenerationRepository.save(generation);
+            FlightGenerationEntity generationSaved = flightGenerationRepository.saveAndFlush(generation);
             asyncFlightGenerationService.executeGeneration(generationSaved.getId());
 
         } catch (DataIntegrityViolationException e) {

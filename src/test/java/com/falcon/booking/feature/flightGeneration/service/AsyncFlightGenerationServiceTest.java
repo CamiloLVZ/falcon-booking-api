@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -91,5 +92,29 @@ public class AsyncFlightGenerationServiceTest {
         given(flightGenerationRepository.findById(1L)).willReturn(Optional.empty());
 
         assertThrows(FlightGenerationNotFoundException.class, () -> asyncFlightGenerationService.executeGeneration(1L));
+    }
+
+    @DisplayName("Should do nothing when generationId is null")
+    @Test
+    void shouldDoNothing_whenGenerationIdIsNull() {
+        asyncFlightGenerationService.executeGeneration(null);
+
+        verify(flightGenerationRepository, org.mockito.Mockito.never()).findById(any());
+    }
+
+    @DisplayName("Should mark generation as failed when route type generation has null route ID")
+    @Test
+    void shouldMarkGenerationAsFailed_whenRouteIdIsNullForRouteType() {
+        FlightGenerationEntity generation = FlightGenerationEntity.startGlobalGeneration();
+        generation.setId(1L);
+        generation.setType(com.falcon.booking.common.enums.FlightGenerationType.ROUTE);
+        generation.setIdRoute(null);
+
+        given(flightGenerationRepository.findById(1L)).willReturn(Optional.of(generation));
+
+        asyncFlightGenerationService.executeGeneration(1L);
+
+        assertEquals(FlightGenerationStatus.FAILED, generation.getStatus());
+        verify(flightGenerationRepository).save(generation);
     }
 }
