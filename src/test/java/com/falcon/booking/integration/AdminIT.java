@@ -109,10 +109,40 @@ class AdminIT extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("Should return 403 when accessing admin endpoint without authentication")
-    void adminEndpoint_WithoutAuth_ShouldReturn403() {
+    @DisplayName("Should return 401 when accessing admin endpoint without authentication")
+    void adminEndpoint_WithoutAuth_ShouldReturn401() {
         ResponseEntity<String> response = restTemplate.getForEntity(
                 baseUrl() + "/v1/flights/generations?size=10&page=0", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("Should return 403 Forbidden when client user attempts to create a route")
+    void createRoute_AsClient_ShouldReturn403() {
+        String clientEmail = "client-it-" + counter.incrementAndGet() + "@falcon.com";
+        userService.createClientUser(new CreateUserDto(clientEmail, "client123"));
+
+        ResponseEntity<LoginResponseDto> loginResponse = restTemplate.postForEntity(
+                baseUrl() + "/v1/auth/login",
+                new LoginRequestDto(clientEmail, "client123"),
+                LoginResponseDto.class);
+        String clientJwt = loginResponse.getBody().accessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(clientJwt);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        CreateRouteDto request = new CreateRouteDto(
+                "FAL" + counter.incrementAndGet(), "BOG", "MDE", airplaneTypeId, 60,
+                new BigDecimal("100.00"), new BigDecimal("200.00")
+        );
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/v1/routes",
+                HttpMethod.POST,
+                new HttpEntity<>(request, headers),
+                String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
