@@ -30,12 +30,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String path = request.getServletPath();
-        if (path.startsWith("/v1/auth/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             log.debug("Authorization header is missing or does not start with Bearer");
@@ -61,9 +55,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(payload, null, authorities);
         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        }
+        SecurityContextHolder.getContext().setAuthentication(auth);
         log.debug("JWT authentication successful for user: {}", payload.userId());
         filterChain.doFilter(request, response);
     }
