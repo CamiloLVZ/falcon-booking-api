@@ -5,6 +5,9 @@ import com.falcon.booking.feature.auth.dto.LoginRequestDto;
 import com.falcon.booking.feature.auth.dto.LoginResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -65,6 +68,21 @@ class AuthIT extends BaseIntegrationTest {
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 baseUrl() + "/v1/auth/login", request, String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("Should return 401 when accessing protected endpoint with invalid JWT")
+    void protectedEndpoint_InvalidJwt_ShouldReturn401() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth("invalid.jwt.token.string");
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/v1/passengers/me",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
