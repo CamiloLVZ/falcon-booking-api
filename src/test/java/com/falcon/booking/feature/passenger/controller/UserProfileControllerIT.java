@@ -208,4 +208,14 @@ class UserProfileControllerIT {
 
         response.andExpect(status().isBadRequest());
     }
+
+    @DisplayName("Should return 401 Unauthorized when accessing profile without authentication")
+    @Test
+    void shouldReturn401_getMyProfile_unauthenticated() throws Exception {
+        ResultActions response = mockMvc.perform(
+                get("/v1/passengers/me")
+                        .accept(MediaType.APPLICATION_JSON));
+
+        response.andExpect(status().isUnauthorized());
+    }
 }

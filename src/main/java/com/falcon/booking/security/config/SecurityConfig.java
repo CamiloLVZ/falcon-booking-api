@@ -1,6 +1,7 @@
 package com.falcon.booking.security.config;
 
 import com.falcon.booking.security.jwt.JwtFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,52 +38,57 @@ public class SecurityConfig {
                         //AUTH & DOCS
                         .requestMatchers("/v1/auth/register-admin").hasRole("ADMIN")
                         .requestMatchers("/v1/auth/**").permitAll()
-                        .requestMatchers("/v1/health/**").permitAll()
+                        .requestMatchers("/v1/health/**", "/error").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // FLIGHTS GENERATIONS
-                        .requestMatchers("/v1/flights/generations/**").hasRole("ADMIN")
+                        .requestMatchers("/v1/flights/generations", "/v1/flights/generations/**").hasRole("ADMIN")
 
                         // FLIGHTS
-                        .requestMatchers(HttpMethod.POST, "/v1/flights/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/v1/flights/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/v1/flights/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/flights", "/v1/flights/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/flights", "/v1/flights/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/v1/flights", "/v1/flights/**").permitAll()
 
                         // MY PROFILE
-                        .requestMatchers("/v1/passengers/me/**").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/v1/passengers/me", "/v1/passengers/me/**").hasAnyRole("CLIENT", "ADMIN")
 
                         // MY RESERVATIONS
                         .requestMatchers(HttpMethod.GET, "/v1/reservations/me").hasAnyRole("CLIENT", "ADMIN")
 
                         //RESERVATIONS, CHECK-IN, BOARDING
-                        .requestMatchers("/v1/reservations/**").permitAll()
-                        .requestMatchers("/v1/check-in/**").permitAll()
-                        .requestMatchers("/v1/boarding-passes/**").permitAll()
+                        .requestMatchers("/v1/reservations", "/v1/reservations/**").permitAll()
+                        .requestMatchers("/v1/check-in", "/v1/check-in/**").permitAll()
+                        .requestMatchers("/v1/boarding-passes", "/v1/boarding-passes/**").permitAll()
 
                         //PAYMENTS
-                        .requestMatchers("/v1/payments/**").permitAll()
+                        .requestMatchers("/v1/payments", "/v1/payments/**").permitAll()
 
                         //COUNTRIES
-                        .requestMatchers(HttpMethod.GET, "/v1/countries/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/countries", "/v1/countries/**").permitAll()
 
                         //ROUTES
-                        .requestMatchers(HttpMethod.GET, "/v1/routes/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/routes", "/v1/routes/**").permitAll()
 
                         //CATALOG
-                        .requestMatchers("/v1/catalog/**").permitAll()
+                        .requestMatchers("/v1/catalog", "/v1/catalog/**").permitAll()
 
                         //ADMIN ONLY
                         .requestMatchers(
-                                "/v1/airplane-types/**",
-                                "/v1/passengers/**",
-                                "/v1/airports/**",
-                                "/v1/routes/**"
+                                "/v1/airplane-types", "/v1/airplane-types/**",
+                                "/v1/passengers", "/v1/passengers/**",
+                                "/v1/airports", "/v1/airports/**",
+                                "/v1/routes", "/v1/routes/**"
                         ).hasRole("ADMIN")
 
-                        .requestMatchers("/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/v1/admin", "/v1/admin/**").hasRole("ADMIN")
 
                         .anyRequest().hasRole("ADMIN")
 
+                ).exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
                 ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

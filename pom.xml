@@ -41,7 +41,12 @@
 		<sonar.coverage.jacoco.xmlReportPaths>
 			target/site/jacoco/jacoco.xml
 		</sonar.coverage.jacoco.xmlReportPaths>
-
+		<sonar.coverage.exclusions>
+			**/config/**,
+			**/security/config/**,
+			**/dto/**,
+			**/*Application.java
+		</sonar.coverage.exclusions>
 	</properties>
 
 	<dependencies>
@@ -264,6 +269,12 @@
 					<execution>
 						<goals>
 							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>prepare-agent-integration</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
 						</goals>
 					</execution>
 					<execution>
